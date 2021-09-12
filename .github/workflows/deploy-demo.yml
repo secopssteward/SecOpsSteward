@@ -35,3 +35,4 @@ jobs:
         with:
           app-name: soswebapp-demo
           app-settings-json: '[{"Name":"RunDemoMode", "Value":"true"}]'
+          mask-inputs: false
