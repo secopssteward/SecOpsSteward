@@ -47,7 +47,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SecOpsSteward.Coordinator.A
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SecOpsSteward.UI.WebJob", "Agents\SecOpsSteward.UI.WebJob\SecOpsSteward.UI.WebJob.csproj", "{EE4549E5-A8FA-4F06-AB69-056186C5999D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SecOpsSteward.Plugins.DeveloperExample", "SecOpsSteward.Plugins.DeveloperExample\SecOpsSteward.Plugins.DeveloperExample.csproj", "{6DEC9EF5-D700-4F66-AFF0-3D6204DC412B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SecOpsSteward.Plugins.DeveloperExample", "Plugins\SecOpsSteward.Plugins.DeveloperExample\SecOpsSteward.Plugins.DeveloperExample.csproj", "{6DEC9EF5-D700-4F66-AFF0-3D6204DC412B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

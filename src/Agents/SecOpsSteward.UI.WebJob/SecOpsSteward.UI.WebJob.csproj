@@ -3,20 +3,7 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>net5.0</TargetFramework>
   </PropertyGroup>
-  <ItemGroup>
-    <None Remove="appsettings.json" />
-  </ItemGroup>
   
-  <ItemGroup>
-    <Content Include="appsettings.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
-    </Content>
-    <Content Include="appsettings.Development.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
-    </Content>
-  </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Azure.WebJobs" Version="3.0.27" />
     <PackageReference Include="Microsoft.Azure.WebJobs.Extensions" Version="4.0.1" />
@@ -29,6 +16,18 @@
     <ProjectReference Include="..\..\ServiceIntegrations\SecOpsSteward.Integrations.Azure\SecOpsSteward.Integrations.Azure.csproj" />
     <ProjectReference Include="..\..\Core\SecOpsSteward.Shared\SecOpsSteward.Shared.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <None Update="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>Never</CopyToPublishDirectory>
+    </None>
+    <None Update="appsettings.Development.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>Never</CopyToPublishDirectory>
+    </None>
+  </ItemGroup>
+  
   <ItemGroup>
     <None Update="Settings.job">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
