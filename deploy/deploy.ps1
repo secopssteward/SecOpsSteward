@@ -265,7 +265,7 @@ if (!$SkipInfrastructure)
     # Deploy Bicep files
     $deployed = az deployment sub create `
     --location $Location `
-    --template-file .\SecOpsSteward.bicep `
+    --template-file ${PSScriptRoot}\SecOpsSteward.bicep `
     --parameters `
     resourceGroupName=$ResourceGroup `
     azureAdApplicationId=$ApplicationId `
@@ -353,8 +353,8 @@ else { Write-Host "Skipping infrastructure deployment..." }
 
 #region App Build/Publish
 # move to project folder
-Remove-Item .\publish -Recurse -ErrorAction Ignore
-Push-Location ..\src\UI\SecOpsSteward.UI
+Remove-Item $PSScriptRoot\publish -Recurse -ErrorAction Ignore
+Push-Location $PSScriptRoot\..\src\UI\SecOpsSteward.UI
 
 Write-Host "### Restoring packages" -ForegroundColor Cyan
 $restored = dotnet restore
@@ -384,7 +384,7 @@ Write-Host "### Copying in project description" -ForegroundColor Cyan
 Copy-Item *.csproj ..\..\..\deploy\publish
 Pop-Location
 # move to publish folder
-Push-Location .\publish
+Push-Location $PSScriptRoot\publish
 
 Write-Host "### Applying publish artifacts to Azure application" -ForegroundColor Cyan
 $appUp = az webapp up --plan "soshosting${DeploymentId}" --resource-group $ResourceGroup --name $WebAppName
