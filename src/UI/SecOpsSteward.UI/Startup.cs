@@ -36,9 +36,10 @@ namespace SecOpsSteward.UI
         public IConfiguration Configuration { get; }
 
         public static Startup Instance { get; private set; }
-        public bool HasAuthConfiguration => Configuration.GetSection("AzureAd").Exists();
-        public bool UseDummyServices => Configuration.GetValue<bool>("UseDummyServices");
-        public static bool LockDiscovery => Instance.Configuration.GetValue<bool>("DisableDiscovery", false);
+        public bool RunDemoMode => Configuration.GetValue("RunDemoMode", false);
+        public bool HasAuthConfiguration => !RunDemoMode && Configuration.GetSection("AzureAd").Exists();
+        public bool UseDummyServices => RunDemoMode || Configuration.GetValue<bool>("UseDummyServices");
+        public static bool LockDiscovery => Instance.RunDemoMode || Instance.Configuration.GetValue<bool>("DisableDiscovery", false);
         private void RegisterAuthXServices(IServiceCollection services)
         {
             if (HasAuthConfiguration)
