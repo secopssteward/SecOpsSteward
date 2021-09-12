@@ -1,0 +1,37 @@
+name: Deploy Example
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    defaults:
+      run:
+        working-directory: ./src
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v2
+      
+      # ----------
+      
+      - name: Azure Login
+        uses: Azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          enable-AzPSSession: true
+          environment: azurecloud
+      
+      # ----------
+      
+      - name: Azure PowerShell Action
+        uses: Azure/powershell@v1
+        with:
+          azPSVersion: latest
+          inlineScript: |
+            ${{ github.workspace }}\deploy\deploy.ps1 -HideSecrets -Location westus -ResourceGroup sos-webapp-demo -ApplicationId 3b8ddfeb-ea9f-49a1-b66a-d937db14e741 -ApplicationSecret ${{ secrets.DEPLOY_SOS_APP_SECRET }} -WebAppName soswebapp-demo -DeploymentId ghaction -AdminUserPrincipal ${{ secrets.SOS_ADMIN_PRINCIPAL }}
+
+      - name: Set Dummy Mode
+        uses: Azure/appservice-settings@v1
+        with:
+          app-name: soswebapp-demo
+          app-settings-json: '[{"Name":"Debug", "Value":"true"}, {"Name":"UseDummyServices", "Value":"true"}, {"Name":"DisableDiscovery", "Value":"true"}]'
