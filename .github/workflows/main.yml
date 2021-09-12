@@ -20,27 +20,7 @@ jobs:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
           enable-AzPSSession: true
           environment: azurecloud
-          
-      # ----------
-          
-      #- name: Setup .NET 3.1
-      #  uses: actions/setup-dotnet@v1
-      #  with:
-      #    dotnet-version: 3.1.x
-      #- name: Setup .NET 5
-      #  uses: actions/setup-dotnet@v1
-      #  with:
-      #    dotnet-version: 5.0.x
-          
-      # ----------
-          
-      #- name: Restore dependencies
-      #  run: dotnet restore
-      #- name: Build
-      #  run: dotnet build --no-restore
-      #- name: Test
-      #  run: dotnet test --no-build --verbosity normal
-          
+      
       # ----------
       
       - name: Azure PowerShell Action
@@ -49,14 +29,3 @@ jobs:
           azPSVersion: latest
           inlineScript: |
             ${{ github.workspace }}\deploy\deploy.ps1 -Location westus -ResourceGroup sos-webapp-deploy -ApplicationId 3b8ddfeb-ea9f-49a1-b66a-d937db14e741 -ApplicationSecret ${{ secrets.DEPLOY_SOS_APP_SECRET }} -WebAppName soswebapp -DeploymentId ghaction -AdminUserPrincipal ${{ secrets.SOS_ADMIN_PRINCIPAL }}
-      
-      # ----------
-          
-      - name: Azure CLI script
-        uses: azure/CLI@v1
-        with:
-          azcliversion: 2.0.72
-          inlineScript: |
-            az logout
-            az cache purge
-            az account clear
