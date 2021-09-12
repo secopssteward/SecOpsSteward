@@ -46,7 +46,8 @@ jobs:
       - name: Azure PowerShell Action
         uses: Azure/powershell@v1
         with:
-          inlineScript: /deploy/deploy.ps1 -Location westus -ResourceGroup sos-webapp-deploy -ApplicationSecret ${{ secrets.DEPLOY_SOS_APP_SECRET }} -WebAppName soswebapp -DeploymentId ghaction
+          # /src is working dir
+          inlineScript: ../deploy/deploy.ps1 -Location westus -ResourceGroup sos-webapp-deploy -ApplicationSecret ${{ secrets.DEPLOY_SOS_APP_SECRET }} -WebAppName soswebapp -DeploymentId ghaction
           azPSVersion: latest
           
       # ----------
