@@ -70,6 +70,7 @@ param (
     [String]$ApplicationName = "SecOpsSteward",
     [String]$WebAppName = "soswebapp", 
     [String]$SqlAdministratorLogin = "sossqladmin",
+    [String]$AdminUserPrincipal = $null,
     [String]$DeploymentId = $null, # random string to append to all resources
     [switch]$SkipInfrastructure = $false,
     [switch]$IAmADeveloper = $false
@@ -142,7 +143,17 @@ $SqlAdministratorLoginPassword = Get-RandomAlphaNumeric -length 24
 
 # get info for the current "az" user.
 # this user will receive the first set of permissions for the Key Vault (admin, contributor, user access admin)
-$signedInUser = $(az ad signed-in-user show | ConvertFrom-Json)
+
+if ([string]::IsNullOrEmpty($AdminUserPrincipal)) {
+    $signedInUser = $(az ad signed-in-user show | ConvertFrom-Json)
+    $signedInUserName = $signedInUser.userPrincipalName
+    $signedInUserObjectId = $signedInUser.objectId
+}
+else
+{
+    $signedInUserName = "Manually input"
+    $signedInUserObjectId = $AdminUserPrincipal
+}
 
 #region AAD App Setup
 # Create AAD app if ID is not specified
@@ -243,9 +254,9 @@ if (!$SkipInfrastructure)
     Write-Host "Location:`t`t" -nonewline -ForegroundColor Green
     Write-Host $Location
     Write-Host "Primary Admin:`t`t" -nonewline -ForegroundColor Green 
-    Write-Host $signedInUser.userPrincipalName
+    Write-Host $signedInUserName
     Write-Host "Primary Admin OID:`t" -nonewline -ForegroundColor Green 
-    Write-Host $signedInUser.objectId
+    Write-Host $signedInUserObjectId
     Write-Host "Resource Group:`t`t" -nonewline -ForegroundColor Green
     Write-Host $ResourceGroup
     Write-Host "App ID:`t`t`t" -nonewline -ForegroundColor Green
@@ -262,6 +273,8 @@ if (!$SkipInfrastructure)
     $debugRolesText = ""
     if ($IAmADeveloper) { $debugRolesText = "includeDebugRoles=true"; }
 
+    if ()
+
     # Deploy Bicep files
     $deployed = az deployment sub create `
     --location $Location `
@@ -273,7 +286,7 @@ if (!$SkipInfrastructure)
     webAppName=$WebAppName `
     sqlAdministratorLogin=$SqlAdministratorLogin `
     sqlAdministratorLoginPassword=$SqlAdministratorLoginPassword `
-    mainUserPrincipal=$($signedInUser.objectId) `
+    mainUserPrincipal=$signedInUserObjectId `
     deploymentId=$DeploymentId `
     $debugRolesText
 
