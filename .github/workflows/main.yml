@@ -48,7 +48,7 @@ jobs:
         with:
           azPSVersion: latest
           inlineScript: |
-            ${{ env.GITHUB_WORKSPACE }}\deploy\deploy.ps1 -Location westus -ResourceGroup sos-webapp-deploy -ApplicationSecret ${{ secrets.DEPLOY_SOS_APP_SECRET }} -WebAppName soswebapp -DeploymentId ghaction      
+            ${{ github.workspace }}\deploy\deploy.ps1 -Location westus -ResourceGroup sos-webapp-deploy -ApplicationSecret ${{ secrets.DEPLOY_SOS_APP_SECRET }} -WebAppName soswebapp -DeploymentId ghaction      
       
       # ----------
           
