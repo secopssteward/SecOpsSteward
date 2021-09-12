@@ -34,5 +34,5 @@ jobs:
         uses: Azure/appservice-settings@v1
         with:
           app-name: soswebapp-demo
-          app-settings-json: '[{"Name":"RunDemoMode", "Value":"true"}]'
+          app-settings-json: '[{"Name":"RunDemoMode", "Value":"true", "slotSetting":false}]'
           mask-inputs: false
