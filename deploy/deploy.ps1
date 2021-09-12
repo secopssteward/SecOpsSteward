@@ -273,8 +273,6 @@ if (!$SkipInfrastructure)
     $debugRolesText = ""
     if ($IAmADeveloper) { $debugRolesText = "includeDebugRoles=true"; }
 
-    if ()
-
     # Deploy Bicep files
     $deployed = az deployment sub create `
     --location $Location `
