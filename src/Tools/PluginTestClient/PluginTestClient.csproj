@@ -15,8 +15,14 @@
     <ProjectReference Include="..\..\Core\SecOpsSteward.Shared\SecOpsSteward.Shared.csproj" />
   </ItemGroup>
 
+  <Target Name="CopyBuiltFiles" AfterTargets="Build">
+    <ItemGroup>
+      <BuiltFiles Include="$(ProjectDir)*.*" />
+    </ItemGroup>
+  </Target>
+
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="copy /Y $(TargetDir)* $(ProjectDir)..\..\..\tools\plugintest" />
+    <Copy SourceFiles="@(BuiltFiles)" DestinationFolder="$(ProjectDir)..\..\..\tools\plugintest" SkipUnchangedFiles="true" />
   </Target>
 
 </Project>
