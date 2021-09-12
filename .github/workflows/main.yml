@@ -1,0 +1,20 @@
+name: Deploy Example
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: windows-latest
+    steps:
+      - name: Azure Login
+        uses: Azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDS }}
+          enable-AzPSSession: true
+          environment: azurecloud
+      - name: Azure PowerShell Action
+        uses: Azure/powershell@v1
+        with:
+          inlineScript: /deploy/deploy.ps1 -Location westus -ResourceGroup sos-webapp-deploy -ApplicationSecret ${{ secrets.DEPLOY_SOS_APP_SECRET }} -WebAppName soswebapp -DeploymentId ghaction
+          azPSVersion: latest
