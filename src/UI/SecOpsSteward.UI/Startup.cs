@@ -20,6 +20,8 @@ using SecOpsSteward.Shared.Packaging;
 using SecOpsSteward.Shared.Roles;
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace SecOpsSteward.UI
 {
@@ -36,6 +38,7 @@ namespace SecOpsSteward.UI
         public static Startup Instance { get; private set; }
         public bool HasAuthConfiguration => Configuration.GetSection("AzureAd").Exists();
         public bool UseDummyServices => Configuration.GetValue<bool>("UseDummyServices");
+        public static bool LockDiscovery => Instance.Configuration.GetValue<bool>("DisableDiscovery", false);
         private void RegisterAuthXServices(IServiceCollection services)
         {
             if (HasAuthConfiguration)
@@ -94,7 +97,7 @@ namespace SecOpsSteward.UI
 
 
             // If running locally, this factory is registered to use managed identity (provided by the environment)
-            services.RegisterCurrentCredentialFactory(Configuration.GetSection("AzureAd")["TenantId"], config["SubscriptionId"], UseDummyServices);
+            services.RegisterCurrentCredentialFactory(Configuration.GetSection("AzureAd")["TenantId"], config["SubscriptionId"], false, UseDummyServices);
 
             // This is for executions local to the _web server_ ... don't bother with this (for now)
             services.AddScoped<INonceTrackingService, NoNonceTrackingService>();
@@ -184,6 +187,30 @@ namespace SecOpsSteward.UI
                 endpoints.MapBlazorHub();
                 endpoints.MapFallbackToPage("/_Host");
             });
+
+            // --- Dummy mode ---
+            if (UseDummyServices)
+            {
+                Task.Delay(1000).Wait();
+                using (var cxt = serviceProvider.GetRequiredService<SecOpsStewardDbContext>())
+                {
+                    var api = serviceProvider.GetRequiredService<DataBoundApi>();
+
+                    if (!cxt.Agents.Any())
+                    {
+                        Task.WhenAll(
+                            api.AddAgent("Sample A", Guid.NewGuid()),
+                            api.AddAgent("Sample B", Guid.NewGuid())).GetAwaiter().GetResult();
+                    }
+
+                    if (!cxt.Users.Any())
+                    {
+                        Task.WhenAll(
+                            api.AddUser("bob"),
+                            api.AddUser("jane")).GetAwaiter().GetResult();
+                    }
+                }
+            }
         }
     }
 }

@@ -3,8 +3,6 @@ using SecOpsSteward.Data.Models;
 using SecOpsSteward.Data.Workflow;
 using SecOpsSteward.Plugins.Azure;
 using SecOpsSteward.Shared;
-using SecOpsSteward.Shared.Cryptography;
-using SecOpsSteward.Shared.Messages;
 using SecOpsSteward.Shared.Packaging;
 using SecOpsSteward.Shared.Roles;
 using System;
@@ -17,32 +15,23 @@ namespace SecOpsSteward.Data
 {
     public class DataBoundApi
     {
-        private readonly ChimeraServiceConfigurator _configurator;
         private readonly AzureCurrentCredentialFactory _credentialFactory;
         private readonly ChimeraSystemOperationsService _chimeraSystem;
         private readonly IRoleAssignmentService _roleAssignment;
-        private readonly ICryptographicService _cryptographicService;
-        private readonly IMessageTransitService _messageTransitService;
         private readonly PackageActionsService _packageActionsService;
         private readonly IPackageRepository _packageRepository;
         private IDbContextFactory<SecOpsStewardDbContext> _dbFactory;
         public DataBoundApi(
-            ChimeraServiceConfigurator configurator,
             AzureCurrentCredentialFactory credentialFactory,
             ChimeraSystemOperationsService chimeraSystem,
             IRoleAssignmentService roleAssignment,
-            ICryptographicService cryptographicService,
-            IMessageTransitService messageTransitService,
             PackageActionsService packageActionsService,
             IPackageRepository packageRepository,
             IDbContextFactory<SecOpsStewardDbContext> dbFactory)
         {
-            _configurator = configurator;
             _credentialFactory = credentialFactory;
             _chimeraSystem = chimeraSystem;
             _roleAssignment = roleAssignment;
-            _cryptographicService = cryptographicService;
-            _messageTransitService = messageTransitService;
             _packageActionsService = packageActionsService;
             _packageRepository = packageRepository;
             _dbFactory = dbFactory;
@@ -76,7 +65,7 @@ namespace SecOpsSteward.Data
             {
                 UserId = user.UserId.Id,
                 DisplayName = user.Name,
-                Username = string.Join(',', user.Aliases.Append(user.Email))
+                Username = user.Email
             };
 
             using (var cxt = _dbFactory.CreateDbContext())
@@ -326,7 +315,6 @@ namespace SecOpsSteward.Data
 
         public async Task<List<PluginMetadataModel>> AddPackage(ChimeraContainer package)
         {
-            var credential = _credentialFactory.GetCredential().Credential;
             await _packageRepository.CreateOrUpdate(package);
             var metadata = package.GetMetadata();
 

@@ -26,7 +26,7 @@
                         <MudTablePager PageSizeOptions="new int[]{10, 25, 50, 100}" />
                     </PagerContent>
 				</MudTable>
-                <MudButton Color="Color.Primary" StartIcon="@Icons.Material.Filled.AddChart" OnClick="@EnrollAgent" Class="mr-2 my-1">Enroll Agent</MudButton>
+                <MudButton Color="Color.Primary" StartIcon="@Icons.Material.Filled.AddChart" Disabled="@Startup.LockDiscovery" OnClick="@EnrollAgent" Class="mr-2 my-1">Enroll Agent</MudButton>
 			</MudPaper>
         </MudItem>
         @if (SelectedModel != null)

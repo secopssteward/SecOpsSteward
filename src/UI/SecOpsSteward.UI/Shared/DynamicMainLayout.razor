@@ -3,9 +3,9 @@
 
 <CascadingValue Value="@this">
     <MudLayout>
-        <MudAppBar Dense="true">
+        <MudAppBar Dense="true" Style="z-index:50000">
             <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
-            <img src="/css/SOS_Logo_White.svg" class="mx-1" style="height:2em" title="SecOps Steward" />
+            <img src="/css/SOS_Logo_White.svg" class="ml-1 mr-5" style="height:2em" title="SecOps Steward" />
                 @titleBar
             <MudSpacer />
                 @buttonBar

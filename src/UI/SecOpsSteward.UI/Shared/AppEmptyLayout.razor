@@ -10,11 +10,9 @@
 </CascadingAuthenticationState>
 
 @inject PublicPackageRepository PackageService
-@inject MicrosoftIdentityConsentAndConditionalAccessHandler ConsentHandler
-@inject ITokenAcquisition tokenAcquisition
 @code
 {
-    [Inject] protected NavigationManager NavManager { get; set; }
+	[Inject] protected NavigationManager NavManager { get; set; }
     [Inject]
 	public WorkflowMessageProcessorService MessageProcessor { get; set; }
 

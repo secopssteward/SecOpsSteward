@@ -20,6 +20,7 @@ namespace SecOpsSteward.Shared
         public static void AddChimera(this IServiceCollection serviceCollection, ChimeraServiceConfigurator config)
         {
             serviceCollection.AddSingleton<ChimeraServiceConfigurator>(config);
+
             serviceCollection.AddScoped<ChimeraSystemOperationsService>();
             serviceCollection.AddTransient<WorkflowProcessorFactory>();
 

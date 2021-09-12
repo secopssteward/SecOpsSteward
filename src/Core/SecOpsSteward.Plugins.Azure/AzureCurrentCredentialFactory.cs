@@ -14,9 +14,9 @@ namespace SecOpsSteward.Plugins.Azure
 {
     public static class AzureCurrentCredentialFactoryExtensions
     {
-        public static void RegisterCurrentCredentialFactory(this IServiceCollection services, string tenantId, string subscriptionId, bool useManagedId = false)
+        public static void RegisterCurrentCredentialFactory(this IServiceCollection services, string tenantId, string subscriptionId, bool useManagedId = false, bool useDummy = false)
         {
-            services.AddScoped<AzureCurrentCredentialFactory>(s => new AzureCurrentCredentialFactory(s, tenantId, subscriptionId, useManagedId));
+            services.AddScoped<AzureCurrentCredentialFactory>(s => new AzureCurrentCredentialFactory(s, tenantId, subscriptionId, useManagedId, useDummy));
         }
     }
 
@@ -28,16 +28,19 @@ namespace SecOpsSteward.Plugins.Azure
         private readonly string _tenantId;
         private readonly string _subscriptionId;
         private readonly bool _useManagedIdentity;
+        private readonly bool _useEmulatedCredential;
         public AzureCurrentCredentialFactory(
             IServiceProvider sp,
             string tenantId,
             string subscriptionId,
-            bool useManagedIdentity = false)
+            bool useManagedIdentity = false,
+            bool useEmulatedCredential = false)
         {
             _sp = sp;
             _tenantId = tenantId;
             _subscriptionId = subscriptionId;
             _useManagedIdentity = useManagedIdentity;
+            _useEmulatedCredential = useEmulatedCredential;
         }
 
         public void RegisterManualCredentialHandle(TokenCredential credential, string subscriptionId = null)
@@ -56,6 +59,7 @@ namespace SecOpsSteward.Plugins.Azure
         public AzureCurrentCredential GetCredential() => GetCredential(_subscriptionId);
         public AzureCurrentCredential GetCredential(string subscriptionId)
         {
+            if (_useEmulatedCredential) return new EmulatedCurrentCredential();
             lock (_handles)
             {
                 if (!_handles.ContainsKey(_subscriptionId))
@@ -75,6 +79,17 @@ namespace SecOpsSteward.Plugins.Azure
         }
     }
 
+    public class EmulatedCurrentCredential : AzureCurrentCredential
+    {
+        public EmulatedCurrentCredential()
+        {
+            TenantId = Guid.NewGuid().ToString();
+            SubscriptionId = Guid.NewGuid().ToString();
+            Credential = null;
+            _emulated = true;
+        }
+    }
+
     public abstract class AzureCurrentCredential
     {
         public static string[] RequiredScopes = new[]
@@ -90,6 +105,7 @@ namespace SecOpsSteward.Plugins.Azure
         protected IAzure _azure;
         private string _tenantId;
         private string _subscriptionId;
+        protected bool _emulated;
 
         public string TenantId
         {
@@ -105,6 +121,7 @@ namespace SecOpsSteward.Plugins.Azure
 
         public IAzure GetAzure()
         {
+            if (_emulated) return null; // todo: mock?
             if (_azure == null)
             {
                 var armToken = Credential.GetToken(new TokenRequestContext(scopes: new[] { "https://management.azure.com/.default" }, parentRequestId: null), default).Token;

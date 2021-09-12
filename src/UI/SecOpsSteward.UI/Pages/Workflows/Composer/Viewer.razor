@@ -1,5 +1,5 @@
 ﻿@layout DynamicMainLayout
-@page "/workflows/viewer/{WorkflowId:guid}"
+@page "/workflows/list/{WorkflowId:guid}"
 @using SecOpsSteward.Plugins.Configurable
 @using SecOpsSteward.Shared.Messages
 @using SecOpsSteward.Data.Models
@@ -13,19 +13,19 @@
         @if (Workflow == null)
         {
             <span>
-            SecOps Steward - No Workflow Loaded
+            No Workflow Loaded
             </span>
         }
         else
         {
             <span>
-            SecOps Steward - @Workflow.Name
+            @Workflow.Name
             </span>
         }
 	</TitleBar>
     <ButtonBar>
         @*<MudIconButton Icon="@Icons.Material.Filled.PlayArrow" OnClick="@Execute" Disabled="@(!Workflow.IsLocked)" />*@
-        <MudIconButton Icon="@Icons.Material.Filled.PlayArrow" OnClick="@Execute" />
+        <MudIconButton Icon="@Icons.Material.Filled.PlayArrow" OnClick="@Execute" Disabled="@Startup.LockDiscovery" />
         <MudIconButton Icon="@Icons.Material.Filled.Outbound" OnClick="@ExecuteOnAgent" />
 	</ButtonBar>
     <SecondaryDrawer>

@@ -11,19 +11,31 @@
 @using SecOpsSteward.UI.Pages.Workflows.Composer.Panels
 @using SecOpsSteward.UI.Shared
 
+
+@{var isEditing = false;}
 <PageSections @ref="_sections">
     <TitleBar>
         @if (Workflow == null)
         {
             <span>
-            SecOps Steward - No Workflow Loaded
+            No Workflow Loaded
             </span>
         }
         else
         {
-            <span>
-            SecOps Steward - @Workflow.Name
-            </span>
+            @if (!isEditing)
+            {
+                <span>
+                @Workflow.Name <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Edit" OnClick="@(() => { isEditing = true; _sections.LayoutStateHasChanged(); })" />
+                </span>
+            }
+            else
+            {
+                <span>
+                <MudTextField T="string" Style="color:#fff;margin-top: 0;margin-bottom: 0.5em;width: 15em;" @bind-Text="@Workflow.Name" Placeholder="Workflow Name" AutoFocus="true" OnBlur="@(async (b) => 
+                {isEditing = false; await SaveChanges(); _sections.LayoutStateHasChanged();  })" />
+                </span>
+            }
         }
 	</TitleBar>
     <ButtonBar>
@@ -31,7 +43,7 @@
             @{ var dialogParams = new DialogParameters();
             dialogParams.Add(nameof(DiscoveryDialog.TemplateAdded), EventCallback.Factory.Create<RouteSegmentPossibility>(this, cb => { ComposerComponent.AddWorkflowDefinitionSteps(cb); })); 
         }
-        <MudIconButton Icon="@Icons.Material.Filled.Search" Color="Color.Inherit" OnClick="@(() => DialogService.Show<DiscoveryDialog>("Discovery", dialogParams))" />
+        <MudIconButton Icon="@Icons.Material.Filled.Search" Color="Color.Inherit" Disabled="@Startup.LockDiscovery" OnClick="@(() => DialogService.Show<DiscoveryDialog>("Discovery", dialogParams))" />
 	</ButtonBar>
     <SecondaryDrawer>
         <AddComponentsDrawer
@@ -126,7 +138,8 @@
         var config = dResult.Data as ConfigurableObjectParameterCollection;
 
         ComposerComponent.AddWorkflowTemplate(t, config.AsDictionary());
-    }
+    }
+
     protected void ClearSelectionClicked()
     {
         ComposerComponent.ClearSelection();

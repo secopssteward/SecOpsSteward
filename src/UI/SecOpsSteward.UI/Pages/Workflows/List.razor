@@ -24,7 +24,7 @@
                             {
                                 <MudIconButton Color="@Color.Primary" Icon="@Icons.Material.Filled.Edit" Title="Edit" Link="@("/workflows/composer/"+context.WorkflowId)" />
                             }
-                            <MudIconButton Color="@Color.Tertiary" Icon="@Icons.Material.Filled.Preview" Title="Edit" Link="@("/workflows/viewer/"+context.WorkflowId)" />
+                            <MudIconButton Color="@Color.Tertiary" Icon="@Icons.Material.Filled.Preview" Title="Edit" Link="@("/workflows/list/"+context.WorkflowId)" />
                             @if (!DbContext.WorkflowExecutions.Any(e => e.WorkflowId == context.WorkflowId))
                             {
                                 <MudIconButton Color="@Color.Warning" Icon="@Icons.Material.Filled.Delete" Title="Edit" OnClick="@(() => DeleteWorkflow(context))" /> 

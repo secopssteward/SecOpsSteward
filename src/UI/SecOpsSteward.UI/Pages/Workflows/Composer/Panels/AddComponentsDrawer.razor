@@ -24,7 +24,7 @@
                         @foreach (var item in Services)
                         {
                             <MudExpansionPanel Dense="true" Text="@item.Name" DisableGutters="true">
-                                @foreach (var template in item.Templates.Where(t => t.Participants.Count > 1))
+                                @foreach (var template in item.Templates.Where(t => t.Participants.Where(p => p.PackageId != Guid.Empty).Count() > 1))
                                 {
                                     <MudButton EndIcon="@Icons.Material.Filled.ChevronRight"
                                             FullWidth="true"
@@ -121,7 +121,7 @@
             {
                 <MudGrid Spacing="0" Class="py-1 px-3">
                     <MudItem Class="mx-auto">
-                        <MudButton IconColor="Color.Primary" Variant="Variant.Outlined" StartIcon="@Icons.Custom.Brands.MicrosoftAzure" Size="Size.Small" OnClick="@RunResourceSearch">Select Resource</MudButton>
+                        <MudButton IconColor="Color.Primary" Variant="Variant.Outlined" StartIcon="@Icons.Custom.Brands.MicrosoftAzure" Size="Size.Small" Disabled="@Startup.LockDiscovery" OnClick="@RunResourceSearch">Select Resource</MudButton>
                     </MudItem>
                     <MudItem xs="12">
                         <MudTextField Label="Node Description" HelperText="Text to be displayed on the node to identify it to the user" @bind-Value="@SelectedNode.NodeName" />

@@ -42,7 +42,7 @@ namespace SecOpsSteward.Shared.Roles
                 Name = $"User {username}",
                 Email = $"{username}@id",
                 UserId = new ChimeraUserIdentifier(GetGuidFromUsername(username)),
-                Aliases = new List<string>() { $"{username}", $"{username}@Id" }
+                Aliases = new List<string>() { $"{username}" }
             });
         }
 

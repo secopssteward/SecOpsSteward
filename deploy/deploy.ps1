@@ -31,6 +31,9 @@
   Unique identifier to append to resources and the resource group, to correlate objects.
   If not present, it will be randomly generated.
 
+  .PARAMETER HideSecrets
+  If provided, the script will not show passwords or other sensitive info.
+
   .PARAMETER SkipInfrastructure
   If provided, the script will not deploy the Azure infrastructure Bicep file.
   Documentation shows this as having a switch parameter, but in practice, just specifying
@@ -72,6 +75,7 @@ param (
     [String]$SqlAdministratorLogin = "sossqladmin",
     [String]$AdminUserPrincipal = $null,
     [String]$DeploymentId = $null, # random string to append to all resources
+    [switch]$HideSecrets = $false
     [switch]$SkipInfrastructure = $false,
     [switch]$IAmADeveloper = $false
 )
@@ -263,10 +267,14 @@ if (!$SkipInfrastructure)
     Write-Host $ApplicationId
     Write-Host "WebApp Name:`t`t" -nonewline -ForegroundColor Green
     Write-Host $WebAppName".azurewebsites.net"
-    Write-Host "SQL Admin User:`t`t" -nonewline -ForegroundColor Green
-    Write-Host $SqlAdministratorLogin
-    Write-Host "SQL Admin Password:`t" -nonewline -ForegroundColor Green
-    Write-Host $SqlAdministratorLoginPassword
+
+    if (!$HideSecrets)
+    {
+        Write-Host "SQL Admin User:`t`t" -nonewline -ForegroundColor Green
+        Write-Host $SqlAdministratorLogin
+        Write-Host "SQL Admin Password:`t" -nonewline -ForegroundColor Green
+        Write-Host $SqlAdministratorLoginPassword
+    }
 
     # Debug roles are RBAC roles assigned to the principal of the user running this tool
     # This should only be used for developers if they are running the app locally

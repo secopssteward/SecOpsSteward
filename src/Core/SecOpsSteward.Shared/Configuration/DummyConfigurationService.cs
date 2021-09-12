@@ -16,6 +16,8 @@ namespace SecOpsSteward.Shared.Configuration
         {
             await Task.Yield();
             _logger.LogTrace($"Config being retrieved for {agent}");
+            if (!Configurations.Any(c => c.AgentId == agent))
+                return new AgentConfiguration() { AgentId = agent };
             return Configurations.FirstOrDefault(c => c.AgentId == agent);
         }
 
@@ -30,7 +32,8 @@ namespace SecOpsSteward.Shared.Configuration
         {
             await Task.Yield();
             _logger.LogTrace($"Config being updated for {agent}");
-            Configurations.RemoveAll(c => c.AgentId == agent);
+            if (Configurations.Any(c => c.AgentId == agent))
+                Configurations.RemoveAll(c => c.AgentId == agent);
             configuration.AgentId = agent;
             Configurations.Add(configuration);
         }
