@@ -75,7 +75,7 @@ param (
     [String]$SqlAdministratorLogin = "sossqladmin",
     [String]$AdminUserPrincipal = $null,
     [String]$DeploymentId = $null, # random string to append to all resources
-    [switch]$HideSecrets = $false
+    [switch]$HideSecrets = $false,
     [switch]$SkipInfrastructure = $false,
     [switch]$IAmADeveloper = $false
 )
