@@ -34,4 +34,4 @@ jobs:
         uses: Azure/appservice-settings@v1
         with:
           app-name: soswebapp-demo
-          app-settings-json: '[{"Name":"Debug", "Value":"true"}, {"Name":"UseDummyServices", "Value":"true"}, {"Name":"DisableDiscovery", "Value":"true"}]'
+          app-settings-json: '[{"Name":"RunDemoMode", "Value":"true"}]'
