@@ -1,0 +1,107 @@
+﻿@page "/manage/agents"
+
+<MudContainer MaxWidth="MaxWidth.Large">
+    <h3>Workflows</h3>
+    <MudGrid>
+        <MudItem md="12" lg="@((SelectedModel != null ? 6 : 12))">
+            <MudPaper Elevation="2" Class="p-0" Style="text-align:right;">
+                <MudTable @ref="_table" Elevation="0" Items="@AgentModels" @bind-SelectedItem="@SelectedModel" Hover="true" Striped="true">
+                    <HeaderContent>
+                        <MudTh><MudTableSortLabel SortBy="new Func<AgentModel, object>(x=>x.AgentId)">Agent ID</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel InitialDirection="SortDirection.Ascending"  SortBy="new Func<AgentModel, object>(x=>x.Tag)">Tag</MudTableSortLabel></MudTh>
+                        <MudTh></MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Agent ID">@context.AgentId.ShortId()</MudTd>
+                        <MudTd DataLabel="Tag">@context.Tag</MudTd>
+                        <MudTd>
+                            <div class="ml-auto mr-auto" style="width: fit-content">          
+                                <MudTooltip Text="Delete" Placement="Placement.End">
+                                    <MudIconButton Color="Color.Error" OnClick="@(() => RemoveAgent(context))" Icon="@Icons.Material.Filled.Delete" Size="Size.Small"></MudIconButton>
+                                </MudTooltip>              
+                            </div>
+                        </MudTd>
+                    </RowTemplate>
+                    <PagerContent>
+                        <MudTablePager PageSizeOptions="new int[]{10, 25, 50, 100}" />
+                    </PagerContent>
+				</MudTable>
+                <MudButton Color="Color.Primary" StartIcon="@Icons.Material.Filled.AddChart" OnClick="@EnrollAgent" Class="mr-2 my-1">Enroll Agent</MudButton>
+			</MudPaper>
+        </MudItem>
+        @if (SelectedModel != null)
+        {
+            <MudItem md="12" lg="6">
+                <MudPaper Elevation="2" Class="p-0">
+                    <ManagePermissions Agent="@SelectedModel" />
+                </MudPaper>
+            </MudItem>
+        }
+    </MudGrid>
+</MudContainer>
+
+@code
+{
+    private MudTable<AgentModel> _table;
+    public List<AgentModel> AgentModels { get; set; } = new List<AgentModel>();
+    public AgentModel SelectedModel { get; set; }
+
+    public Dictionary<AgentModel, bool> DetailsVisible { get; set; } = new Dictionary<AgentModel, bool>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Refresh();
+
+        //if (SelectedModel != null) ChangeSelectedAgent(SelectedModel);
+    }
+
+    protected async Task EnrollAgent()
+    {
+        IDialogReference result = DialogService.Show<NewAgentDialog>("Add Agent");
+        var canceled = await result.Result;
+        if (!canceled.Cancelled) await Refresh();
+    }
+
+    protected async Task RemoveAgent(AgentModel model)
+    {
+        var dlg = await DialogService.ShowMessageBox("Delete Agent",
+            "Are you sure you want to delete agent " + model.AgentId.ShortId() + "?",
+            "Yes", "No");
+
+        if (dlg.GetValueOrDefault(false))
+        {
+            Snackbar.Add("Starting Agent removal...", Severity.Info);
+
+            await TryExecute(() => DataBoundApi.RemoveAgent(model.AgentId),
+                "Agent removal completed",
+                "Agent removal failed");
+
+            Snackbar.Add("Agent removal complete!", Severity.Success);
+        }
+    }
+
+    private async Task Refresh()
+    {
+        AgentModels = (await DbContext.Agents
+            .Include(a => a.Permissions).ThenInclude(p => p.User)
+            .Include(a => a.Permissions).ThenInclude(p => p.Package)
+            .ToListAsync());
+        StateHasChanged();
+    }
+
+    private async Task TryExecute(Func<Task> task, string success, string failure)
+    {
+        try
+        {
+            await task();
+            Snackbar.Add(success, Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(failure + ": " + ex.Message, Severity.Error);
+        }
+        await Refresh();
+    }
+
+    protected Task EditAgent(AgentModel m) => TryExecute(()=> DataBoundApi.ChangeTag(m.AgentId, m.Tag), "Agent tag updated", "Agent update failed");
+}

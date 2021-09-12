@@ -1,0 +1,95 @@
+﻿@layout DynamicMainLayout
+@page "/workflows/grants/{WorkflowId:guid}"
+@using System.Text.Json
+@using SecOpsSteward.Data.Workflow
+@using SecOpsSteward.UI.Pages.Workflows.Composer.Nodes
+
+@if (Workflow != null)
+{
+<MudContainer MaxWidth="MaxWidth.Large">
+    <h3>Workflow Agent Grants</h3>
+    <MudGrid>
+		<MudItem md="12">
+			<MudPaper Elevation="2" Class="@("p-0 " + (Workflow.Nodes.Any(n => n.Grant == null) ? "" : "configurationIncomplete"))">
+				<MudTable T="SavedNode" Elevation="0" Items="@Workflow.Nodes" @bind-SelectedItem="@SelectedNode" Hover="true" Striped="true">
+					<HeaderContent>
+						<MudTh><MudTableSortLabel SortBy="new Func<SavedNode, object>(x=>x.Id)">Id</MudTableSortLabel></MudTh>
+						<MudTh><MudTableSortLabel SortBy="new Func<SavedNode, object>(x=>x.NodeName)">Name</MudTableSortLabel></MudTh>
+						<MudTh><MudTableSortLabel SortBy="new Func<SavedNode, object>(x=>x.Agent.Tag)">Agent</MudTableSortLabel></MudTh>
+						<MudTh><MudTableSortLabel SortBy="new Func<SavedNode, object>(x=>x.Service.Name)">Service</MudTableSortLabel></MudTh>
+						<MudTh>Status</MudTh>
+					</HeaderContent>
+					<RowTemplate>
+						<MudTd DataLabel="Id">@Guid.Parse(context.Id).ShortId()</MudTd>
+						<MudTd DataLabel="Name">@context.NodeName</MudTd>
+						<MudTd DataLabel="Agent">@context.Agent.Tag (@context.Agent.AgentId.ShortId())</MudTd>
+						<MudTd DataLabel="Service">@context.Package.Name (@context.Package.PluginId.ShortId())</MudTd>
+						<MudTd DataLabel="Status">
+							@if (context.Grant != null)
+							{
+								<MudIcon Color="Color.Success" Icon="@Icons.Material.Filled.ThumbUp" />
+							}
+							else
+							{
+								<MudButton OnClick="@(() => AddGrant(context))" Disabled="@(!context.Parameters.GrantScopeValuesPopulated)">
+									<MudIcon Color="Color.Error" Icon="@Icons.Material.Filled.ThumbDown" />
+								</MudButton>
+							}
+						</MudTd>
+					</RowTemplate>
+					<PagerContent>
+						<MudTablePager PageSizeOptions="new int[]{10, 25}" />
+					</PagerContent>
+				</MudTable>
+				<MudButton Color="Color.Primary" StartIcon="@Icons.Material.Filled.SelectAll" 
+						    OnClick="@(async (a) => { foreach(var n in Workflow.Nodes) await AddGrant(n); })" Class="mr-2 my-1">Grant All</MudButton>
+			</MudPaper>
+		</MudItem>
+    </MudGrid>
+</MudContainer>
+}
+
+@code
+{
+	[Parameter]
+	public Guid WorkflowId { get; set; }
+
+	protected SavedNode SelectedNode { get; set; }
+
+	protected WorkflowModel WorkflowModel { get; set; }
+	protected SavedWorkflow Workflow { get; set; }
+
+	protected override async Task OnInitializedAsync()
+	{
+		WorkflowModel = await DbContext.Workflows.FirstOrDefaultAsync(w => w.WorkflowId == WorkflowId);
+		Workflow = WorkflowModel.SavedData;
+
+		await Refresh();
+	}
+
+	protected async Task Refresh()
+	{
+		Workflow.Nodes.ForEach(n => n.PopulateDatabaseLinks(DbContext));
+
+		if (!Workflow.Nodes.Any(n => n.Grant == null) &&
+			!WorkflowModel.IsAgentSetGranted)
+		{
+			WorkflowModel.IsAgentSetGranted = true;
+			await DbContext.SaveChangesAsync();
+		}
+		if (Workflow.Nodes.Any(n => n.Grant == null) &&
+			WorkflowModel.IsAgentSetGranted)
+		{
+			WorkflowModel.IsAgentSetGranted = false;
+			await DbContext.SaveChangesAsync();
+		}
+
+		StateHasChanged();
+	}
+
+	protected async Task AddGrant(SavedNode node)
+	{
+		await DataBoundApi.GrantAgentRightsToRun(CurrentUser.UserId.Id, WorkflowId, node.WorkflowStepId);
+		await Refresh();
+	}
+}

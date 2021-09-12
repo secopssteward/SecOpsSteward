@@ -1,0 +1,21 @@
+﻿<MudList Clickable="false" Dense="true">
+    @foreach (var param in ParameterCollection.Parameters)
+    {
+        <MudListItem Dense="true">
+            <ParameterEditor ReadOnly="@ReadOnly" Parameter="@param" />
+	    </MudListItem>
+    }
+</MudList>
+
+@using SecOpsSteward.Plugins.Configurable
+@code {
+
+    [Parameter]
+    public bool ReadOnly { get; set; }
+
+    [Parameter]
+    public ConfigurableObjectParameterCollection ParameterCollection { get; set; } = new ConfigurableObjectParameterCollection();
+
+    [Parameter]
+    public EventCallback<ConfigurableObjectParameterCollection> ParameterCollectionChanged { get; set; }
+}

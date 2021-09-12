@@ -1,0 +1,59 @@
+﻿@inherits LayoutComponentBase
+@layout AppEmptyLayout
+
+<CascadingValue Value="@this">
+    <MudLayout>
+        <MudAppBar Dense="true">
+            <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
+            <img src="/css/SOS_Logo_White.svg" class="mx-1" style="height:2em" title="SecOps Steward" />
+                @titleBar
+            <MudSpacer />
+                @buttonBar
+            <MudIconButton Icon="@Icons.Material.Filled.Logout" Color="Color.Inherit" Link="/signout-oidc" />
+        </MudAppBar>
+        <MudDrawer @bind-Open="@_drawerOpen" ClipMode="DrawerClipMode.Docked" Style="z-index:5000;">
+            <NavMenu/>
+        </MudDrawer>
+        @if (secondaryDrawer != null)
+        {
+            <MudMainContent Style="position:relative;padding-top: calc(var(--mud-appbar-min-height) - 16px);">
+                @secondaryDrawer
+                @Body
+            </MudMainContent>
+        }
+        else
+        {
+            <MudMainContent Style="position:relative;">
+                @Body
+            </MudMainContent>
+        }
+    </MudLayout>
+</CascadingValue>
+
+@code {
+    bool _drawerOpen = true;
+
+    void DrawerToggle()
+    {
+        _drawerOpen = !_drawerOpen;
+    }
+
+    private RenderFragment titleBar;
+    private RenderFragment buttonBar;
+    private RenderFragment secondaryDrawer;
+    private RenderFragment body;
+
+    public void SetDynamicLayout(RenderFragment titleBar, RenderFragment buttonBar, RenderFragment secondaryDrawer, RenderFragment body)
+    {
+        this.titleBar = titleBar;
+        this.buttonBar = buttonBar;
+        this.secondaryDrawer = secondaryDrawer;
+        this.body = body;
+        StateHasChanged();
+    }
+
+    public void LayoutStateHasChanged()
+    {
+        this.StateHasChanged();
+    }
+}

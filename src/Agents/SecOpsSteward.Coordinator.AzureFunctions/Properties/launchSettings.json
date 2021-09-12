@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "SecOpsSteward.Coordinator.AzureFunctions": {
+      "commandName": "Project",
+      "remoteDebugEnabled": false
+    }
+  }
+}

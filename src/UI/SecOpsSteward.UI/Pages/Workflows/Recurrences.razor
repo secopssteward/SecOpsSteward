@@ -1,0 +1,75 @@
+﻿@page "/workflows/recurrences"
+@using SecOpsSteward.UI.Pages.Workflows.Dialogs
+
+<MudContainer MaxWidth="MaxWidth.Large">
+    <h3>Workflow Recurrences</h3>
+    <MudGrid>
+        <MudItem md="12">
+            <MudPaper Elevation="2" Class="p-0">
+                <MudTable @ref="_table" Items="@WorkflowRecurrences" Hover="true" Striped="true">
+                    <HeaderContent>
+                        <MudTh></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<WorkflowRecurrenceModel, object>(x=>x.WorkflowId)">Workflow ID</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<WorkflowRecurrenceModel, object>(x=>x.Workflow.Name)">Name</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel InitialDirection="SortDirection.Descending" SortBy="new Func<WorkflowRecurrenceModel, object>(x=>x.FirstRun)">First Run</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<WorkflowRecurrenceModel, object>(x=>x.TimeBetweenRuns)">Interval</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<WorkflowRecurrenceModel, object>(x=>x.ApproversString)">Approvers</MudTableSortLabel></MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd>
+                            <MudIconButton Color="@Color.Warning" Icon="@Icons.Material.Filled.Delete" Title="Delete" OnClick="@(() => DeleteRecurrence(context))" /> 
+						</MudTd>
+                        <MudTd DataLabel="Workflow ID">@context.WorkflowId.ShortId()</MudTd>
+                        <MudTd DataLabel="Name">@context.Workflow.Name</MudTd>
+                        <MudTd DataLabel="First Run">@context.FirstRun</MudTd>
+                        <MudTd DataLabel="Interval">@context.TimeBetweenRuns</MudTd>
+                        <MudTd DataLabel="Approvers">@context.ApproversString</MudTd>
+                    </RowTemplate>
+                    <PagerContent>
+                        <MudTablePager PageSizeOptions="new int[]{10, 25, 50, 100}" />
+                    </PagerContent>
+				</MudTable>
+                <MudButton Color="Color.Primary" StartIcon="@Icons.Material.Filled.Repeat" OnClick="@CreateRecurrence" Class="mr-2 my-1">Create Recurrence</MudButton>
+			</MudPaper>
+        </MudItem>
+    </MudGrid>
+</MudContainer>
+
+@code
+{
+    private MudTable<WorkflowRecurrenceModel> _table;
+
+    protected List<WorkflowRecurrenceModel> WorkflowRecurrences { get; set; } = new List<WorkflowRecurrenceModel>();
+
+    protected override Task OnInitializedAsync() => Refresh();
+
+    protected async Task Refresh()
+    {
+        WorkflowRecurrences = await DbContext.WorkflowRecurrences.ToListAsync();
+    }
+
+    protected async Task CreateRecurrence()
+    {
+        var dlg = DialogService.Show<NewRecurrenceDialog>("Create Recurrence");
+        var result = await dlg.Result;
+        var model = result.Data as WorkflowRecurrenceModel;
+        if (model != null)
+        {
+            DbContext.WorkflowRecurrences.Add(model);
+            await DbContext.SaveChangesAsync();
+
+            await Refresh();
+        }
+    }
+
+    protected async Task DeleteRecurrence(WorkflowRecurrenceModel model)
+    {
+        var result = await DialogService.ShowMessageBox("Delete Workflow Recurrence", "Do you want to delete this workflow recurrence?", "Yes", "No");
+        if (result.GetValueOrDefault(false))
+        {
+            DbContext.WorkflowRecurrences.Remove(model);
+            await DbContext.SaveChangesAsync();
+            WorkflowRecurrences.Remove(model);
+        }
+    }
+}

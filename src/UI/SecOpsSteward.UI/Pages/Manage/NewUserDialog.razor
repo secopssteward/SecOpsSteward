@@ -1,0 +1,33 @@
+﻿<MudDialog>
+    <DialogContent>
+        <MudTextField Value="@Username" Label="Username" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Success" OnClick="@AddUser">Add User</MudButton>
+    </DialogActions>
+</MudDialog>
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+
+    protected string Username { get; set; } = string.Empty;
+
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+
+    private async Task AddUser()
+    {
+        try
+        {
+            await DataBoundApi.AddUser(Username);
+            Snackbar.Add("User enrollment successful.", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("User enrollment failed: " + ex.Message, Severity.Error);
+        }
+        MudDialog.Close(DialogResult.Ok(Username));
+    }
+}

@@ -1,0 +1,134 @@
+﻿@layout DynamicMainLayout
+@page "/workflows/viewer/{WorkflowId:guid}"
+@using SecOpsSteward.Plugins.Configurable
+@using SecOpsSteward.Shared.Messages
+@using SecOpsSteward.Data.Models
+@using SecOpsSteward.UI.Pages.Workflows.Composer
+@using SecOpsSteward.UI.Pages.Workflows.Composer.Nodes
+@using SecOpsSteward.UI.Pages.Workflows.Dialogs
+@using SecOpsSteward.UI.Shared
+
+<PageSections @ref="_sections">
+    <TitleBar>
+        @if (Workflow == null)
+        {
+            <span>
+            SecOps Steward - No Workflow Loaded
+            </span>
+        }
+        else
+        {
+            <span>
+            SecOps Steward - @Workflow.Name
+            </span>
+        }
+	</TitleBar>
+    <ButtonBar>
+        @*<MudIconButton Icon="@Icons.Material.Filled.PlayArrow" OnClick="@Execute" Disabled="@(!Workflow.IsLocked)" />*@
+        <MudIconButton Icon="@Icons.Material.Filled.PlayArrow" OnClick="@Execute" />
+        <MudIconButton Icon="@Icons.Material.Filled.Outbound" OnClick="@ExecuteOnAgent" />
+	</ButtonBar>
+    <SecondaryDrawer>
+        <SecOpsSteward.UI.Pages.Workflows.Composer.Panels.ReviewDrawer
+            ClearSelectionClicked="@(() => { ComposerComponent.ClearSelection(); SelectedNode = null; })"
+            SelectedNode="@SelectedNode" />
+	</SecondaryDrawer>
+</PageSections>
+
+<div id="workflowDiagram" Style="height:calc(100vh - 50px);">
+	<WorkflowComposerComponent @ref="ComposerComponent" NodeSelected="@((n) => { SelectedNode = n; _sections.LayoutStateHasChanged(); })" />
+</div>
+
+@code {
+    private PageSections _sections;
+
+    protected WorkflowModel Workflow { get; set; }
+
+    private WorkflowComposerComponent ComposerComponent;
+
+    protected WorkflowComposerNode SelectedNode { get; set; }
+
+    [CascadingParameter(Name = "MessageProcessor")]
+    public WorkflowMessageProcessorService MessageProcessor { get; set; }
+
+    [Parameter]
+    public Guid? WorkflowId { get; set; }
+
+    [Inject]
+    protected NavigationManager NavManager { get; set; }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (WorkflowId == null)
+            NavManager.NavigateTo("/workflows");
+        else await LoadWorkflow();
+    }
+
+    private async Task LoadWorkflow()
+    {
+        if (Workflow != null && WorkflowId == Workflow.WorkflowId) return;
+        Workflow = DbContext.Workflows.FirstOrDefault(w => w.WorkflowId == WorkflowId);
+        if (Workflow == null) NavManager.NavigateTo("/workflows");
+
+        await Task.Run(async () =>
+        {
+            await Task.Delay(500);
+            await InvokeAsync(() => ComposerComponent.Load(Workflow));
+        });
+    }
+
+    private async Task Execute()
+    {
+        MessageProcessor.SetExecutionApproval(async a => await GetApproval(a));
+
+        var steps = ComposerComponent.CreateStepCollectionFromWorkflow();
+        steps.ForEach(s => s.RunningEntity = CurrentUser.UserId);
+
+        var wfGuid = await MessageProcessor.EnqueueImmediateRun(steps);
+        MessageProcessor.SubscribeStepReceipt(async s =>
+        {
+            await InvokeAsync(() => { ComposerComponent.ConsumeStepReceipt(s); });
+        });
+        MessageProcessor.SubscribeWorkflowReceipt(async s =>
+        {
+            await InvokeAsync(() =>
+            {
+                ComposerComponent.ConsumeStepReceipt(s.Receipts.Last());
+                if (s.WorkflowComplete)
+                    MessageProcessor.SetExecutionApproval(null);
+            });
+        });
+    }
+
+    private async Task ExecuteOnAgent()
+    {
+        var steps = ComposerComponent.CreateStepCollectionFromWorkflow();
+        var wfGuid = await MessageProcessor.EnqueueImmediateRun(steps);
+        MessageProcessor.SubscribeStepReceipt(async s =>
+        {
+            await InvokeAsync(() => { ComposerComponent.ConsumeStepReceipt(s); });
+        });
+        MessageProcessor.SubscribeWorkflowReceipt(async s =>
+        {
+            await InvokeAsync(() =>
+            {
+                ComposerComponent.ConsumeStepReceipt(s.Receipts.Last());
+                if (s.WorkflowComplete)
+                    MessageProcessor.SetExecutionApproval(null);
+            });
+        });
+    }
+
+    private async Task<bool> GetApproval(EncryptedMessageEnvelope envelope)
+    {
+        bool result = false;
+        await InvokeAsync(async () =>
+        {
+            var dlg = DialogService.Show<ExecutionApprovalDialog>();
+            var dlgResult = await dlg.Result;
+            if (dlgResult.Cancelled || dlgResult.Data as bool? != true) result = false;
+            result = true;
+        });
+        return result;
+    }
+}

@@ -1,0 +1,179 @@
+﻿@page "/manage/packages"
+@using SecOpsSteward.Shared.Cryptography
+@using SecOpsSteward.Shared.Packaging
+@using SecOpsSteward.Shared.Packaging.Metadata
+
+<MudContainer MaxWidth="MaxWidth.Large">
+    <h3>Installed Packages</h3>
+    <MudGrid>
+        <MudItem md="12">
+            <MudPaper Elevation="2" Class="p-0">
+                <MudButton @onclick="@(() => Task.WhenAll(LocalSelectedContainerModels.Select(m => RemovePackage(m))))">Delete Selected Packages</MudButton>
+
+                @* Want to add   GroupBy="@_groupDefinition"   but it breaks :( *@
+                <MudTable T="ContainerModel" 
+                          Items="@LocalContainerModels" 
+                          MultiSelection="true" Hover="true" Striped="true" Dense="true"
+                          @bind-SelectedItems="@LocalSelectedContainerModels">
+                    <HeaderContent>
+                        <MudTh><MudTableSortLabel SortBy="new Func<ContainerModel, object>(x=>x.ContainerId)">Container ID</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel InitialDirection="SortDirection.Ascending"  SortBy="new Func<ContainerModel, object>(x=>x.Version)">Version</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<ContainerModel, object>(x=>x.ManagedServices.First().Name)">Services</MudTableSortLabel></MudTh>
+                        <MudTh>Plugins</MudTh>
+                    </HeaderContent>
+
+                    <RowTemplate>
+                        <MudTd DataLabel="Plugin ID">@context.ContainerId.ShortId()</MudTd>
+                        <MudTd DataLabel="Version">@context.Version</MudTd>
+                        <MudTd DataLabel="Services">
+                            @foreach (var s in context.ManagedServices)
+                            {
+                                <p>@s.Name</p>
+                            }
+                        </MudTd>
+                        <MudTd DataLabel="Plugins">
+                            @foreach (var s in context.ManagedServices.SelectMany(ms => ms.Plugins))
+                            {
+                                <p>@s.Name</p>
+                            }
+                        </MudTd>
+                    </RowTemplate>
+                    <PagerContent>
+                        <MudTablePager PageSizeOptions="new int[]{10, 25, 50}" />
+                    </PagerContent>
+				</MudTable>
+			</MudPaper>
+        </MudItem>
+
+        
+        <h3 class="mt-2">Public Packages</h3>
+        <MudItem md="12">
+            <MudPaper Elevation="2" Class="p-0">
+
+                <MudButton @onclick="@(() => Task.WhenAll(PublicSelectedContainerModels.Select(m => TransferPackage(m))))">Install Selected Packages</MudButton>
+
+                @* Want to add   GroupBy="@_groupDefinition"   but it breaks :( *@
+                <MudTable T="ContainerModel" 
+                          Items="@PublicContainerModels"
+                          MultiSelection="true" Hover="true" Striped="true" Dense="true"
+                          @bind-SelectedItems="@PublicSelectedContainerModels">
+                    <HeaderContent>
+                        <MudTh><MudTableSortLabel SortBy="new Func<ContainerModel, object>(x=>x.ContainerId)">Container ID</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel InitialDirection="SortDirection.Ascending"  SortBy="new Func<ContainerModel, object>(x=>x.Version)">Version</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<ContainerModel, object>(x=>x.ManagedServices.First().Name)">Services</MudTableSortLabel></MudTh>
+                        <MudTh>Plugins</MudTh>
+                    </HeaderContent>
+
+                    <RowTemplate>
+                        <MudTd DataLabel="Plugin ID">@context.ContainerId.ShortId()</MudTd>
+                        <MudTd DataLabel="Version">@context.Version</MudTd>
+                        <MudTd DataLabel="Services">
+                            @foreach (var s in context.ManagedServices)
+                            {
+                                <p>@s.Name</p>
+                            }
+                        </MudTd>
+                        <MudTd DataLabel="Plugins">
+                            @foreach (var s in context.ManagedServices.SelectMany(ms => ms.Plugins))
+                            {
+                                <p>@s.Name</p>
+                            }
+                        </MudTd>
+                    </RowTemplate>
+
+                    <PagerContent>
+                        <MudTablePager PageSizeOptions="new int[]{10, 25, 50}" />
+                    </PagerContent>
+				</MudTable>
+			</MudPaper>
+        </MudItem>
+    </MudGrid>
+</MudContainer>
+
+@inject IPackageRepository PackageRepo
+@inject PublicPackageRepository PackageService
+@code
+{
+    private Dictionary<string, ContainerMetadata> PublicPackageModelUrls { get; set; } = new Dictionary<string, ContainerMetadata>();
+
+    protected byte[] IndexKey { get; set; }
+
+    public List<ContainerModel> LocalContainerModels { get; set; } = new List<ContainerModel>();
+    public HashSet<ContainerModel> LocalSelectedContainerModels { get; set; } = new HashSet<ContainerModel>();
+
+    public List<ContainerModel> PublicContainerModels { get; set; } = new List<ContainerModel>();
+    public HashSet<ContainerModel> PublicSelectedContainerModels { get; set; } = new HashSet<ContainerModel>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Refresh();
+    }
+
+    private async Task Refresh(bool localOnly = false)
+    {
+        StateHasChanged();
+
+        await Task.Run(async () =>
+        {
+            if (!localOnly)
+            {
+                // get public packages
+                IndexKey = await PackageService.GetIndexKey();
+                PublicPackageModelUrls = await PackageService.ListPackages();
+                PublicContainerModels = PublicPackageModelUrls.Select(u => ContainerModel.FromMetadata(u.Value)).ToList();
+            }
+
+            // get local packages
+            LocalContainerModels = await DbContext.Containers.Include(c => c.ManagedServices).ToListAsync();
+
+            // resolve differences
+            PublicContainerModels.RemoveAll(pub => LocalContainerModels.Any(local => pub.ContainerId == local.ContainerId));
+            LocalContainerModels.RemoveAll(pub => PublicContainerModels.Any(local => pub.ContainerId == local.ContainerId));
+        });
+
+        StateHasChanged();
+    }
+
+    protected async Task TransferPackage(ContainerModel metadata, string url = null)
+    {
+        await Task.Yield();
+        if (string.IsNullOrEmpty(url))
+            url = PublicPackageModelUrls.First(u => u.Value.ContainerId.Id == metadata.ContainerId).Key;
+
+        ChimeraContainer pkg = null;
+        Snackbar.Add("Installing package '" + metadata.ContainerId.ShortId() + "' (" + string.Join(", ", metadata.ManagedServices.Select(m => m.Name)) + ")", Severity.Normal);
+        _ = TryExecute(async () =>
+        {
+            pkg = await PackageService.GetPackage(url);
+            if (!pkg.GetMetadata().PubliclyVerify(IndexKey))
+            {
+                throw new Exception("Package key invalid");
+            }
+
+            await DataBoundApi.AddPackage(pkg);
+        }, "Package installed", "Package installation failed");
+
+        StateHasChanged();
+    }
+    
+    protected Task RemovePackage(ContainerModel c) => TryExecute(()=> DataBoundApi.RemovePackage(c.ContainerId), "Package removal completed", "Package removal failed");
+
+    private async Task TryExecute(Func<Task> task, string success, string failure)
+    {
+        await Task.Yield();
+        _ = Task.Run(async() =>
+        {
+            try
+            {
+                await task();
+                await InvokeAsync(() => Snackbar.Add(success, Severity.Success));
+            }
+            catch (Exception ex)
+            {
+                await InvokeAsync(() => Snackbar.Add(failure + ": " + ex.Message, Severity.Error));
+                throw;
+            }
+            await InvokeAsync(async() => await Refresh(localOnly:true));
+        });
+    }
+}

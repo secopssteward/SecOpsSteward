@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net5.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Azure.Storage.Blobs" Version="12.9.1" />
+    <PackageReference Include="McMaster.NETCore.Plugins" Version="1.4.0" />
+    <PackageReference Include="Spectre.Console" Version="0.41.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Core\SecOpsSteward.Shared\SecOpsSteward.Shared.csproj" />
+  </ItemGroup>
+  
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="copy /Y $(TargetDir)\* $(ProjectDir)\..\..\..\tools\packaging" />
+  </Target>
+
+</Project>
