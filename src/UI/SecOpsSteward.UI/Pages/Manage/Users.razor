@@ -1,11 +1,26 @@
 ﻿@page "/manage/users"
 
+<PageSections>
+    <HelpDrawer>
+        <MudText Typo="Typo.h6">User List</MudText>
+        <MudText Typo="Typo.body2" Class="mb-4">
+            This page displays all of the Users enrolled in the system. It can also enroll new Users.
+        </MudText>
+        <MudText Typo="Typo.body2" Class="mb-4">
+            Users in this table can access the SecOps Steward Web UI and control plane.
+            There is no additional role-based access control at this time.
+        </MudText>
+    </HelpDrawer>
+</PageSections>
+
 <MudContainer MaxWidth="MaxWidth.Large">
-    <h3>Users</h3>
     <MudGrid>
         <MudItem md="12" lg="@((SelectedModel != null ? 6 : 12))">
             <MudPaper Elevation="2" Class="p-0" Style="text-align:right;">
                 <MudTable @ref="_table" Elevation="0" Items="@UserModels" @bind-SelectedItem="@SelectedModel" Hover="true" Striped="true">
+                    <ToolBarContent>
+                        <MudText Typo="Typo.h6">Users</MudText>
+                    </ToolBarContent>
                     <HeaderContent>
                         <MudTh><MudTableSortLabel SortBy="new Func<UserModel, object>(x=>x.UserId)">User ID</MudTableSortLabel></MudTh>
                         <MudTh><MudTableSortLabel InitialDirection="SortDirection.Ascending" SortBy="new Func<UserModel, object>(x=>x.Username)">Username</MudTableSortLabel></MudTh>

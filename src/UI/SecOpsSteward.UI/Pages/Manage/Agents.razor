@@ -1,14 +1,31 @@
 ﻿@page "/manage/agents"
 
+<PageSections>
+    <HelpDrawer>
+        <MudText Typo="Typo.h6">Agent List</MudText>
+        <MudText Typo="Typo.body2" Class="mb-4">
+            This page allows you to list and edit the Agents which perform the actions associated with a Plugin.
+        </MudText>
+
+        <IconHelp Color="@Color.Primary" Icon="@Icons.Material.Filled.AddChart"
+                  Header="Enroll Agent">
+                  You can click this button to select an Azure Function which contains the infrastructure for an agent.
+                  This can be deployed using the <pre class="d-inline">deploy-agent.ps1</pre> script in the repository.
+        </IconHelp>
+    </HelpDrawer>
+</PageSections>
+
 <MudContainer MaxWidth="MaxWidth.Large">
-    <h3>Workflows</h3>
     <MudGrid>
         <MudItem md="12" lg="@((SelectedModel != null ? 6 : 12))">
             <MudPaper Elevation="2" Class="p-0" Style="text-align:right;">
                 <MudTable @ref="_table" Elevation="0" Items="@AgentModels" @bind-SelectedItem="@SelectedModel" Hover="true" Striped="true">
+                    <ToolBarContent>
+                        <MudText Typo="Typo.h6">Agents</MudText>
+                    </ToolBarContent>
                     <HeaderContent>
                         <MudTh><MudTableSortLabel SortBy="new Func<AgentModel, object>(x=>x.AgentId)">Agent ID</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel InitialDirection="SortDirection.Ascending"  SortBy="new Func<AgentModel, object>(x=>x.Tag)">Tag</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel InitialDirection="SortDirection.Ascending" SortBy="new Func<AgentModel, object>(x=>x.Tag)">Tag</MudTableSortLabel></MudTh>
                         <MudTh></MudTh>
                     </HeaderContent>
                     <RowTemplate>

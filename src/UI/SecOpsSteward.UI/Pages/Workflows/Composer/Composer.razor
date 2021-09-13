@@ -52,6 +52,33 @@
             ClearSelectionClicked="@ClearSelectionClicked"
             SelectedNode="@SelectedNode" />
 	</SecondaryDrawer>
+    <HelpDrawer>
+        <MudText Typo="Typo.h6">Workflow Composer</MudText>
+        <MudText Typo="Typo.body2" Class="mb-4">
+            This provides a drag-and-drop workspace for creating Workflows. It is the heart of SecOps Steward
+            and is used to configure individual Plugins and the sequence in which they execute.
+        </MudText>
+        <MudText Typo="Typo.body2" Class="mb-4">
+            Use the options at the left to insert components for the service they are listed under.
+        </MudText>
+        <MudText Typo="Typo.body2" Class="mb-4">
+            Clicking on the Plugin node in the workspace will display its Properties on the left under the Add Component
+            control. You can configure and name that node here, or use the Resource Selector to configure the resource from
+            an existing Azure resource in your subscription.
+        </MudText>
+        <MudText Typo="Typo.body2" Class="mb-4">
+            The Workflow can be named based on what you're trying to accomplish with the <MudIconButton Icon="@Icons.Material.Filled.Edit" Class="icon-baseline-adjustment" /> icon
+            to the right of the workflow name, listed at the top left.
+        </MudText>
+        <MudText Typo="Typo.body2" Class="mb-4">
+            You can also try to discover related resources by using the <MudIconButton Icon="@Icons.Material.Filled.Search" Class="icon-baseline-adjustment" /> icon
+            at the upper right.
+        </MudText>
+        <MudText Typo="Typo.body2" Class="mb-4">
+            When you're satisfied with your workflow, or just want to come back to it later, save it by clicking the <MudIconButton Icon="@Icons.Material.Filled.Save" Class="icon-baseline-adjustment" /> icon
+            at the upper right.
+        </MudText>
+    </HelpDrawer>
 </PageSections>
 
 <div id="workflowDiagram" Style="height:calc(100vh - 50px);">

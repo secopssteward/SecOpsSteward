@@ -20,8 +20,6 @@ using SecOpsSteward.Shared.Packaging;
 using SecOpsSteward.Shared.Roles;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace SecOpsSteward.UI
 {
@@ -35,6 +33,7 @@ namespace SecOpsSteward.UI
 
         public IConfiguration Configuration { get; }
 
+        public static bool FirstRun { get; set; } = false;
         public static Startup Instance { get; private set; }
         public bool RunDemoMode => Configuration.GetValue("RunDemoMode", false);
         public bool HasAuthConfiguration => !RunDemoMode && Configuration.GetSection("AzureAd").Exists();
@@ -188,31 +187,6 @@ namespace SecOpsSteward.UI
                 endpoints.MapBlazorHub();
                 endpoints.MapFallbackToPage("/_Host");
             });
-
-            // --- Dummy mode ---
-            if (UseDummyServices)
-            {
-                Task.Delay(1000).Wait();
-                using (var cxt = serviceProvider.GetRequiredService<SecOpsStewardDbContext>())
-                {
-                    var api = serviceProvider.GetRequiredService<DataBoundApi>();
-
-                    if (!cxt.Agents.Any())
-                    {
-                        Task.WhenAll(
-                            api.AddAgent("Sample A", Guid.NewGuid()),
-                            api.AddAgent("Sample B", Guid.NewGuid())).GetAwaiter().GetResult();
-                    }
-
-                    if (!cxt.Users.Any())
-                    {
-                        Task.WhenAll(
-                            api.AddUser(TokenOwner.Create(null, false)),
-                            api.AddUser("bob"),
-                            api.AddUser("jane")).GetAwaiter().GetResult();
-                    }
-                }
-            }
         }
     }
 }

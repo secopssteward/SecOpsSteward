@@ -3,7 +3,41 @@
 
 /* ----------------------------------------------------------- */
 
-body,html { font-family: Raleway, sans-serif; }
+#instructions {
+    position: fixed;
+    left: 50%;
+}
+
+#a, #b {
+    color: white;
+    text-align: center;
+    padding: 10px;
+    position: fixed;
+    width: 100px;
+    height: 20px;
+    left: 100px;
+}
+
+#a {
+    background-color: blue;
+    top: 20px;
+}
+
+#b {
+    background-color: red;
+    top: 150px;
+}
+
+
+
+.icon-baseline-adjustment {
+    position: relative;
+    top: 0.2em;
+}
+
+body, html {
+    font-family: Raleway, sans-serif;
+}
 
 a, .btn-link {
     color: #0366d6;

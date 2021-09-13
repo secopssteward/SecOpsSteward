@@ -3,18 +3,36 @@
 @using SecOpsSteward.Shared.Packaging
 @using SecOpsSteward.Shared.Packaging.Metadata
 
+<PageSections>
+    <HelpDrawer>
+        <MudText Typo="Typo.h6">Package List</MudText>
+        <MudText Typo="Typo.body2" Class="mb-4">
+            This page allows you to list the Packages which are installed in the system and install new Packages from the
+            publicly available package repository. Source code for all public plugins can be found in the source control 
+            repository.
+        </MudText>
+        <MudText Typo="Typo.body2" Class="mb-4">
+            A Package contains at least one Managed Service, which describes a resource which is targeted by Plugins.
+            It also contains at least one Plugin, which performs a specific action against a resource with a given configuration.
+            Finally, packaged Managed Services can contain Templates, a collection of multiple Plugins which operate together
+            to perform a larger action. One example might be rotating a service out of availability and back into it later.
+        </MudText>
+    </HelpDrawer>
+</PageSections>
+
 <MudContainer MaxWidth="MaxWidth.Large">
-    <h3>Installed Packages</h3>
     <MudGrid>
         <MudItem md="12">
             <MudPaper Elevation="2" Class="p-0">
-                <MudButton @onclick="@(() => Task.WhenAll(LocalSelectedContainerModels.Select(m => RemovePackage(m))))">Delete Selected Packages</MudButton>
-
-                @* Want to add   GroupBy="@_groupDefinition"   but it breaks :( *@
                 <MudTable T="ContainerModel" 
                           Items="@LocalContainerModels" 
                           MultiSelection="true" Hover="true" Striped="true" Dense="true"
                           @bind-SelectedItems="@LocalSelectedContainerModels">
+                    <ToolBarContent>
+                        <MudText Typo="Typo.h6">Installed Packages</MudText>
+                        <MudSpacer />
+                        <MudButton @onclick="@(() => Task.WhenAll(LocalSelectedContainerModels.Select(m => RemovePackage(m))))">Delete Selected Packages</MudButton>
+                    </ToolBarContent>
                     <HeaderContent>
                         <MudTh><MudTableSortLabel SortBy="new Func<ContainerModel, object>(x=>x.ContainerId)">Container ID</MudTableSortLabel></MudTh>
                         <MudTh><MudTableSortLabel InitialDirection="SortDirection.Ascending"  SortBy="new Func<ContainerModel, object>(x=>x.Version)">Version</MudTableSortLabel></MudTh>
@@ -46,17 +64,17 @@
         </MudItem>
 
         
-        <h3 class="mt-2">Public Packages</h3>
-        <MudItem md="12">
+        <MudItem md="12" Class="mt-3">
             <MudPaper Elevation="2" Class="p-0">
-
-                <MudButton @onclick="@(() => Task.WhenAll(PublicSelectedContainerModels.Select(m => TransferPackage(m))))">Install Selected Packages</MudButton>
-
-                @* Want to add   GroupBy="@_groupDefinition"   but it breaks :( *@
                 <MudTable T="ContainerModel" 
                           Items="@PublicContainerModels"
                           MultiSelection="true" Hover="true" Striped="true" Dense="true"
                           @bind-SelectedItems="@PublicSelectedContainerModels">
+                    <ToolBarContent>
+                        <MudText Typo="Typo.h6">Available Public Packages</MudText>
+                        <MudSpacer />
+                        <MudButton @onclick="@(() => Task.WhenAll(PublicSelectedContainerModels.Select(m => TransferPackage(m))))">Install Selected Packages</MudButton>
+                    </ToolBarContent>
                     <HeaderContent>
                         <MudTh><MudTableSortLabel SortBy="new Func<ContainerModel, object>(x=>x.ContainerId)">Container ID</MudTableSortLabel></MudTh>
                         <MudTh><MudTableSortLabel InitialDirection="SortDirection.Ascending"  SortBy="new Func<ContainerModel, object>(x=>x.Version)">Version</MudTableSortLabel></MudTh>

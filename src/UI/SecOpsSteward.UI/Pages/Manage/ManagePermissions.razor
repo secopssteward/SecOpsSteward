@@ -1,4 +1,7 @@
 ﻿<MudTable @ref="_table" Items="@PermissionModels" @bind-SelectedItem="@SelectedModel" RowEditCommit="@(async (a) => await AddPermission(SelectedModel))">
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">Permissions</MudText>
+    </ToolBarContent>
     <HeaderContent>
         @if (!StartedWithAgent)
         {

@@ -4,6 +4,44 @@
 @using SecOpsSteward.Data.Workflow
 @using SecOpsSteward.UI.Pages.Workflows.Dialogs
 
+<PageSections>
+    <HelpDrawer>
+        <MudText Typo="Typo.h6">Workflow List</MudText>
+        <MudText Typo="Typo.body2" Class="mb-4">
+            This page allows you to review the Workflows registered with SecOps Steward.
+            Each row has a series of icons which can be used to perform a variety of operations:
+        </MudText>
+
+        <IconHelp Color="@Color.Primary" Icon="@Icons.Material.Filled.Edit"
+                  Header="Edit Workflow">
+                  If the Workflow is not locked, you can use this button to make changes to it.
+        </IconHelp>
+
+        <IconHelp Color="@Color.Tertiary" Icon="@Icons.Material.Filled.Preview"
+                  Header="View Workflow">
+                  View the current layout of the workflow. This also allows you to run the workflow manually, either via the Agent or as the authenticated user.
+        </IconHelp>
+
+        <IconHelp Color="@Color.Error" Icon="@Icons.Material.Filled.Delete"
+                  Header="Delete Workflow">
+                  Remove the workflow from the SecOps Steward system. If this has been locked and run, the details behind past runs will remain in the database. This action is permanent.
+        </IconHelp>
+
+        <IconHelp Color="@Color.Success" Icon="@Icons.Material.Filled.Lock"
+                  SecondColor="@Color.Error" SecondIcon="@Icons.Material.Filled.LockOpen"
+                  Header="Workflow Locked/Unlocked">
+                  These icons indicate if the Workflow is or is not locked, respectively. Only locked Workflows may be used automatically. By
+                  locking a Workflow, you are signing off on the safety and accuracy of its content and parameters. Once a Workflow is locked, it cannot be changed or unlocked.
+        </IconHelp>
+
+        <IconHelp Color="@Color.Success" Icon="@Icons.Material.Filled.ThumbUp"
+                  SecondColor="@Color.Error" SecondIcon="@Icons.Material.Filled.StopCircle"
+                  Header="Workflow Rights Granted">
+                  This icon indicates whether the appropriate access rights for the plugins in the workflow have been granted to the Agents configured to run them.
+                  Clicking this will bring you to a page with more details about the required access.
+        </IconHelp>
+    </HelpDrawer>
+</PageSections>
 <MudContainer MaxWidth="MaxWidth.Large">
     <h3>Workflows</h3>
     <MudGrid>
@@ -35,7 +73,7 @@
                             @if (!DbContext.WorkflowExecutions.Any(e => e.WorkflowId == context.WorkflowId))
                             {
                                 <MudTooltip Text="Delete Workflow">
-                                    <MudIconButton Color="@Color.Warning" Icon="@Icons.Material.Filled.Delete" Title="Edit" OnClick="@(() => DeleteWorkflow(context))" /> 
+                                    <MudIconButton Color="@Color.Error" Icon="@Icons.Material.Filled.Delete" Title="Edit" OnClick="@(() => DeleteWorkflow(context))" /> 
                                 </MudTooltip>
                             }
 

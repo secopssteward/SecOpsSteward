@@ -3,12 +3,17 @@
 
 <CascadingValue Value="@this">
     <MudLayout>
-        <MudAppBar Dense="true" Style="z-index:50000">
+        <MudAppBar Dense="true">
             <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
             <img src="/css/SOS_Logo_White.svg" class="ml-1 mr-5" style="height:2em" title="SecOps Steward" />
                 @titleBar
             <MudSpacer />
                 @buttonBar
+
+            @{var helpColor = _helpDrawerOpen ? Color.Primary : Color.Inherit;}
+            <MudTooltip Text="Contextual help for this page">
+                <MudIconButton Disabled="@(helpContent == null)" Icon="@Icons.Material.Filled.HelpOutline" Color="@helpColor" OnClick="@HelpDrawerToggle" id="helpCircleIcon" />
+            </MudTooltip>
             <MudIconButton Icon="@Icons.Material.Filled.Logout" Color="Color.Inherit" Link="/signout-oidc" />
         </MudAppBar>
         <MudDrawer @bind-Open="@_drawerOpen" ClipMode="DrawerClipMode.Docked" Style="z-index:5000;">
@@ -27,28 +32,42 @@
                 @Body
             </MudMainContent>
         }
+        @if (helpContent != null)
+        {
+            <HelpDrawerComponent @bind-HelpDrawerOpen="@_helpDrawerOpen">
+                @helpContent
+            </HelpDrawerComponent>
+        }
     </MudLayout>
 </CascadingValue>
 
 @code {
     bool _drawerOpen = true;
+    bool _helpDrawerOpen = false;
 
     void DrawerToggle()
     {
         _drawerOpen = !_drawerOpen;
     }
+    void HelpDrawerToggle()
+    {
+        _helpDrawerOpen = !_helpDrawerOpen;
+    }
 
+    private bool _hasHelpContent;
     private RenderFragment titleBar;
     private RenderFragment buttonBar;
     private RenderFragment secondaryDrawer;
     private RenderFragment body;
+    private RenderFragment helpContent;
 
-    public void SetDynamicLayout(RenderFragment titleBar, RenderFragment buttonBar, RenderFragment secondaryDrawer, RenderFragment body)
+    public void SetDynamicLayout(RenderFragment titleBar, RenderFragment buttonBar, RenderFragment secondaryDrawer, RenderFragment body, RenderFragment helpContent)
     {
         this.titleBar = titleBar;
         this.buttonBar = buttonBar;
         this.secondaryDrawer = secondaryDrawer;
         this.body = body;
+        this.helpContent = helpContent;
         StateHasChanged();
     }
 

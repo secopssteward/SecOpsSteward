@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Components;
+using System.Threading.Tasks;
 
 namespace SecOpsSteward.UI.Shared
 {
@@ -19,9 +20,15 @@ namespace SecOpsSteward.UI.Shared
         [Parameter]
         public RenderFragment Body { get; set; }
 
+        [Parameter]
+        public RenderFragment HelpDrawer { get; set; }
+
+        [Inject]
+        public NavigationManager NavMgr { get; set; }
+
         protected override void OnInitialized()
         {
-            Layout.SetDynamicLayout(TitleBar, ButtonBar, SecondaryDrawer, Body);
+            Layout.SetDynamicLayout(TitleBar, ButtonBar, SecondaryDrawer, Body, HelpDrawer);
         }
 
         public void LayoutStateHasChanged()

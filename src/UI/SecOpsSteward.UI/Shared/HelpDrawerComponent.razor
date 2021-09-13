@@ -1,0 +1,20 @@
+﻿<MudDrawer @bind-Open="@HelpDrawerOpen" Anchor="Anchor.Right" Elevation="2" Fixed="true" ClipMode="DrawerClipMode.Docked" Variant="@DrawerVariant.Temporary"
+            Style="padding-top: var(--mud-appbar-min-height)" Class="px-4" Width="25em">
+    @ChildContent
+    <div style="border-top: 1px #ddd solid;padding: 1em 0 1em 0;position: absolute;bottom: 0;right: 0;left: 0;text-align: center;background: var(--mud-palette-background-grey);">
+        <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Public" Link="https://www.secopssteward.com" Color="Color.Secondary">Website</MudButton>
+        <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.MenuBook" Link="https://docs.secopssteward.com" Color="Color.Tertiary">Documentation</MudButton>
+    </div>
+</MudDrawer>
+
+@code
+{
+    [Parameter]
+    public bool HelpDrawerOpen { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> HelpDrawerOpenChanged { get; set; }
+
+    [Parameter]
+    public RenderFragment ChildContent { get; set; }
+}
