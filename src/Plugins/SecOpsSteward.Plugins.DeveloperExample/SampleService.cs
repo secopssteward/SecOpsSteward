@@ -23,6 +23,9 @@ namespace SecOpsSteward.Plugins.DeveloperExample
         public string Location { get; set; }
     }
 
+    [ElementDescription(
+        "Developer Sample Service",
+        "Shows developers how to use ManagedServices")]
     public class SampleService : SOSManagedService<SampleServiceConfiguration>
     {
         public override ManagedServiceRole Role => ManagedServiceRole.Hybrid;
@@ -99,8 +102,7 @@ namespace SecOpsSteward.Plugins.DeveloperExample
                 {
                     // Map from the template configuration's values to the various plugin values. This can be useful
                     // for templates which have multiple plugins which share template config values.
-                    { nameof(SampleTemplateConfiguration.MappedValue), nameof(SamplePluginConfiguration.Color) },
-                    { nameof(SampleTemplateConfiguration.MappedValue), nameof(SamplePluginConfiguration.PetName) }
+                    { nameof(SampleTemplateConfiguration.MappedValue), nameof(SamplePluginConfiguration.Color) }
                 }),
 
                 // If there is something that can happen after this, specify it here.

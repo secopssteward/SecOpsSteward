@@ -100,7 +100,7 @@ namespace SecOpsSteward.Plugins.Azure.AppServices.Functions
                 .RunWorkflowStep<SetFunctionConfiguration>(
                     nameof(SetFunctionConfigurationConfiguration.FunctionAppName).MapsTo(nameof(SetFunctionConfigurationConfiguration.FunctionAppName)),
                     nameof(SetFunctionConfigurationConfiguration.Name).MapsTo(nameof(SetFunctionConfigurationConfiguration.Name)),
-                    nameof(SetFunctionConfigurationConfiguration.FunctionAppName).MapsTo(nameof(SetFunctionConfigurationConfiguration.Value)));
+                    nameof(SetFunctionConfigurationConfiguration.Value).MapsTo(nameof(SetFunctionConfigurationConfiguration.Value)));
 
 
         protected AzureCurrentCredentialFactory PlatformFactory { get; set; }

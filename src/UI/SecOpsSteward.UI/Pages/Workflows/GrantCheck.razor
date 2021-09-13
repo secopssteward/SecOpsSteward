@@ -2,6 +2,7 @@
 @using System.Text.Json
 @using SecOpsSteward.Data.Workflow
 @using SecOpsSteward.UI.Pages.Workflows.Composer.Nodes
+@using SecOpsSteward.UI.Pages.Workflows.Dialogs
 
 @if (Workflow != null)
 {
@@ -30,9 +31,9 @@
 							}
 							else
 							{
-								<MudButton OnClick="@(() => AddGrant(context))" Disabled="@(!context.Parameters.GrantScopeValuesPopulated)">
-									<MudIcon Color="Color.Error" Icon="@Icons.Material.Filled.ThumbDown" />
-								</MudButton>
+								<MudIconButton Color="Color.Error" Icon="@Icons.Material.Filled.ThumbDown" 
+											    OnClick="@(() => AddGrant(context))" Variant="@(context.Parameters.GrantScopeValuesPopulated ? Variant.Outlined : Variant.Text)" 
+												Disabled="@(!context.Parameters.GrantScopeValuesPopulated)" />
 							}
 						</MudTd>
 					</RowTemplate>
@@ -41,7 +42,7 @@
 					</PagerContent>
 				</MudTable>
 				<MudButton Color="Color.Primary" StartIcon="@Icons.Material.Filled.SelectAll" 
-						    OnClick="@(async (a) => { foreach(var n in Workflow.Nodes) await AddGrant(n); })" Class="mr-2 my-1">Grant All</MudButton>
+						    OnClick="@(async (a) => { await AddAllGrants(); })" Class="mr-2 my-1">Grant All</MudButton>
 			</MudPaper>
 		</MudItem>
     </MudGrid>
@@ -88,7 +89,34 @@
 
 	protected async Task AddGrant(SavedNode node)
 	{
-		await DataBoundApi.GrantAgentRightsToRun(CurrentUser.UserId.Id, WorkflowId, node.WorkflowStepId);
-		await Refresh();
+		var dialogParams = new DialogParameters();
+        dialogParams.Add(nameof(GrantDialog.PluginId), new ChimeraPackageIdentifier(node.PackageId));
+		dialogParams.Add(nameof(GrantDialog.Configuration), node.Parameters);
+		var dlg = DialogService.Show<GrantDialog>("Grant Rights?", dialogParams);
+		var dlgResult = await dlg.Result;
+
+		if (dlgResult.Data != null && (bool)dlgResult.Data)
+		{
+			Snackbar.Add("Granting access for " + node.PackageId.ShortId(), Severity.Normal);
+			await DataBoundApi.GrantAgentRightsToRun(CurrentUser.UserId.Id, WorkflowId, node.WorkflowStepId);
+			await Refresh();
+			Snackbar.Add("Access grant for " + node.PackageId.ShortId() + " complete", Severity.Normal);
+		}
+	}
+
+	protected async Task AddAllGrants()
+	{
+		var dialogParams = new DialogParameters();
+        dialogParams.Add(nameof(BulkGrantDialog.Workflow), Workflow);
+		var dlg = DialogService.Show<BulkGrantDialog>("Grant All Rights?", dialogParams);
+		var dlgResult = await dlg.Result;
+
+		if (dlgResult.Data != null && (bool)dlgResult.Data)
+		{
+			Snackbar.Add("Granting access for workflow " + WorkflowModel.Name, Severity.Normal);
+			await Task.WhenAll(Workflow.Nodes.Select(async (n) => await DataBoundApi.GrantAgentRightsToRun(CurrentUser.UserId.Id, WorkflowId, n.WorkflowStepId)));
+			await Refresh();
+			Snackbar.Add("Access grant for workflow " + WorkflowModel.Name + " complete", Severity.Normal);
+		}
 	}
 }

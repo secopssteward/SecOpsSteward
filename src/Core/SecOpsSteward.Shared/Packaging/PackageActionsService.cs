@@ -58,6 +58,17 @@ namespace SecOpsSteward.Shared.Packaging
 
         // -----
 
+        public Task<IEnumerable<PluginRbacRequirements>> GetRbacRequirements(ChimeraPackageIdentifier pluginId, ConfigurableObjectParameterCollection configuration) =>
+            GetRbacRequirements(pluginId, configuration.AsSerializedString());
+
+        public async Task<IEnumerable<PluginRbacRequirements>> GetRbacRequirements(ChimeraPackageIdentifier pluginId, string configuration)
+        {
+            var plugin = await GetPlugin(pluginId, configuration);
+            return plugin.RbacRequirements;
+        }
+
+        // -----
+
         public Task Grant(ChimeraPackageIdentifier pluginId, ConfigurableObjectParameterCollection configuration, string identity) =>
             Grant(pluginId, configuration.AsSerializedString(), identity);
 

@@ -79,6 +79,7 @@
     protected IDbContextFactory<SecOpsStewardDbContext> DbContextFactory { get; set; }
 
     private bool _loading = false;
+    private bool _newWf = false;
     protected override async Task OnInitializedAsync()
     {
         if (WorkflowId == null) return;
@@ -108,7 +109,9 @@
                     Workflow = new WorkflowModel() { WorkflowId = WorkflowId.GetValueOrDefault(Guid.NewGuid()) };
                     if (!DbContext.Workflows.Local.Any(wf => wf.WorkflowId == Workflow.WorkflowId))
                         DbContext.Workflows.Add(Workflow);
+                    _newWf = true;
                 }
+                else _newWf = false;
 
                 await Task.Run(async () =>
                 {
@@ -150,6 +153,9 @@
     private async Task SaveChanges()
     {
         var updatedWorkflow = ComposerComponent.Save();
+
+        if (!_newWf)
+            Workflow = await DbContext.Workflows.FirstAsync(w => w.WorkflowId == WorkflowId);
 
         Workflow.WorkflowJson = updatedWorkflow;
         await DbContext.SaveChangesAsync();
