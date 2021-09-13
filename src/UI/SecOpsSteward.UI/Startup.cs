@@ -122,7 +122,7 @@ namespace SecOpsSteward.UI
             services.AddDbContextFactory<SecOpsStewardDbContext>(options =>
             {
                 options.EnableDetailedErrors(true);
-                if (Configuration.GetValue("Debug", false))
+                if (UseDummyServices)
                     options.UseSqlite("Data Source=sos.db")
                            .EnableSensitiveDataLogging(true);
 
