@@ -98,7 +98,7 @@
 		if (dlgResult.Data != null && (bool)dlgResult.Data)
 		{
 			Snackbar.Add("Granting access for " + node.PackageId.ShortId(), Severity.Normal);
-			await DataBoundApi.GrantAgentRightsToRun(CurrentUser.UserId.Id, WorkflowId, node.WorkflowStepId);
+			await PerformGrant(WorkflowId, node.WorkflowStepId);
 			await Refresh();
 			Snackbar.Add("Access grant for " + node.PackageId.ShortId() + " complete", Severity.Normal);
 		}
@@ -114,9 +114,16 @@
 		if (dlgResult.Data != null && (bool)dlgResult.Data)
 		{
 			Snackbar.Add("Granting access for workflow " + WorkflowModel.Name, Severity.Normal);
-			await Task.WhenAll(Workflow.Nodes.Select(async (n) => await DataBoundApi.GrantAgentRightsToRun(CurrentUser.UserId.Id, WorkflowId, n.WorkflowStepId)));
+			await Task.WhenAll(Workflow.Nodes.Select(async (n) => await PerformGrant(WorkflowId, n.WorkflowStepId)));
 			await Refresh();
 			Snackbar.Add("Access grant for workflow " + WorkflowModel.Name + " complete", Severity.Normal);
 		}
+	}
+
+	private async Task PerformGrant(Guid workflowId, Guid workflowStepId)
+	{
+		if (Startup.LockDiscovery)
+			return;
+		await DataBoundApi.GrantAgentRightsToRun(CurrentUser.UserId.Id, workflowId, workflowStepId);
 	}
 }
