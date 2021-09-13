@@ -31,9 +31,16 @@
 							}
 							else
 							{
+								var itemTooltipText = "Grant Access for this Plugin to the Agent identity";
+								if (Workflow.Nodes.Any(n => !n.Parameters.GrantScopeValuesPopulated))
+								{
+									itemTooltipText = "This plugin does not have enough information to determine its grant needs.";
+								}
+								<MudTooltip Text="@itemTooltipText">
 								<MudIconButton Color="Color.Error" Icon="@Icons.Material.Filled.ThumbDown" 
-											    OnClick="@(() => AddGrant(context))" Variant="@(context.Parameters.GrantScopeValuesPopulated ? Variant.Outlined : Variant.Text)" 
+												OnClick="@(() => AddGrant(context))" Variant="@(context.Parameters.GrantScopeValuesPopulated ? Variant.Outlined : Variant.Text)" 
 												Disabled="@(!context.Parameters.GrantScopeValuesPopulated)" />
+								</MudTooltip>
 							}
 						</MudTd>
 					</RowTemplate>
@@ -41,8 +48,16 @@
 						<MudTablePager PageSizeOptions="new int[]{10, 25}" />
 					</PagerContent>
 				</MudTable>
-				<MudButton Color="Color.Primary" StartIcon="@Icons.Material.Filled.SelectAll" 
-						    OnClick="@(async (a) => { await AddAllGrants(); })" Class="mr-2 my-1">Grant All</MudButton>
+
+				@{var tooltipText = "Grant for all Plugins";}
+				@if (Workflow.Nodes.Any(n => !n.Parameters.GrantScopeValuesPopulated))
+				{
+					tooltipText = "One or more plugins does not have enough information provided to determine needs.";
+				}
+				<MudTooltip Text="@tooltipText">
+					<MudButton Color="Color.Primary" StartIcon="@Icons.Material.Filled.SelectAll" Disabled=@(Workflow.Nodes.Any(n => !n.Parameters.GrantScopeValuesPopulated))
+								OnClick="@(async (a) => { await AddAllGrants(); })" Class="mr-2 my-1">Grant All</MudButton>
+				</MudTooltip>
 			</MudPaper>
 		</MudItem>
     </MudGrid>

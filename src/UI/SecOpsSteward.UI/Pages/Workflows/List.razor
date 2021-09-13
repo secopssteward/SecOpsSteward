@@ -15,20 +15,61 @@
                         <MudTh><MudTableSortLabel SortBy="new Func<WorkflowModel, object>(x=>x.WorkflowId)">Workflow ID</MudTableSortLabel></MudTh>
                         <MudTh><MudTableSortLabel SortBy="new Func<WorkflowModel, object>(x=>x.Name)">Name</MudTableSortLabel></MudTh>
                         <MudTh><MudTableSortLabel InitialDirection="SortDirection.Descending" SortBy="new Func<WorkflowModel, object>(x=>x.LastModified)">Last Modified</MudTableSortLabel></MudTh>
-                        <MudTh Style="text-align:center"><MudTableSortLabel SortBy="new Func<WorkflowModel, object>(x=>x.IsLocked)">Locked</MudTableSortLabel></MudTh>
-                        <MudTh Style="text-align:center"><MudTableSortLabel SortBy="new Func<WorkflowModel, object>(x=>x.IsAgentSetGranted)">Grants</MudTableSortLabel></MudTh>
                     </HeaderContent>
                     <RowTemplate>
                         <MudTd DataLabel="Actions">
+                            @* ----- *@
+
                             @if (!context.IsLocked)
                             {
-                                <MudIconButton Color="@Color.Primary" Icon="@Icons.Material.Filled.Edit" Title="Edit" Link="@("/workflows/composer/"+context.WorkflowId)" />
+                                <MudTooltip Text="Edit Workflow">
+                                    <MudIconButton Color="@Color.Primary" Icon="@Icons.Material.Filled.Edit" Title="Edit" Link="@("/workflows/composer/"+context.WorkflowId)" />
+                                </MudTooltip>
                             }
+                            <MudTooltip Text="View Workflow for Execution">
                             <MudIconButton Color="@Color.Tertiary" Icon="@Icons.Material.Filled.Preview" Title="Edit" Link="@("/workflows/list/"+context.WorkflowId)" />
+                            </MudTooltip>
+
+                            @* ----- *@
+
                             @if (!DbContext.WorkflowExecutions.Any(e => e.WorkflowId == context.WorkflowId))
                             {
-                                <MudIconButton Color="@Color.Warning" Icon="@Icons.Material.Filled.Delete" Title="Edit" OnClick="@(() => DeleteWorkflow(context))" /> 
+                                <MudTooltip Text="Delete Workflow">
+                                    <MudIconButton Color="@Color.Warning" Icon="@Icons.Material.Filled.Delete" Title="Edit" OnClick="@(() => DeleteWorkflow(context))" /> 
+                                </MudTooltip>
                             }
+
+                            @* ----- *@
+                            
+                            @if (context.IsLocked)
+                            {
+                                <MudTooltip Text="@("Workflow is locked and cannot be modified (locked by "+context.GrantingUser+")")">
+                                    <MudIconButton Color="Color.Success" Icon="@Icons.Material.Filled.Lock"/>
+                                </MudTooltip>
+                            }
+                            else
+                            {
+                                <MudTooltip Text="Lock Workflow to prevent modification">
+                                    <MudIconButton Color="Color.Error" Icon="@Icons.Material.Filled.LockOpen" OnClick="@(() => LockWorkflow(context))" />
+                                </MudTooltip>
+                            }
+
+                            @* ----- *@
+
+                            @if (context.IsAgentSetGranted)
+                            {
+                                <MudTooltip Text="All Agents have the rights necessary to execute the plugins in this workflow">
+                                    <MudIconButton Color="Color.Success" Icon="@Icons.Material.Filled.ThumbUp" Link="@("/workflows/grants/"+context.WorkflowId)" />
+                                </MudTooltip>
+                            }
+                            else
+                            {
+                                <MudTooltip Text="Agents do not yet have the rights necessary to execute the plugins in this workflow; click to add those grants">
+                                    <MudIconButton Color="Color.Error" Icon="@Icons.Material.Filled.StopCircle" Link="@("/workflows/grants/"+context.WorkflowId)" />
+                                </MudTooltip>
+                            }
+
+                            @* ----- *@
                         </MudTd>
                         <MudTd DataLabel="Workflow ID">
                             <MudTooltip Text="@context.WorkflowId.ToString()">
@@ -37,22 +78,6 @@
                         </MudTd>
                         <MudTd DataLabel="Name">@context.Name</MudTd>
                         <MudTd DataLabel="Last Modified">@context.LastModified.DateTime</MudTd>
-                        <MudTd DataLabel="Locked" Style="text-align:center">
-                            @{ 
-                                var color = context.IsLocked ? Color.Success : Color.Warning;
-                                var icon = context.IsLocked ? Icons.Material.Filled.Lock : Icons.Material.Filled.LockOpen;
-                                var outlined = context.IsLocked ? Variant.Text : Variant.Outlined;
-                            }
-                            <MudIconButton Color="@color" Icon="@icon" Variant="@outlined" OnClick="@(() => LockWorkflow(context))" />
-                        </MudTd>
-                        <MudTd DataLabel="Grants" Style="text-align:center">
-                            @{
-                                var color = context.IsAgentSetGranted ? Color.Success : Color.Error;
-                                var icon = context.IsAgentSetGranted ? Icons.Material.Filled.ThumbUp : Icons.Material.Filled.ThumbDown;
-                                var outlined = context.IsAgentSetGranted ? Variant.Text : Variant.Outlined;
-                            }
-                            <MudIconButton Color="@color" Icon="@icon" Variant="@outlined" Link="@("/workflows/grants/"+context.WorkflowId)" />
-                        </MudTd>
                     </RowTemplate>
                     <PagerContent>
                         <MudTablePager PageSizeOptions="new int[]{10, 25, 50, 100}" />

@@ -207,6 +207,7 @@ namespace SecOpsSteward.UI
                     if (!cxt.Users.Any())
                     {
                         Task.WhenAll(
+                            api.AddUser(TokenOwner.Create(null, false)),
                             api.AddUser("bob"),
                             api.AddUser("jane")).GetAwaiter().GetResult();
                     }
