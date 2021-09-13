@@ -33,5 +33,7 @@ jobs:
       - name: Set Dummy Mode
         uses: Azure/appservice-settings@v1
         with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
           app-name: soswebapp-demo
-          app-settings-json: '[{"Name":"Debug", "Value":"true"}, {"Name":"UseDummyServices", "Value":"true"}, {"Name":"DisableDiscovery", "Value":"true"}]'
+          app-settings-json: '[{ "name": "RunDemoMode", "value": "true", "slotSetting": false }]'
+          mask-inputs: false
