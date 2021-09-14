@@ -48,7 +48,7 @@
                         <MudIcon Icon="@Icons.Material.Outlined.RunCircle" Class="mx-1" 
                                  Color="@((!StepWasExecuted ? Color.Dark : (StepExecutionSucceeded ? Color.Success : Color.Error)))" />
                         <MudIcon Icon="@Icons.Material.Outlined.CheckCircle" Class="mx-1" 
-                                 Color="@((!StepWasExecuted ? Color.Dark : (PluginSucceeded ? Color.Success : Color.Error)))"/>
+                                 Color="@((!StepExecutionSucceeded ? Color.Dark : (PluginSucceeded ? Color.Success : Color.Error)))"/>
                     </div>
 		        </MudItem>
             </MudGrid>

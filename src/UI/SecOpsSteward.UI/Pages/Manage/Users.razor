@@ -4,10 +4,10 @@
     <HelpDrawer>
         <MudText Typo="Typo.h6">User List</MudText>
         <MudText Typo="Typo.body2" Class="mb-4">
-            This page displays all of the Users enrolled in the system. It can also enroll new Users.
+            This page displays all of the <b>Users</b> enrolled in the system. It can also enroll new <b>Users</b>.
         </MudText>
         <MudText Typo="Typo.body2" Class="mb-4">
-            Users in this table can access the SecOps Steward Web UI and control plane.
+            <b>Users</b> in this table can access the SecOps Steward Web UI and control plane.
             There is no additional role-based access control at this time.
         </MudText>
     </HelpDrawer>
@@ -20,6 +20,8 @@
                 <MudTable @ref="_table" Elevation="0" Items="@UserModels" @bind-SelectedItem="@SelectedModel" Hover="true" Striped="true">
                     <ToolBarContent>
                         <MudText Typo="Typo.h6">Users</MudText>
+                        <MudSpacer />
+                        <MudButton Color="Color.Primary" StartIcon="@Icons.Material.Filled.VerifiedUser" Disabled="@Startup.LockDiscovery" OnClick="@EnrollUser" Class="mr-2 my-1">Enroll User</MudButton>
                     </ToolBarContent>
                     <HeaderContent>
                         <MudTh><MudTableSortLabel SortBy="new Func<UserModel, object>(x=>x.UserId)">User ID</MudTableSortLabel></MudTh>
@@ -43,7 +45,6 @@
                         <MudTablePager PageSizeOptions="new int[]{10, 25, 50, 100}" />
                     </PagerContent>
 				</MudTable>
-                <MudButton Color="Color.Primary" StartIcon="@Icons.Material.Filled.VerifiedUser" Disabled="@Startup.LockDiscovery" OnClick="@EnrollUser" Class="mr-2 my-1">Enroll User</MudButton>
 			</MudPaper>
         </MudItem>
         @if (SelectedModel != null)
