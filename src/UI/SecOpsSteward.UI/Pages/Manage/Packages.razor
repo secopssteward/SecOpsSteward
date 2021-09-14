@@ -31,7 +31,8 @@
                     <ToolBarContent>
                         <MudText Typo="Typo.h6">Installed Packages</MudText>
                         <MudSpacer />
-                        <MudButton @onclick="@(() => Task.WhenAll(LocalSelectedContainerModels.Select(m => RemovePackage(m))))">Delete Selected Packages</MudButton>
+                        <MudButton StartIcon="@Icons.Material.Filled.Delete" IconColor="@Color.Error"
+                                   @onclick="@(() => Task.WhenAll(LocalSelectedContainerModels.Select(m => RemovePackage(m))))">Delete Selected Packages</MudButton>
                     </ToolBarContent>
                     <HeaderContent>
                         <MudTh><MudTableSortLabel SortBy="new Func<ContainerModel, object>(x=>x.ContainerId)">Container ID</MudTableSortLabel></MudTh>
@@ -73,7 +74,8 @@
                     <ToolBarContent>
                         <MudText Typo="Typo.h6">Available Public Packages</MudText>
                         <MudSpacer />
-                        <MudButton @onclick="@(() => Task.WhenAll(PublicSelectedContainerModels.Select(m => TransferPackage(m))))">Install Selected Packages</MudButton>
+                        <MudButton StartIcon="@Icons.Material.Filled.Download" IconColor="@Color.Success"
+                                   @onclick="@(() => Task.WhenAll(PublicSelectedContainerModels.Select(m => TransferPackage(m))))">Install Selected Packages</MudButton>
                     </ToolBarContent>
                     <HeaderContent>
                         <MudTh><MudTableSortLabel SortBy="new Func<ContainerModel, object>(x=>x.ContainerId)">Container ID</MudTableSortLabel></MudTh>
