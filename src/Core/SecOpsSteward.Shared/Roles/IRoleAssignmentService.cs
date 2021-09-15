@@ -97,7 +97,7 @@ namespace SecOpsSteward.Shared.Roles
 
         public static TokenOwner Create(AuthenticationState state, bool hasAuthConfiguration)
         {
-            if (!hasAuthConfiguration) return new TokenOwner() { Name = "Local User", Email = "user@_local_", UserId = Guid.Parse("6b78c8e6-a8e3-42ef-8783-7b7f780595b2"), Avatar = "" };
+            if (!hasAuthConfiguration) return TokenOwner.Default();
             if (!state.User.Identity.IsAuthenticated) return new TokenOwner() { };
 
             var hash = System.Security.Cryptography.MD5.Create().ComputeHash(System.Text.Encoding.UTF8.GetBytes(state.User.Identity.Name));
@@ -109,6 +109,18 @@ namespace SecOpsSteward.Shared.Roles
                 Email = state.User.Identity.Name,
                 UserId = Guid.Parse(state.User.Claims.First(c => c.Type == "http://schemas.microsoft.com/identity/claims/objectidentifier").Value),
                 Avatar = gravatar
+            };
+        }
+
+        public static TokenOwner Default()
+        {
+            var id = Guid.Parse("6b78c8e6-a8e3-42ef-8783-7b7f780595b2");
+            return new TokenOwner() 
+            { 
+                Name = "James Doe", 
+                Email = "james@contoso.com", 
+                UserId = id,
+                Avatar = $"https://www.gravatar.com/avatar/{(id.ToString().Replace("-",""))}?s=32&d=identicon&r=PG"
             };
         }
     }

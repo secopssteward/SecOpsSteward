@@ -10,7 +10,7 @@
             <MudSpacer />
                 @buttonBar
 
-            @if (Startup.LockDiscovery)
+            @if (Startup.RunDemoMode)
             {
                 <MudTooltip Text="In this mode, the system does not modify any real data, and information is regularly purged.">
                     <MudChip Size="@Size.Small" Variant="Variant.Outlined" Color="Color.Secondary" Icon="@Icons.Material.Filled.AutoAwesome">Demo Mode</MudChip>
@@ -60,7 +60,6 @@
         _helpDrawerOpen = !_helpDrawerOpen;
     }
 
-    private bool _hasHelpContent;
     private RenderFragment titleBar;
     private RenderFragment buttonBar;
     private RenderFragment secondaryDrawer;

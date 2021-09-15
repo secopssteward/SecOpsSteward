@@ -31,16 +31,41 @@ namespace SecOpsSteward.UI
             Configuration = configuration;
         }
 
+        public static Startup Instance { get; private set; }
         public IConfiguration Configuration { get; }
 
+        // ---
+
+        /// <summary>
+        /// If this is the first time the app is being run
+        /// </summary>
         public static bool FirstRun { get; set; } = false;
-        public static Startup Instance { get; private set; }
-        public bool RunDemoMode => Configuration.GetValue("RunDemoMode", false);
-        public bool HasAuthConfiguration => !RunDemoMode && Configuration.GetSection("AzureAd").Exists();
-        public bool UseDummyServices => RunDemoMode || Configuration.GetValue<bool>("UseDummyServices");
-        public static bool LockDiscovery => Instance.RunDemoMode || Instance.Configuration.GetValue<bool>("DisableDiscovery", false);
+        
+        /// <summary>
+        /// If the App is running in Demo mode. This is shorthand for disabling all of the below.
+        /// </summary>
+        public static bool RunDemoMode => Instance.Configuration.GetValue("RunDemoMode", false);
+
+        /// <summary>
+        /// If authentication is configured; if not, no AuthX will be integrated. The app will not have user awareness for any features.
+        /// </summary>
+        public static bool HasAuthConfiguration => !RunDemoMode && Instance.Configuration.GetSection("AzureAd").Exists();
+
+        /// <summary>
+        /// If Service Integrations are to be used, or if dummy/test Integrations are used instead
+        /// </summary>
+        public static bool UseDummyServices => RunDemoMode || Instance.Configuration.GetValue<bool>("UseDummyServices");
+
+        /// <summary>
+        /// If Auto-Discovery/Resource Explorers are enabled
+        /// </summary>
+        public static bool LockDiscovery => RunDemoMode || Instance.Configuration.GetValue<bool>("DisableDiscovery", false);
+
+        // ---
+
         private void RegisterAuthXServices(IServiceCollection services)
         {
+            // Register authentication/authorization services and consent handler
             if (HasAuthConfiguration)
             {
                 services.AddAuthentication(OpenIdConnectDefaults.AuthenticationScheme)
@@ -65,31 +90,23 @@ namespace SecOpsSteward.UI
             }
             else
             {
+                // Skip all AuthX, no user integrations
                 services.AddServerSideBlazor();
             }
 
-            // Register TokenOwner for user information
+            // Register TokenOwner for user information, avatar, etc
             services.AddScoped<TokenOwner>(s => TokenOwner.Create(
                 s.GetRequiredService<AuthenticationStateProvider>().GetAuthenticationStateAsync().Result,
                 HasAuthConfiguration));
         }
+
         private ChimeraServiceConfigurator RegisterChimeraServices(IServiceCollection services)
         {
-            var config = new ChimeraServiceConfigurator(new Dictionary<string, string>()
-            {
-                { "SubscriptionId", Configuration.GetSection("Chimera")["SubscriptionId"] },
-                { "ResourceGroup", Configuration.GetSection("Chimera")["ResourceGroup"] },
-                { "VaultName", Configuration.GetSection("Chimera")["VaultName"] },
-                { "PackageRepoAccount", Configuration.GetSection("Chimera")["PackageRepoAccount"] },
-                { "PackageRepoContainer", Configuration.GetSection("Chimera")["PackageRepoContainer"] },
-                { "NonceAccount", Configuration.GetSection("Chimera")["NonceAccount"] },
-                { "NonceContainer", Configuration.GetSection("Chimera")["NonceContainer"] },
-                { "ServiceBusNamespace", Configuration.GetSection("Chimera")["ServiceBusNamespace"] },
-                { "SignDecryptRole", Configuration.GetSection("Chimera")["SignDecryptRole"] },
-                { "VerifyEncryptRole", Configuration.GetSection("Chimera")["VerifyEncryptRole"] },
-            });
+            // Map config based on Chimera section (all values translate)
+            var config = new ChimeraServiceConfigurator(new Dictionary<string, string>());
+            foreach (var a in Configuration.GetSection("Chimera").GetChildren()) config[a.Key] = a.Value;
 
-
+            // Add service integrations (storage, messaging, vault, etc)
             if (!UseDummyServices)
                 services.AddAzurePlatformIntegrations();
             else
@@ -99,11 +116,8 @@ namespace SecOpsSteward.UI
             // If running locally, this factory is registered to use managed identity (provided by the environment)
             services.RegisterCurrentCredentialFactory(Configuration.GetSection("AzureAd")["TenantId"], config["SubscriptionId"], false, UseDummyServices);
 
-            // This is for executions local to the _web server_ ... don't bother with this (for now)
-            services.AddScoped<INonceTrackingService, NoNonceTrackingService>();
-
-            // Chimera core
-            services.AddChimera(config);
+            // Chimera core ( + public packages)
+            services.AddChimeraWithPublicPackageRepository(config, Configuration.GetConnectionString("PublicPackages"));
 
             // Bindings to Chimera API and data repo
             services.AddTransient<DataBoundApi>();
@@ -111,20 +125,25 @@ namespace SecOpsSteward.UI
             // Message processing (as user)
             services.AddScoped<WorkflowMessageProcessorService>();
 
-            // Public package repo
-            services.AddSingleton<PublicPackageRepository>(s => new PublicPackageRepository(Configuration.GetConnectionString("PublicPackages")));
+            // This is for executions local to the _web server_ ... don't bother with this (for now)
+            services.AddScoped<INonceTrackingService, NoNonceTrackingService>();
 
             return config;
         }
         private void RegisterDatabaseServices(IServiceCollection services)
         {
+            // Adds the DbContext
             services.AddDbContextFactory<SecOpsStewardDbContext>(options =>
             {
+                // TODO: Disable in production
                 options.EnableDetailedErrors(true);
+
+                // If using dummy integrations, fall back to SQLite
                 if (UseDummyServices)
                     options.UseSqlite("Data Source=sos.db")
-                           .EnableSensitiveDataLogging(true);
-
+                           .EnableSensitiveDataLogging(true); // TODO: Disable
+                
+                // Try SQL Server
                 else if (Configuration.GetConnectionString("Database") != null)
                     options.UseSqlServer(Configuration.GetConnectionString("Database"));
                 else if (Environment.GetEnvironmentVariable("SQLAZURECONNSTR_Database") != null)
@@ -133,6 +152,7 @@ namespace SecOpsSteward.UI
                 else throw new Exception("No database configuration specified!");
             });
 
+            // Add convenience method for creating transient DB connections
             services.AddTransient<SecOpsStewardDbContext>(p => p.GetRequiredService<IDbContextFactory<SecOpsStewardDbContext>>().CreateDbContext());
         }
 
@@ -175,7 +195,7 @@ namespace SecOpsSteward.UI
 
             app.UseRouting();
 
-            if (HasAuthConfiguration)
+            if (HasAuthConfiguration) // other place which adds AuthX
             {
                 app.UseAuthentication();
                 app.UseAuthorization();

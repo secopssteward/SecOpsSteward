@@ -33,6 +33,12 @@ namespace SecOpsSteward.Shared
             serviceCollection.AddSingleton<HandleSecurityTripwire>(new HandleSecurityTripwire(async (c, wf) => await Task.Yield()));
         }
 
+        public static void AddChimeraWithPublicPackageRepository(this IServiceCollection serviceCollection, ChimeraServiceConfigurator config, string publicRepoUrl)
+        {
+            serviceCollection.AddChimera(config);
+            serviceCollection.AddSingleton<PublicPackageRepository>(s => new PublicPackageRepository(publicRepoUrl));
+        }
+
         public static void AddChimeraDummyIntegrations(this IServiceCollection serviceCollection, bool useDummyReceiver = true)
         {
             serviceCollection.AddSingleton<IConfigurationProvider, DummyConfigurationService>();
