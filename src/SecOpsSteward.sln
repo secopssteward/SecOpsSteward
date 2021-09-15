@@ -49,6 +49,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SecOpsSteward.UI.WebJob", "
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SecOpsSteward.Plugins.DeveloperExample", "Plugins\SecOpsSteward.Plugins.DeveloperExample\SecOpsSteward.Plugins.DeveloperExample.csproj", "{6DEC9EF5-D700-4F66-AFF0-3D6204DC412B}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SecOpsSteward.Tests.Core", "Tests\SecOpsSteward.Tests.Core\SecOpsSteward.Tests.Core.csproj", "{2F43EAA7-396F-4795-AA1B-7616EC65F6B4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -111,6 +113,10 @@ Global
 		{6DEC9EF5-D700-4F66-AFF0-3D6204DC412B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6DEC9EF5-D700-4F66-AFF0-3D6204DC412B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6DEC9EF5-D700-4F66-AFF0-3D6204DC412B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2F43EAA7-396F-4795-AA1B-7616EC65F6B4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2F43EAA7-396F-4795-AA1B-7616EC65F6B4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2F43EAA7-396F-4795-AA1B-7616EC65F6B4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2F43EAA7-396F-4795-AA1B-7616EC65F6B4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -6,9 +6,9 @@ namespace SecOpsSteward.Shared.NonceTracking
 {
     public class TrackedNonceCollection
     {
-        private List<TrackedNonce> _nonces = new List<TrackedNonce>();
+        public List<TrackedNonce> Nonces { get; set; } = new List<TrackedNonce>();
         public TrackedNonce GetById(Guid requestId) =>
-            _nonces.FirstOrDefault(n => n.RequestId == requestId);
+            Nonces.FirstOrDefault(n => n.RequestId == requestId);
 
         public string ValidateRegenerate(ChimeraEntityIdentifier agentId, Guid requestId, string nonce)
         {
@@ -17,7 +17,7 @@ namespace SecOpsSteward.Shared.NonceTracking
             {
                 // never before seen, create new
                 var newNonce = new TrackedNonce(agentId, requestId);
-                _nonces.Add(newNonce);
+                Nonces.Add(newNonce);
                 return newNonce.ExpectedNonce;
             }
             else if (target.IsValid(nonce))
@@ -31,6 +31,6 @@ namespace SecOpsSteward.Shared.NonceTracking
                 return string.Empty;
         }
 
-        public void CleanupExpired() => _nonces.RemoveAll(n => n.IsExpired);
+        public void CleanupExpired() => Nonces.RemoveAll(n => n.IsExpired);
     }
 }

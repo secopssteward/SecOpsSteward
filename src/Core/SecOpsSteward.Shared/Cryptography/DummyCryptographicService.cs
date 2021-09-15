@@ -7,7 +7,7 @@ namespace SecOpsSteward.Shared.Cryptography
 {
     public class DummyCryptographicService : ICryptographicService
     {
-        public static byte[] IV = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x10, 0x11, 0x12, 0x13, 0x14 };
+        public static byte[] IV = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15 };
 
         // TODO: Add a way to bind signing/verification to correct entities
 
@@ -41,7 +41,7 @@ namespace SecOpsSteward.Shared.Cryptography
         {
             await Task.Yield();
             _logger.LogTrace($"Unwrapping key for {wrappingKey}");
-            return keyToUnwrap;
+            return Decrypt(keyToUnwrap, wrappingKey.Id.ToByteArray(), IV);
         }
 
         public async Task<bool> Verify(ChimeraEntityIdentifier signer, byte[] signature, byte[] digest)
@@ -55,7 +55,7 @@ namespace SecOpsSteward.Shared.Cryptography
         {
             await Task.Yield();
             _logger.LogTrace($"Wrapping key for {wrappingKey}");
-            return keyToWrap;
+            return Encrypt(keyToWrap, wrappingKey.Id.ToByteArray(), IV);
         }
 
         private byte[] Encrypt(byte[] data, byte[] key, byte[] iv)

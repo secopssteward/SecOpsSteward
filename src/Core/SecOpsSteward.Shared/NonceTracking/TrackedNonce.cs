@@ -20,7 +20,7 @@ namespace SecOpsSteward.Shared.NonceTracking
             Regenerate();
         }
 
-        public bool IsExpired => Expiry > DateTimeOffset.UtcNow;
+        public bool IsExpired => Expiry < DateTimeOffset.UtcNow;
         public void Regenerate()
         {
             ExpectedNonce = ChimeraSharedHelpers.RandomString(NONCE_LENGTH);
