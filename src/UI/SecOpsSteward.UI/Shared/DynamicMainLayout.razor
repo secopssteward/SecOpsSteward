@@ -10,6 +10,12 @@
             <MudSpacer />
                 @buttonBar
 
+            @if (Startup.LockDiscovery)
+            {
+                <MudTooltip Text="In this mode, the system does not modify any real data, and information is regularly purged.">
+                    <MudChip Size="@Size.Small" Variant="Variant.Outlined" Color="Color.Secondary" Icon="@Icons.Material.Filled.AutoAwesome">Demo Mode</MudChip>
+                </MudTooltip>
+            }
             @{var helpColor = _helpDrawerOpen ? Color.Primary : Color.Inherit;}
             <MudTooltip Text="Contextual help for this page">
                 <MudIconButton Disabled="@(helpContent == null)" Icon="@Icons.Material.Filled.HelpOutline" Color="@helpColor" OnClick="@HelpDrawerToggle" id="helpCircleIcon" />

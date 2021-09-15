@@ -32,6 +32,7 @@
                         <MudText Typo="Typo.h6">Installed Packages</MudText>
                         <MudSpacer />
                         <MudButton StartIcon="@Icons.Material.Filled.Delete" IconColor="@Color.Error"
+                                   Disabled="@(!LocalSelectedContainerModels.Any())"
                                    @onclick="@(() => Task.WhenAll(LocalSelectedContainerModels.Select(m => RemovePackage(m))))">Delete Selected Packages</MudButton>
                     </ToolBarContent>
                     <HeaderContent>
@@ -75,6 +76,7 @@
                         <MudText Typo="Typo.h6">Available Public Packages</MudText>
                         <MudSpacer />
                         <MudButton StartIcon="@Icons.Material.Filled.Download" IconColor="@Color.Success"
+                                   Disabled="@(!PublicSelectedContainerModels.Any())"
                                    @onclick="@(() => Task.WhenAll(PublicSelectedContainerModels.Select(m => TransferPackage(m))))">Install Selected Packages</MudButton>
                     </ToolBarContent>
                     <HeaderContent>
