@@ -27,6 +27,7 @@
     private Diagram Diagram { get; set; }
 
     public Guid LoadedWorkflowId { get; set; }
+    public WorkflowModel LoadedWorkflow { get; set; }
 
     private bool _readOnly;
     public bool ReadOnly 
@@ -52,8 +53,7 @@
         Diagram.Groups.ToList().ForEach(g => Diagram.RemoveGroup(g));
         Diagram.Nodes.Clear();
 
-        _root = null;
-
+        LoadedWorkflow = value;
         LoadedWorkflowId = value.WorkflowId;
         if (!string.IsNullOrEmpty(value.WorkflowJson))
         {
@@ -152,7 +152,7 @@
         OutputPort lastOutput = null;
         foreach (var n in orderedNodes)
         {
-            Diagram.Nodes.Add(n);
+            AddNode(n);
             if (lastOutput != null)
                 Diagram.Links.Add(new LinkModel(lastOutput, n.SourcePort));
             lastOutput = n.ResultPorts[CommonResultCodes.Success];
@@ -227,7 +227,7 @@
         OutputPort lastOutput = null;
         foreach (var n in orderedNodes)
         {
-            Diagram.Nodes.Add(n);
+            AddNode(n);
             if (lastOutput != null)
                 Diagram.Links.Add(new LinkModel(lastOutput, n.SourcePort));
             lastOutput = n.ResultPorts[CommonResultCodes.Success];
@@ -243,9 +243,40 @@
     public void AddPackageNode(PluginMetadataModel package)
     {
         var thisStepNode = new WorkflowComposerNode(package, 100, 100);
-        Diagram.Nodes.Add(thisStepNode);
+        AddNode(thisStepNode);
 
         StateHasChanged();
+    }
+
+    private void AddNode(WorkflowComposerNode node)
+    {
+        var paddingX = 50;
+        var paddingY = 100;
+
+        if (!Diagram.Nodes.Any())
+        {
+            node.SetPosition(Diagram.Container.Left + paddingX, Diagram.Container.Top + paddingY);
+            Diagram.Nodes.Add(node);
+            return;
+        }
+
+        var lastNode = Diagram.Nodes.OrderByDescending(d => d.Position.Y).ThenByDescending(d => d.Position.X).First();
+
+        double x, y;
+        if (lastNode.Position.X + lastNode.Size.Width > Diagram.Container.Right - Diagram.Container.Width / 10)
+        {
+            // wraps
+            x = Diagram.Container.Left + paddingX;
+            y = lastNode.Position.Y + lastNode.Size.Height + paddingY;
+        }
+        else
+        {
+            x = lastNode.Position.X + lastNode.Size.Width + paddingX;
+            y = lastNode.Position.Y;
+        }
+
+        node.SetPosition(x, y);
+        Diagram.Nodes.Add(node);
     }
 
     /// <summary>
@@ -254,14 +285,14 @@
     /// <param name="stepReceipt">Step receipt to apply</param>
     public void ConsumeStepReceipt(ExecutionStepReceipt stepReceipt)
     {
-        var allSteps = GetRootPackageStep().GetCollapsedSteps();
-        var target = allSteps.FirstOrDefault(s => s.AuthorizingMessage.StepId == stepReceipt.StepId);
-        if (target == null)return;
+        var target = Diagram.Nodes
+                            .OfType<WorkflowComposerNode>()
+                            .First(n => n.WorkflowStepId == stepReceipt.StepId);
 
-        target.PackageNode.Receipt = stepReceipt;
+        target.Receipt = stepReceipt;
 
         HighlightResultPort(
-            target.PackageNode, 
+            target, 
             ((stepReceipt.StepExecutionResult == ResultCodes.RanPluginOk) ? NodeStates.Success : NodeStates.Failed), 
             stepReceipt.PluginResult.ResultCode);
 
@@ -294,38 +325,4 @@
         node.RefreshAll();
         node.RefreshLinks();
     }
-
-    /// <summary>
-    /// Get an ExecutionStepCollection which represents the step hierarchy and order for this workflow
-    /// </summary>
-    /// <returns></returns>
-    public ExecutionStepCollection CreateStepCollectionFromWorkflow()
-    {
-        var step = GetRootPackageStep();
-        var steps = new ExecutionStepCollection();
-        var parent = steps.AddStepWithoutSigning(step.AgentId, step.PackageId, null, step.Configuration);
-        step.AuthorizingMessage = parent;
-        foreach (var next in step.NextSteps)
-            AddStepsToCollection(steps, parent, next);
-        return steps;
-    }
-    private void AddStepsToCollection(ExecutionStepCollection steps, ExecutionStep parentStep, WorkflowPackageStep packageStep)
-    {
-        var parent = steps.AddStepWithoutSigning(parentStep, packageStep.RequiredInputCode, packageStep.AgentId, packageStep.PackageId, null, packageStep.Configuration);
-        packageStep.AuthorizingMessage = parent;
-        foreach (var next in packageStep.NextSteps)
-            AddStepsToCollection(steps, parent, next);
-    }
-    private WorkflowPackageStep GetRootPackageStep()
-    {
-        if (_root != null) return _root;
-        _root = new WorkflowPackageStep(
-                Diagram.Nodes
-                       .Where(n => !n.Links.Any(l => l.TargetPort is InputPort || l.SourcePort is InputPort))
-                       .Cast<WorkflowComposerNode>()
-                       .FirstOrDefault());
-        return _root;
-    }
-
-    private WorkflowPackageStep _root; // TODO: Fix this -- without the persistence, send and recv create two different trees -- one without an authorization message!!!!
 }

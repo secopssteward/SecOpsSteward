@@ -56,7 +56,7 @@
 	protected string PackagesError { get; set; }
 	protected string QueuesError { get; set; }
 
-	protected override async global::System.Threading.Tasks.Task OnInitializedAsync()
+	protected override async Task OnInitializedAsync()
 	{
 		var azure = Platform.GetCredential().GetAzure();
 

@@ -2,6 +2,7 @@
 @using SecOpsSteward.Shared.Cryptography
 @using SecOpsSteward.Shared.Messages
 @using SecOpsSteward.Data.Workflow
+@using SecOpsSteward.UI.Pages.Workflows.Composer
 @using SecOpsSteward.UI.Pages.Workflows.Dialogs
 
 <PageSections>
@@ -161,8 +162,7 @@
         model.GrantingUser = DbContext.Users.First(u => u.UserId == CurrentUser.UserId.Id);
         model.LastModified = DateTime.UtcNow;
 
-        var sequencer = new StepSequencer(model);
-        var steps = sequencer.CreateStepCollectionFromWorkflow();
+        var steps = model.CreateStepCollectionFromWorkflow();
         var wfAuth = new WorkflowExecutionMessage(CurrentUser.UserId, steps);
         await wfAuth.Sign(CryptoService, CurrentUser.UserId, CurrentUser.Name);
 

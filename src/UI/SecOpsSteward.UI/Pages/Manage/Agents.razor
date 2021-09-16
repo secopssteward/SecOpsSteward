@@ -1,4 +1,5 @@
 ﻿@page "/manage/agents"
+@using SecOpsSteward.UI.Pages.Manage.Dialogs
 
 <PageSections>
     <HelpDrawer>
@@ -68,7 +69,7 @@
                 </ErrorText>
             }
         </MudItem>
-        @if (SelectedModel != null)
+        @if (SelectedModel != null && DbContext.Agents.Any())
         {
             <MudItem md="12" lg="6">
                 <MudPaper Elevation="2" Class="p-0">

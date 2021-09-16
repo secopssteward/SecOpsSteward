@@ -116,7 +116,7 @@
     {
         MessageProcessor.SetExecutionApproval(async a => await GetApproval(a));
 
-        var steps = ComposerComponent.CreateStepCollectionFromWorkflow();
+        var steps = Workflow.CreateStepCollectionFromWorkflow();
         steps.ForEach(s => s.RunningEntity = CurrentUser.UserId);
 
         var wfGuid = await MessageProcessor.EnqueueImmediateRun(steps);
@@ -137,7 +137,7 @@
 
     private async Task ExecuteOnAgent()
     {
-        var steps = ComposerComponent.CreateStepCollectionFromWorkflow();
+        var steps = Workflow.CreateStepCollectionFromWorkflow();
         var wfGuid = await MessageProcessor.EnqueueImmediateRun(steps);
         MessageProcessor.SubscribeStepReceipt(async s =>
         {
