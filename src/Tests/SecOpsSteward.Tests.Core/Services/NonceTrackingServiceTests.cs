@@ -2,6 +2,7 @@
 using System;
 using Xunit;
 using SecOpsSteward.Shared.NonceTracking;
+using System.Threading.Tasks;
 
 namespace SecOpsSteward.Tests.Core.Services
 {
@@ -13,30 +14,30 @@ namespace SecOpsSteward.Tests.Core.Services
             _nonceTracker = nonceTracker;
 
         [Fact]
-        public void FirstRequestWithEmptyNonceShouldPass()
+        public async Task FirstRequestWithEmptyNonceShouldPass()
         {
             var requestId = Guid.NewGuid();
-            _nonceTracker.ValidateNonce(TestValues.SampleAgent, requestId, string.Empty)
-                .Result.Should().NotBeNullOrEmpty();
+            (await _nonceTracker.ValidateNonce(TestValues.SampleAgent, requestId, string.Empty))
+                .Should().NotBeNullOrEmpty();
         }
 
         [Fact]
-        public void InvalidNonceForNextRequestShouldFail()
+        public async Task InvalidNonceForNextRequestShouldFail()
         {
             var requestId = Guid.NewGuid();
-            var newNonce = _nonceTracker.ValidateNonce(TestValues.SampleAgent, requestId, string.Empty).Result;
+            var newNonce = await _nonceTracker.ValidateNonce(TestValues.SampleAgent, requestId, string.Empty);
 
             newNonce.Should().NotBeNullOrEmpty();
 
-            _nonceTracker.ValidateNonce(TestValues.SampleAgent, requestId, "abc123")
-                .Result.Should().BeNullOrEmpty();
+            (await _nonceTracker.ValidateNonce(TestValues.SampleAgent, requestId, "abc123"))
+                .Should().BeNullOrEmpty();
         }
 
         [Fact]
-        public void GeneratedNonceForNextRequestShouldPass()
+        public async Task GeneratedNonceForNextRequestShouldPass()
         {
             var requestId = Guid.NewGuid();
-            var newNonce = _nonceTracker.ValidateNonce(TestValues.SampleAgent, requestId, string.Empty).Result;
+            var newNonce = await _nonceTracker.ValidateNonce(TestValues.SampleAgent, requestId, string.Empty);
 
             _nonceTracker.ValidateNonce(TestValues.SampleAgent, requestId, newNonce)
                 .Result.Should().NotBeNullOrEmpty();
