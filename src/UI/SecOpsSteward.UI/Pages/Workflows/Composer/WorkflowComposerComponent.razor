@@ -262,6 +262,12 @@
 
         var lastNode = Diagram.Nodes.OrderByDescending(d => d.Position.Y).ThenByDescending(d => d.Position.X).First();
 
+        var timeout = DateTime.UtcNow.AddMinutes(1);
+        while (lastNode.Size == null && DateTime.UtcNow < timeout)
+        {
+            System.Threading.Thread.Sleep(100);
+        }
+
         double x, y;
         if (lastNode.Position.X + lastNode.Size.Width > Diagram.Container.Right - Diagram.Container.Width / 10)
         {
