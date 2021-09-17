@@ -9,9 +9,6 @@ namespace SecOpsSteward.Shared.Packaging
 {
     public class DummyStorageRepository : IPackageRepository
     {
-        public const string CFG_PACKAGE_REPO_ACCOUNT = "PackageRepoAccount";
-        public const string CFG_PACKAGE_REPO_CONTAINER = "PackageRepoContainer";
-
         public static Dictionary<ChimeraPackageIdentifier, byte[]> _data = new Dictionary<ChimeraPackageIdentifier, byte[]>();
 
         private readonly ILogger<DummyStorageRepository> _logger;

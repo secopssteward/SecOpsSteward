@@ -21,6 +21,11 @@ namespace SecOpsSteward.Shared.Packaging
             _connectionString = connectionString;
         }
 
+
+        /// <summary>
+        /// List packages from a public repository source
+        /// </summary>
+        /// <returns>List of Package metadata keyed by Package filename</returns>
         public async Task<Dictionary<string, ContainerMetadata>> ListPackages()
         {
             var target = $"{_connectionString}/{PACKAGE_CONTAINER}?restype=container&comp=list";
@@ -43,6 +48,11 @@ namespace SecOpsSteward.Shared.Packaging
             }
         }
 
+
+        /// <summary>
+        /// Get the public key for the configured public repository
+        /// </summary>
+        /// <returns></returns>
         public async Task<byte[]> GetIndexKey()
         {
             var target = $"{_connectionString}/{KEY_CONTAINER}/{KEY_FILE}";
@@ -54,9 +64,15 @@ namespace SecOpsSteward.Shared.Packaging
             }
         }
 
-        public async Task<ChimeraContainer> GetPackage(string package)
+        
+        /// <summary>
+        /// Get the package by its filename
+        /// </summary>
+        /// <param name="packageFileName">Package filename</param>
+        /// <returns>Loaded container</returns>
+        public async Task<ChimeraContainer> GetPackage(string packageFileName)
         {
-            var target = $"{_connectionString}/{PACKAGE_CONTAINER}/{package}";
+            var target = $"{_connectionString}/{PACKAGE_CONTAINER}/{packageFileName}";
 
             using (var client = new HttpClient())
             {

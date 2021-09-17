@@ -4,15 +4,13 @@ using System.Linq;
 
 namespace SecOpsSteward.Shared.NonceTracking
 {
-    public class TrackedNonceCollection
+    public partial class TrackedNonceCollection
     {
-        public List<TrackedNonce> Nonces { get; set; } = new List<TrackedNonce>();
-        public TrackedNonce GetById(Guid requestId) =>
-            Nonces.FirstOrDefault(n => n.RequestId == requestId);
+        private List<TrackedNonce> Nonces { get; set; } = new List<TrackedNonce>();
 
         public string ValidateRegenerate(ChimeraEntityIdentifier agentId, Guid requestId, string nonce)
         {
-            var target = GetById(requestId);
+            var target = Nonces.FirstOrDefault(n => n.RequestId == requestId);
             if (target == null)
             {
                 // never before seen, create new

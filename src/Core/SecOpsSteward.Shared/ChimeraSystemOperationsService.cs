@@ -34,11 +34,6 @@ namespace SecOpsSteward.Shared
         }
 
         /// <summary>
-        /// All registered Chimera services which this service interfaces with
-        /// </summary>
-        public IReadOnlyList<IChimeraIntegratedService> Services => _services.ToList();
-
-        /// <summary>
         /// Retrieve an Agent's configuration and commits it back to the configuration provider once complete
         /// </summary>
         /// <param name="agent">Agent</param>
@@ -54,12 +49,6 @@ namespace SecOpsSteward.Shared
         }
 
         /// <summary>
-        /// List all registered agents by their configuration
-        /// </summary>
-        /// <returns>All configurations</returns>
-        public Task<List<AgentConfiguration>> ListRegisteredAgents() => _configurationProvider.ListConfigurations();
-
-        /// <summary>
         /// Create a new Chimera Agent
         /// </summary>
         /// <param name="agentId">New agent ID</param>
@@ -73,7 +62,7 @@ namespace SecOpsSteward.Shared
         /// <param name="agentId">Agent ID to destroy</param>
         /// <returns></returns>
         public Task DestroyAgent(ChimeraAgentIdentifier agentId) =>
-            RunOnAllServices<IHasAgentCreationActions>(s => s.OnAgentRemoved(agentId), true);
+            RunOnAllServices<IHasAgentCreationActions>(s => s.OnAgentRemoved(agentId));
 
         /// <summary>
         /// Create/enroll a new User in the Chimera system
@@ -89,37 +78,25 @@ namespace SecOpsSteward.Shared
         /// <param name="userId">User ID to remove</param>
         /// <returns></returns>
         public Task DestroyUser(ChimeraUserIdentifier userId) =>
-            RunOnAllServices<IHasUserEnrollmentActions>(s => s.OnUserRemoved(userId), true);
+            RunOnAllServices<IHasUserEnrollmentActions>(s => s.OnUserRemoved(userId));
 
-        private async Task RunOnAllServices<TService>(Func<TService, Task> cmd, bool runBackwards = false)
+        private async Task RunOnAllServices<TService>(Func<TService, Task> cmd)
             where TService : IChimeraIntegratedService
         {
-            var services = GetServices<TService>();
-            if (runBackwards) services = services.Reverse();
+            var services = _services.OfType<TService>();
 
             _logger.LogTrace("-- System EXECUTE : {tservice} --", typeof(TService).Name);
-            foreach (var group in services)
+            await Task.WhenAll(services.Select(async g =>
             {
-                _logger.LogTrace("--> Group priority {priority} -- {count} services", group.Key, group.Count());
-                await Task.WhenAll(group.Select(async g =>
+                try
                 {
-                    try
-                    {
-                        _logger.LogTrace("START running service {service}", g.GetType().Name);
-                        await cmd(g);
-                        _logger.LogTrace("END running service {service}", g.GetType().Name);
-                    }
-                    catch (Exception ex)
-                    { _logger.LogError(ex, $"Error executing command for {g.GetType().Name}"); }
-                }));
-            }
+                    _logger.LogTrace("START running service {service}", g.GetType().Name);
+                    await cmd(g);
+                    _logger.LogTrace("END running service {service}", g.GetType().Name);
+                }
+                catch (Exception ex)
+                { _logger.LogError(ex, $"Error executing command for {g.GetType().Name}"); }
+            }));
         }
-
-        private IEnumerable<IGrouping<int, TService>> GetServices<TService>()
-            where TService : IChimeraIntegratedService => _services
-                .Where(s => s is TService)
-                .Cast<TService>()
-                .GroupBy(s => s.ServicePriority)
-                .OrderBy(k => k.Key);
     }
 }

@@ -75,9 +75,9 @@ namespace SecOpsSteward.Shared.DiscoveryWorkflow
             get
             {
                 if (CurrentStep != null && CurrentStep.Signature != null)
-                    return CurrentStep.Signature.Signer.AsUser();
+                    return CurrentStep.Signature.Signer.Id;
                 else if (WorkflowMessage != null && WorkflowMessage.Signature != null)
-                    return WorkflowMessage.Signature.Signer.AsUser();
+                    return WorkflowMessage.Signature.Signer.Id;
                 else return null;
             }
         }
@@ -351,7 +351,7 @@ namespace SecOpsSteward.Shared.DiscoveryWorkflow
         private async Task<bool> CheckUserAccess()
         {
             LogTrace("Checking user {user} access to package {package}", GrantingUser, CurrentStep.PackageId);
-            var config = await _configProvider.GetConfiguration(CurrentStep.RunningEntity.AsAgent());
+            var config = await _configProvider.GetConfiguration(CurrentStep.RunningEntity.Id);
             if (!config.AccessRules.HasAccess(GrantingUser, CurrentStep.PackageId))
             {
                 LogError("User {user} is not authorized to execute this package.", GrantingUser);

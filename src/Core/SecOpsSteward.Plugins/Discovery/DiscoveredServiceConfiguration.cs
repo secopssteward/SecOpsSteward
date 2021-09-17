@@ -34,8 +34,19 @@ namespace SecOpsSteward.Plugins.Discovery
         /// </summary>
         public IConfigurableObjectConfiguration Configuration { get; set; }
 
+        /// <summary>
+        /// All things that this resource links out to (via some string)
+        /// </summary>
         public List<string> LinksOutTo { get; set; } = new List<string>();
+
+        /// <summary>
+        /// All names/URLs that this resource can be identified by
+        /// </summary>
         public List<string> LinksInAs { get; set; } = new List<string>();
+
+        /// <summary>
+        /// Configuration values this resource has set
+        /// </summary>
         public Dictionary<string, string> ConfigurationValues { get; set; } = new Dictionary<string, string>();
 
         public List<ServiceEntityLink> GetOutgoingLinks()

@@ -2,14 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace SecOpsSteward.Shared.Configuration
+namespace SecOpsSteward.Shared.Configuration.Models
 {
-    public class AgentPrivilegeGrants
+    public partial class AgentPrivilegeGrants
     {
         /// <summary>
         /// Collection of grants performed for an Agent
         /// </summary>
-        public List<AgentPrivilegeGrant> Items { get; set; } = new List<AgentPrivilegeGrant>();
+        private List<AgentPrivilegeGrant> Items { get; set; } = new List<AgentPrivilegeGrant>();
 
         /// <summary>
         /// Add a tracking record for a newly performed grant

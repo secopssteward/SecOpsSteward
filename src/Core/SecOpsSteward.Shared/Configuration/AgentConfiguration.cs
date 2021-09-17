@@ -1,9 +1,11 @@
-﻿namespace SecOpsSteward.Shared.Configuration
+﻿using SecOpsSteward.Shared.Configuration.Models;
+
+namespace SecOpsSteward.Shared.Configuration
 {
     /// <summary>
     /// Agent Configuration persisted into the configuration store
     /// </summary>
-    public class AgentConfiguration
+    public partial class AgentConfiguration
     {
         /// <summary>
         /// ID of Agent being configured

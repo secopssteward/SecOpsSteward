@@ -1,6 +1,5 @@
 using FluentAssertions;
-using SecOpsSteward.Shared;
-using System.Linq;
+using SecOpsSteward.Shared.Configuration.Models;
 using Xunit;
 
 namespace SecOpsSteward.Tests.Core
@@ -10,19 +9,17 @@ namespace SecOpsSteward.Tests.Core
         [Fact]
         public void AccessRulesShouldBeAddable()
         {
-            var accessRules = new Shared.Configuration.AccessRules();
+            var accessRules = new AccessRules();
             accessRules.Add(TestValues.SampleGuidA, TestValues.SampleGuidB);
 
-            var rule = accessRules.Items.First();
-            
-            rule.UserId.Should().Be(new ChimeraUserIdentifier(TestValues.SampleGuidA));
-            rule.PackageId.Should().Be(new ChimeraPackageIdentifier(TestValues.SampleGuidB));
+            accessRules.HasAccess(TestValues.SampleGuidA, TestValues.SampleGuidB)
+                .Should().BeTrue();
         }
 
         [Fact]
         public void AccessRulesShouldBeCorrect()
         {
-            var accessRules = new Shared.Configuration.AccessRules();
+            var accessRules = new AccessRules();
             accessRules.Add(TestValues.SampleGuidA, TestValues.SampleGuidB);
 
             accessRules.HasAccess(TestValues.SampleGuidA, TestValues.SampleGuidB)
@@ -34,7 +31,7 @@ namespace SecOpsSteward.Tests.Core
         [Fact]
         public void AccessRulesShouldBeRemovable()
         {
-            var accessRules = new Shared.Configuration.AccessRules();
+            var accessRules = new AccessRules();
             accessRules.Add(TestValues.SampleGuidA, TestValues.SampleGuidB);
             accessRules.HasAccess(TestValues.SampleGuidA, TestValues.SampleGuidB)
                 .Should().BeTrue();

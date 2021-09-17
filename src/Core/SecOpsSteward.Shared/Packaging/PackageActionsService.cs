@@ -13,19 +13,16 @@ namespace SecOpsSteward.Shared.Packaging
 {
     public class PackageActionsService
     {
-        private readonly ChimeraServiceConfigurator _configurator;
         private readonly IServiceProvider _services;
         private readonly ICryptographicService _cryptoService;
         private readonly IPackageRepository _packageRepo;
         private readonly IRoleAssignmentService _roleAssignmentService;
         public PackageActionsService(
-            ChimeraServiceConfigurator configurator,
             IServiceProvider services,
             ICryptographicService cryptoService,
             IPackageRepository packageRepo,
             IRoleAssignmentService roleAssignmentService)
         {
-            _configurator = configurator;
             _services = services;
             _cryptoService = cryptoService;
             _packageRepo = packageRepo;
@@ -45,55 +42,66 @@ namespace SecOpsSteward.Shared.Packaging
         private List<ChimeraContainer> _containers = new List<ChimeraContainer>();
         private List<ChimeraPackageIdentifier> _securelyLoaded = new List<ChimeraPackageIdentifier>();
 
-        // ---
 
-        public Task<bool> HasAccess(ChimeraPackageIdentifier pluginId, ConfigurableObjectParameterCollection configuration, string identity) =>
-            HasAccess(pluginId, configuration.AsSerializedString(), identity);
-
-        public async Task<bool> HasAccess(ChimeraPackageIdentifier pluginId, string configuration, string identity)
+        /// <summary>
+        /// If the Identity has the proper rights to perform the operation in the Plugin, with the given Configuration
+        /// </summary>
+        /// <param name="pluginId">Plugin ID to test</param>
+        /// <param name="configuration">Configuration for Plugin</param>
+        /// <param name="identity">Identity to test</param>
+        /// <returns><c>TRUE</c> if the identity has the rights required to perform the operation in the Plugin</returns>
+        public async Task<bool> HasAccess(ChimeraPackageIdentifier pluginId, ConfigurableObjectParameterCollection configuration, string identity)
         {
-            var plugin = await GetPlugin(pluginId, configuration);
+            var plugin = await GetPlugin(pluginId, configuration.AsSerializedString());
             return await _roleAssignmentService.HasAssignedPluginRole(plugin, plugin.RbacRequirements, identity);
         }
 
-        // -----
 
-        public Task<IEnumerable<PluginRbacRequirements>> GetRbacRequirements(ChimeraPackageIdentifier pluginId, ConfigurableObjectParameterCollection configuration) =>
-            GetRbacRequirements(pluginId, configuration.AsSerializedString());
-
-        public async Task<IEnumerable<PluginRbacRequirements>> GetRbacRequirements(ChimeraPackageIdentifier pluginId, string configuration)
+        /// <summary>
+        /// Get the requirements to present to the user for what the Plugin requires to execute
+        /// </summary>
+        /// <param name="pluginId">Plugin ID to check</param>
+        /// <param name="configuration">Configuration of Plugin ID</param>
+        /// <returns>List of RBAC requirements necessary to run the Plugin with this Configuration</returns>
+        public async Task<IEnumerable<PluginRbacRequirements>> GetRbacRequirements(ChimeraPackageIdentifier pluginId, ConfigurableObjectParameterCollection configuration)
         {
-            var plugin = await GetPlugin(pluginId, configuration);
+            var plugin = await GetPlugin(pluginId, configuration.AsSerializedString());
             return plugin.RbacRequirements;
         }
 
-        // -----
 
-        public Task Grant(ChimeraPackageIdentifier pluginId, ConfigurableObjectParameterCollection configuration, string identity) =>
-            Grant(pluginId, configuration.AsSerializedString(), identity);
-
-        public async Task Grant(ChimeraPackageIdentifier pluginId, string configuration, string identity)
+        /// <summary>
+        /// Grant access to the given Identity to execute the operation in a Plugin with a Configuration
+        /// </summary>
+        /// <param name="pluginId">Plugin ID to use for access requirements</param>
+        /// <param name="configuration">Configuration for Plugin</param>
+        /// <param name="identity">Identity OID to grant</param>
+        public async Task Grant(ChimeraPackageIdentifier pluginId, ConfigurableObjectParameterCollection configuration, string identity) 
         {
-            var plugin = await GetPlugin(pluginId, configuration);
+            var plugin = await GetPlugin(pluginId, configuration.AsSerializedString());
             await _roleAssignmentService.AssignPluginRole(plugin, plugin.RbacRequirements, identity);
         }
 
-        // -----
 
-        public Task Revoke(ChimeraPackageIdentifier pluginId, ConfigurableObjectParameterCollection configuration, string identity) =>
-            Revoke(pluginId, configuration.AsSerializedString(), identity);
-
-        public async Task Revoke(ChimeraPackageIdentifier pluginId, string configuration, string identity)
+        /// <summary>
+        /// Revoke access from the given Identity which allows execution of the operation in a Plugin with a Configuration
+        /// </summary>
+        /// <param name="pluginId">Plugin ID to use for access requirements</param>
+        /// <param name="configuration">Configuration for Plugin</param>
+        /// <param name="identity">Identity OID to revoke</param>
+        public async Task Revoke(ChimeraPackageIdentifier pluginId, ConfigurableObjectParameterCollection configuration, string identity)
         {
-            var plugin = await GetPlugin(pluginId, configuration);
+            var plugin = await GetPlugin(pluginId, configuration.AsSerializedString());
             await _roleAssignmentService.UnassignPluginRole(plugin, plugin.RbacRequirements, identity);
         }
 
-        // -----
 
-        public Task<List<DiscoveredServiceConfiguration>> Discover(ChimeraPackageIdentifier serviceId, ConfigurableObjectParameterCollection configuration) =>
-            Discover(serviceId, configuration.AsSerializedString());
-
+        /// <summary>
+        /// Discover any possible Managed Services in a given configuration (such as providing Subscription ID)
+        /// </summary>
+        /// <param name="serviceId">Service to check for</param>
+        /// <param name="configuration">Base configuration to use when checking</param>
+        /// <returns>List of discovered Managed Services which can be used in the system and the configurations required to use them</returns>
         public async Task<List<DiscoveredServiceConfiguration>> Discover(ChimeraPackageIdentifier serviceId, string configuration)
         {
             var svc = await GetService(serviceId, configuration);
@@ -102,11 +110,14 @@ namespace SecOpsSteward.Shared.Packaging
             return discovered;
         }
 
-        // -
-
-        public Task<List<DiscoveredServiceConfiguration>> Discover(ChimeraPackageIdentifier serviceId, ConfigurableObjectParameterCollection configuration, List<DiscoveredServiceConfiguration> discoveredElements, bool includeSecure = false) =>
-            Discover(serviceId, configuration.AsSerializedString(), discoveredElements, includeSecure);
-
+        /// <summary>
+        /// Run Phase-2 Discovery of any possible Managed Services in a given configuration (such as providing Subscription ID)
+        /// </summary>
+        /// <param name="serviceId">Service to check for</param>
+        /// <param name="configuration">Base configuration to use when checking</param>
+        /// <param name="discoveredElements">Discovered elements from Phase-1 Discovery</param>
+        /// <param name="includeSecure">Include secure elements in resource Discovery</param>
+        /// <returns>List of discovered Managed Services which can be used in the system and the configurations required to use them</returns>
         public async Task<List<DiscoveredServiceConfiguration>> Discover(ChimeraPackageIdentifier serviceId, string configuration, List<DiscoveredServiceConfiguration> discoveredElements, bool includeSecure = false)
         {
             var svc = await GetService(serviceId, configuration);
@@ -115,19 +126,27 @@ namespace SecOpsSteward.Shared.Packaging
             return discovered;
         }
 
-        // -----
 
-        public Task<PluginOutputStructure> Execute(ChimeraPackageIdentifier pluginId, ConfigurableObjectParameterCollection configuration, PluginOutputStructure previousOutput) =>
-            Execute(pluginId, configuration.AsSerializedString(), previousOutput);
+        /// <summary>
+        /// Execute a Plugin with a given configuration and using a previous output
+        /// </summary>
+        /// <param name="pluginId">Plugin ID</param>
+        /// <param name="configuration">Plugin Configuration</param>
+        /// <param name="previousOutput">Output from previous Plugin</param>
+        /// <returns>Output for next Plugin</returns>
+        public async Task<PluginOutputStructure> Execute(ChimeraPackageIdentifier pluginId, ConfigurableObjectParameterCollection configuration, PluginOutputStructure previousOutput) =>
+            await (await GetPlugin(pluginId, configuration.AsSerializedString())).Execute(previousOutput);
 
-        public async Task<PluginOutputStructure> Execute(ChimeraPackageIdentifier pluginId, string configuration, PluginOutputStructure previousOutput) =>
-            await (await GetPlugin(pluginId, configuration)).Execute(previousOutput);
 
-        // -----
-
-        public bool CheckContainerHash(ChimeraPackageIdentifier pluginId, byte[] expectedHash)
+        /// <summary>
+        /// Validate the hash of the Container Package against a known value
+        /// </summary>
+        /// <param name="containerId">Package Container ID to check</param>
+        /// <param name="expectedHash">Expected hash</param>
+        /// <returns></returns>
+        public bool CheckContainerHash(ChimeraPackageIdentifier containerId, byte[] expectedHash)
         {
-            var requestedContainer = new ChimeraPackageIdentifier(pluginId.GetComponents(PackageIdentifierComponents.Container));
+            var requestedContainer = new ChimeraPackageIdentifier(containerId.GetComponents(PackageIdentifierComponents.Container));
 
             var container = _containers.FirstOrDefault(c => c.GetMetadata().ContainerId == requestedContainer);
             if (container == null) return false;
@@ -135,6 +154,13 @@ namespace SecOpsSteward.Shared.Packaging
             else return container.GetMetadata().PackageContentHash.SequenceEqual(expectedHash);
         }
 
+
+        /// <summary>
+        /// Load a Package Container
+        /// </summary>
+        /// <param name="pluginId">Package Container ID to load</param>
+        /// <param name="secureLoad">If the load should be done securely (with signature verification)</param>
+        /// <returns>Loaded Package Container</returns>
         public async Task<ChimeraContainer> LoadContainer(ChimeraPackageIdentifier pluginId, bool secureLoad = false)
         {
             ChimeraContainer c;

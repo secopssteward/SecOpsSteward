@@ -66,10 +66,10 @@ namespace SecOpsSteward.Shared.Messages
             if (RunMessageServiceWithVirtualReceivers && envelope.Recipient.Type == ChimeraEntityIdentifier.EntityType.Agent)
             {
                 _logger.LogTrace($"Enqueueing {envelope.MessageType} message for {envelope.Recipient}");
-                if (!VirtualProcessors.ContainsKey(envelope.Recipient.AsAgent()))
+                if (!VirtualProcessors.ContainsKey(envelope.Recipient))
                     VirtualProcessors.Add(
-                        envelope.Recipient.AsAgent(),
-                        Task.Factory.StartNew(() => RunVirtualProcessor(envelope.Recipient.AsAgent()),
+                        envelope.Recipient,
+                        Task.Factory.StartNew(() => RunVirtualProcessor(envelope.Recipient.Id),
                                               System.Threading.CancellationToken.None,
                                               TaskCreationOptions.LongRunning,
                                               TaskScheduler.Default));

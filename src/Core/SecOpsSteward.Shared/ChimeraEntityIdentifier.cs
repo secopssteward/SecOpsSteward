@@ -73,22 +73,6 @@ namespace SecOpsSteward.Shared
 
             return Guid.Parse(id);
         }
-
-        public ChimeraPackageIdentifier WithContainer(string containerId)
-        {
-            this.Id = Guid.Parse(containerId + ServiceId + PluginId);
-            return this;
-        }
-        public ChimeraPackageIdentifier WithService(string serviceId)
-        {
-            this.Id = Guid.Parse(ContainerId + serviceId + PluginId);
-            return this;
-        }
-        public ChimeraPackageIdentifier WithPlugin(string pluginId)
-        {
-            this.Id = Guid.Parse(ContainerId + ServiceId + pluginId);
-            return this;
-        }
     }
 
     /// <summary>
@@ -138,29 +122,6 @@ namespace SecOpsSteward.Shared
     }
 
     /// <summary>
-    /// Identifies a Group
-    /// </summary>
-    public class ChimeraGroupIdentifier : ChimeraEntityIdentifier
-    {
-        /// <summary>
-        /// Identifies a Group
-        /// </summary>
-        public ChimeraGroupIdentifier() : base(EntityType.Group, Guid.Empty) { }
-
-        /// <summary>
-        /// Identifies a User
-        /// </summary>
-        /// <param name="id">Group ID</param>
-        public ChimeraGroupIdentifier(Guid id) : base(EntityType.Group, id) { }
-
-        /// <summary>
-        /// Implicitly converts a Guid to a Group Identifier
-        /// </summary>
-        /// <param name="g">Guid to convert</param>
-        public static implicit operator ChimeraGroupIdentifier(Guid g) => new ChimeraGroupIdentifier(g);
-    }
-
-    /// <summary>
     /// Identifies an entity in the Chimera system
     /// </summary>
     public class ChimeraEntityIdentifier
@@ -184,12 +145,7 @@ namespace SecOpsSteward.Shared
             /// <summary>
             /// Package identifier
             /// </summary>
-            Package = 4,
-
-            /// <summary>
-            /// Group identifier
-            /// </summary>
-            Group = 8
+            Package = 4
         }
 
         /// <summary>
@@ -274,11 +230,6 @@ namespace SecOpsSteward.Shared
                 ReferenceEquals(id2, null)) return true;
             return !id1.Equals(id2);
         }
-
-        public ChimeraAgentIdentifier AsAgent() => new ChimeraAgentIdentifier(this.Id);
-        public ChimeraUserIdentifier AsUser() => new ChimeraUserIdentifier(this.Id);
-        public ChimeraPackageIdentifier AsPackage() => new ChimeraPackageIdentifier(this.Id);
-        public ChimeraGroupIdentifier AsGroup() => new ChimeraGroupIdentifier(this.Id);
     }
 
     public static class GuidExtensions
