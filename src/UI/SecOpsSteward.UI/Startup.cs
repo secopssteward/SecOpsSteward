@@ -62,6 +62,11 @@ namespace SecOpsSteward.UI
         /// </summary>
         public static bool LockDiscovery => RunDemoMode || Instance.Configuration.GetValue("DisableDiscovery", false);
 
+        /// <summary>
+        ///     If individual Package-based permissions for Users and Agents are enabled
+        /// </summary>
+        public static bool IgnoreUserPermissionRestrictions => Instance.Configuration.GetValue("IgnoreUserPermissionRestrictions", false);
+
         // ---
 
         private void RegisterAuthXServices(IServiceCollection services)

@@ -1,4 +1,5 @@
 ﻿@using Microsoft.Azure.Management.AppService.Fluent
+@using SecOpsSteward.Integrations.Azure
 <MudDialog>
     <DialogContent>
         <MudText Typo="Typo.subtitle1" Align="Align.Center">
@@ -61,20 +62,29 @@
             await SelectedFunction.Update()
                 .WithAppSetting("AgentId", newAgentId)
                 .WithAppSetting("AgentName", AgentTag)
-                .WithAppSetting("TenantId", PlatformFactory.GetCredential().TenantId)
+                .WithAppSetting("TenantId", Configurator["TenantId"])
                 .WithAppSetting("Chimera__SubscriptionId", Configurator["SubscriptionId"])
                 .WithAppSetting("Chimera__VaultName", Configurator["VaultName"])
                 .WithAppSetting("Chimera__ServiceBusNamespace", Configurator["ServiceBusNamespace"])
                 .WithAppSetting("Chimera__PackageRepoAccount", Configurator["PackageRepoAccount"])
                 .WithAppSetting("Chimera__PackageRepoContainer", Configurator["PackageRepoContainer"])
+                .WithAppSetting("IgnoreUserPermissionRestrictions", $"{Startup.IgnoreUserPermissionRestrictions}")
                 .WithAppSetting("SOSBus", serviceBusConnectionString)
                 .ApplyAsync();
 
-            var agentModel = await DataBoundApi.AddAgent(AgentTag, Guid.Parse(newAgentId));
+            var isUpdating = false;
+            if (!DbContext.Agents.Any(a => a.AgentId == Guid.Parse(newAgentId)))
+            {
+                await DataBoundApi.AddAgent(AgentTag, Guid.Parse(newAgentId));
+                isUpdating = true;
+            }
 
             await SelectedFunction.RestartAsync();
 
-            Snackbar.Add("Agent " + newAgentId + " creation successful. App is restarting.", Severity.Success);
+            if (isUpdating)
+                Snackbar.Add("Agent " + newAgentId + " configuration update successful. App is restarting.", Severity.Success);
+            else
+                Snackbar.Add("Agent " + newAgentId + " creation successful. App is restarting.", Severity.Success);
         }
         catch (Exception ex)
         {
