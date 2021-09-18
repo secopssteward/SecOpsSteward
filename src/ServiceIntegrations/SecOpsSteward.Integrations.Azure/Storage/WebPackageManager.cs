@@ -15,7 +15,7 @@ using SecOpsSteward.Shared.Services;
 
 namespace SecOpsSteward.Integrations.Azure.Storage
 {
-    public class WebPackageManager : AzurePlatformIntegrationBase, IPackageRepository, IHasAgentCreationActions
+    public class WebPackageManager : AzurePlatformIntegrationBase, IPackageRepository, IHasAgentCreationActions, IHasUserEnrollmentActions
     {
         private const string PACKAGE_FILE_PREFIX = "pkg-";
 
@@ -139,6 +139,29 @@ namespace SecOpsSteward.Integrations.Azure.Storage
                     ? _platformFactory.GetCredentialPreferringAppIdentity().Credential
                     : _platformFactory.GetCredential().Credential
             );
+        }
+
+        private string PackageRepoScope =>
+            $"{BaseScope}/providers/Microsoft.Storage/storageAccounts/{CfgPackageRepoAccount}/blobServices/default/containers/{CfgPackageRepoContainer}";
+
+        public async Task OnUserEnrolled(ChimeraUserIdentifier user, ChimeraUserRole role)
+        {
+            await _roleAssignment.ApplyScopedRoleToIdentity(user, AssignableRole.CanReadPackages, PackageRepoScope);
+            if (role.HasFlag(ChimeraUserRole.PackageAdmin))
+            {
+                await _roleAssignment.ApplyScopedRoleToIdentity(user, AssignableRole.CanReadWritePackages,
+                    PackageRepoScope);
+            }
+        }
+
+        public async Task OnUserRemoved(ChimeraUserIdentifier user, ChimeraUserRole role)
+        {
+            await _roleAssignment.RemoveScopedRoleFromIdentity(user, AssignableRole.CanReadPackages, PackageRepoScope);
+            if (role.HasFlag(ChimeraUserRole.PackageAdmin))
+            {
+                await _roleAssignment.RemoveScopedRoleFromIdentity(user, AssignableRole.CanReadWritePackages,
+                    PackageRepoScope);
+            }
         }
     }
 }

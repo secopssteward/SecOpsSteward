@@ -14,7 +14,7 @@ using SecOpsSteward.Shared.Services;
 namespace SecOpsSteward.Integrations.Azure.Configuration
 {
     public class AzureKeyVaultConfigurationService : AzureKeyVaultIntegration, IConfigurationProvider,
-        IHasAgentCreationActions
+        IHasAgentCreationActions, IHasUserEnrollmentActions
     {
         public AzureKeyVaultConfigurationService(
             ILogger<AzureKeyVaultConfigurationService> logger,
@@ -26,16 +26,16 @@ namespace SecOpsSteward.Integrations.Azure.Configuration
 
         public async Task<AgentConfiguration> GetConfiguration(ChimeraAgentIdentifier agent)
         {
-            var secret = (await GetSecretClient().GetSecretAsync(GetConfigSecretName(agent))).Value;
+            var secret = (await GetAgentSecretClient().GetSecretAsync(GetConfigSecretName(agent))).Value;
             return ChimeraSharedHelpers.GetFromSerializedString<AgentConfiguration>(secret.Value);
         }
 
         public async Task<List<AgentConfiguration>> ListConfigurations()
         {
-            var secrets = GetSecretClient().GetPropertiesOfSecrets().Where(s => s.Name.EndsWith("-config"));
+            var secrets = GetAgentSecretClient().GetPropertiesOfSecrets().Where(s => s.Name.EndsWith("-config"));
             return (await Task.WhenAll(secrets.Select(async s =>
             {
-                var configStr = await GetSecretClient().GetSecretAsync(s.Name);
+                var configStr = await GetAgentSecretClient().GetSecretAsync(s.Name);
                 return ChimeraSharedHelpers.GetFromSerializedString<AgentConfiguration>(configStr.Value.Value);
             }))).ToList();
         }
@@ -43,7 +43,7 @@ namespace SecOpsSteward.Integrations.Azure.Configuration
         public async Task UpdateConfiguration(ChimeraAgentIdentifier agent, AgentConfiguration configuration)
         {
             var value = ChimeraSharedHelpers.SerializeToString(configuration);
-            await GetSecretClient().SetSecretAsync(GetConfigSecretName(agent), value);
+            await GetAgentSecretClient().SetSecretAsync(GetConfigSecretName(agent), value);
         }
 
         public int ServicePriority => 20;
@@ -62,14 +62,14 @@ namespace SecOpsSteward.Integrations.Azure.Configuration
             Pageable<SecretProperties> properties = null;
             try
             {
-                properties = GetSecretClient().GetPropertiesOfSecretVersions(secretName);
+                properties = GetAgentSecretClient().GetPropertiesOfSecretVersions(secretName);
             }
             catch
             {
             }
 
             if (properties == null || properties.AsPages().Count() > 0)
-                await GetSecretClient().SetSecretAsync(secretName, defaultConfig);
+                await GetAgentSecretClient().SetSecretAsync(secretName, defaultConfig);
 
             await _roleAssignment.ApplyScopedRoleToIdentity(agent, AssignableRole.CanReadWriteSecrets,
                 GetSecretScope(secretName));
@@ -77,7 +77,19 @@ namespace SecOpsSteward.Integrations.Azure.Configuration
 
         public Task OnAgentRemoved(ChimeraAgentIdentifier agent)
         {
-            return GetSecretClient().StartDeleteSecretAsync(GetConfigSecretName(agent));
+            return GetAgentSecretClient().StartDeleteSecretAsync(GetConfigSecretName(agent));
+        }
+
+        public async Task OnUserEnrolled(ChimeraUserIdentifier user, ChimeraUserRole userRole)
+        {
+            if (userRole.HasFlag(ChimeraUserRole.AgentAdmin))
+                await _roleAssignment.ApplyScopedRoleToIdentity(user, AssignableRole.CanReadWriteSecrets, AgentVaultScope);
+        }
+
+        public async Task OnUserRemoved(ChimeraUserIdentifier user, ChimeraUserRole userRole)
+        {
+            if (userRole.HasFlag(ChimeraUserRole.AgentAdmin))
+                await _roleAssignment.ApplyScopedRoleToIdentity(user, AssignableRole.CanReadWriteSecrets, AgentVaultScope);
         }
     }
 }

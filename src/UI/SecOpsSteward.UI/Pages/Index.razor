@@ -42,9 +42,9 @@
                 if (!DbContext.Users.Any())
                 {
                     Startup.FirstRun = true;
-                    await DataBoundApi.AddUser(TokenOwner.Create(null, false));
-                    await DataBoundApi.AddUser("bob");
-                    await DataBoundApi.AddUser("jane");
+                    await DataBoundApi.AddUser(TokenOwner.Create(null, false), ChimeraUserRole.GlobalAdmin);
+                    await DataBoundApi.AddUser("bob", ChimeraUserRole.MessageDispatcher);
+                    await DataBoundApi.AddUser("jane", ChimeraUserRole.PackageAdmin);
                 }
                 break;
             }

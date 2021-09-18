@@ -56,21 +56,45 @@ namespace SecOpsSteward.Integrations.Azure.Cryptography
 
         public Task OnAgentRemoved(ChimeraAgentIdentifier agent)
         {
-            return GetKeyClient().StartDeleteKeyAsync(GetKeyNameFromIdentifier(agent));
+            return GetAgentKeyClient().StartDeleteKeyAsync(GetKeyNameFromIdentifier(agent));
         }
 
         public int ServicePriority => 20;
 
         // ---
 
-        public Task OnUserEnrolled(ChimeraUserIdentifier user)
+        public async Task OnUserEnrolled(ChimeraUserIdentifier user, ChimeraUserRole role)
         {
-            return CreateKeysFor(user);
+            await CreateKeysFor(user);
+
+            if (role.HasFlag(ChimeraUserRole.AgentAdmin))
+            {
+                await _roleAssignment.ApplyScopedRoleToIdentity(user, AssignableRole.CanCreateKeys, AgentVaultScope);
+                await _roleAssignment.ApplyScopedRoleToIdentity(user, AssignableRole.CanManagePermissionsOnVault, AgentVaultScope);
+            }
+
+            if (role.HasFlag(ChimeraUserRole.UserAdmin))
+            {
+                await _roleAssignment.ApplyScopedRoleToIdentity(user, AssignableRole.CanCreateKeys, UserVaultScope);
+                await _roleAssignment.ApplyScopedRoleToIdentity(user, AssignableRole.CanManagePermissionsOnVault, UserVaultScope);
+            }
         }
 
-        public Task OnUserRemoved(ChimeraUserIdentifier user)
+        public async Task OnUserRemoved(ChimeraUserIdentifier user, ChimeraUserRole role)
         {
-            return GetKeyClient().StartDeleteKeyAsync(GetKeyNameFromIdentifier(user));
+            await GetUserKeyClient().StartDeleteKeyAsync(GetKeyNameFromIdentifier(user));
+
+            if (role.HasFlag(ChimeraUserRole.AgentAdmin))
+            {
+                await _roleAssignment.RemoveScopedRoleFromIdentity(user, AssignableRole.CanCreateKeys, AgentVaultScope);
+                await _roleAssignment.RemoveScopedRoleFromIdentity(user, AssignableRole.CanManagePermissionsOnVault, AgentVaultScope);
+            }
+
+            if (role.HasFlag(ChimeraUserRole.UserAdmin))
+            {
+                await _roleAssignment.RemoveScopedRoleFromIdentity(user, AssignableRole.CanCreateKeys, UserVaultScope);
+                await _roleAssignment.RemoveScopedRoleFromIdentity(user, AssignableRole.CanManagePermissionsOnVault, UserVaultScope);
+            }
         }
 
         public async Task CreateKeysFor(ChimeraEntityIdentifier entity)
@@ -81,18 +105,27 @@ namespace SecOpsSteward.Integrations.Azure.Cryptography
 
             try
             {
-                var thisKey = GetKeyClient().GetKeyAsync(keyName).Result;
-                Logger.LogTrace($"{entity} keys successfully created");
+                if (entity is ChimeraUserIdentifier)
+                    await GetUserKeyClient().GetKeyAsync(keyName);
+                else
+                    await GetAgentKeyClient().GetKeyAsync(keyName);
+                Logger.LogTrace($"{entity} keys already exist");
             }
             catch
             {
-                Logger.LogTrace($"{entity} keys already exist");
-                await GetKeyClient().CreateKeyAsync(keyName, KEY_TYPE);
+                if (entity is ChimeraUserIdentifier)
+                    await GetUserKeyClient().CreateKeyAsync(keyName, KEY_TYPE);
+                else
+                    await GetAgentKeyClient().CreateKeyAsync(keyName, KEY_TYPE);
+
+                Logger.LogTrace($"{entity} keys successfully created");
             }
 
-            await _roleAssignment.ApplyScopedRoleToIdentity(entity, AssignableRole.CanSignDecryptKey,
-                GetKeyScope(keyName));
-            await _roleAssignment.ApplyScopedRoleToIdentity(entity, AssignableRole.CanValidateEncryptKey, VaultScope);
+            var vaultScope = entity is ChimeraUserIdentifier ? UserVaultScope : AgentVaultScope;
+            var keyScope = entity is ChimeraUserIdentifier ? GetUserKeyScope(keyName) : GetAgentKeyScope(keyName);
+
+            await _roleAssignment.ApplyScopedRoleToIdentity(entity, AssignableRole.CanSignDecryptKey, keyScope);
+            await _roleAssignment.ApplyScopedRoleToIdentity(entity, AssignableRole.CanValidateEncryptKey, vaultScope);
         }
     }
 }

@@ -34,9 +34,9 @@ namespace SecOpsSteward.Data
             _dbFactory = dbFactory;
         }
 
-        public async Task<UserModel> AddUser(TokenOwner tokenOwner)
+        public async Task<UserModel> AddUser(TokenOwner tokenOwner, ChimeraUserRole role)
         {
-            await _chimeraSystem.CreateUser(tokenOwner.UserId);
+            await _chimeraSystem.CreateUser(tokenOwner.UserId, role);
 
             var userModel = new UserModel
             {
@@ -54,16 +54,17 @@ namespace SecOpsSteward.Data
             return userModel;
         }
 
-        public async Task<UserModel> AddUser(string username)
+        public async Task<UserModel> AddUser(string username, ChimeraUserRole role)
         {
             var user = await _roleAssignment.ResolveUsername(username);
-            await _chimeraSystem.CreateUser(user.UserId);
+            await _chimeraSystem.CreateUser(user.UserId, role);
 
             var userModel = new UserModel
             {
                 UserId = user.UserId.Id,
                 DisplayName = user.Name,
-                Username = user.Email
+                Username = user.Email,
+                Role = role
             };
 
             using (var cxt = _dbFactory.CreateDbContext())
@@ -77,13 +78,15 @@ namespace SecOpsSteward.Data
 
         public async Task RemoveUser(Guid userId)
         {
-            await _chimeraSystem.DestroyUser(userId);
-
             using (var cxt = _dbFactory.CreateDbContext())
             {
                 var userModel = cxt.Users.FirstOrDefault(u => u.UserId == userId);
-                if (userModel != null) cxt.Users.Remove(userModel);
-                await cxt.SaveChangesAsync();
+                if (userModel != null)
+                {
+                    await _chimeraSystem.DestroyUser(userId, userModel.Role);
+                    cxt.Users.Remove(userModel);
+                    await cxt.SaveChangesAsync();
+                }
             }
         }
 

@@ -105,11 +105,6 @@
         await Refresh();
     }
 
-    protected Task AddUser(UserModel u)
-    {
-        return TryExecute(() => DataBoundApi.AddUser(u.Username), "User enrollment completed", "User enrollment failed");
-    }
-
     protected Task RemoveUser(UserModel u)
     {
         return TryExecute(() => DataBoundApi.RemoveUser(u.UserId), "User removal completed", "User removal failed");

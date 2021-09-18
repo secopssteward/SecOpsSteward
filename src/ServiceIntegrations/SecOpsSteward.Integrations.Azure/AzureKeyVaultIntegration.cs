@@ -24,9 +24,11 @@ namespace SecOpsSteward.Integrations.Azure
         {
         }
 
-        private string CfgVaultName => _configurator["VaultName"];
+        private string AgentVaultName => _configurator["AgentVaultName"];
+        private string UserVaultName => _configurator["UserVaultName"];
 
-        protected string VaultScope => $"{BaseScope}/providers/Microsoft.KeyVault/vaults/" + CfgVaultName;
+        protected string AgentVaultScope => $"{BaseScope}/providers/Microsoft.KeyVault/vaults/" + AgentVaultName;
+        protected string UserVaultScope => $"{BaseScope}/providers/Microsoft.KeyVault/vaults/" + UserVaultName;
 
         protected static string GetConfigSecretName(ChimeraAgentIdentifier identifier)
         {
@@ -47,7 +49,10 @@ namespace SecOpsSteward.Integrations.Azure
         {
             // todo: can we simplify this to generating a URL?
             var keyName = GetKeyNameFromIdentifier(identifier);
-            return GetKeyClient().GetKey(keyName).Value.Id.ToString();
+            if (identifier is ChimeraUserIdentifier)
+                return GetUserKeyClient().GetKey(keyName).Value.Id.ToString();
+            else
+                return GetAgentKeyClient().GetKey(keyName).Value.Id.ToString();
         }
 
         protected CryptographyClient GetCryptoClient(ChimeraEntityIdentifier identifier)
@@ -55,24 +60,39 @@ namespace SecOpsSteward.Integrations.Azure
             return new(new Uri(GetKeyIdFromIdentifier(identifier)), _platformFactory.GetCredential().Credential);
         }
 
-        protected KeyClient GetKeyClient()
+        protected KeyClient GetUserKeyClient()
         {
-            return new(new Uri($"https://{CfgVaultName}.vault.azure.net"), _platformFactory.GetCredential().Credential);
+            return new(new Uri($"https://{UserVaultName}.vault.azure.net"), _platformFactory.GetCredential().Credential);
         }
 
-        protected SecretClient GetSecretClient()
+        protected KeyClient GetAgentKeyClient()
         {
-            return new(new Uri($"https://{CfgVaultName}.vault.azure.net"), _platformFactory.GetCredential().Credential);
+            return new(new Uri($"https://{AgentVaultName}.vault.azure.net"), _platformFactory.GetCredential().Credential);
+        }
+
+        protected SecretClient GetUserSecretClient()
+        {
+            return new(new Uri($"https://{UserVaultName}.vault.azure.net"), _platformFactory.GetCredential().Credential);
+        }
+
+        protected SecretClient GetAgentSecretClient()
+        {
+            return new(new Uri($"https://{AgentVaultName}.vault.azure.net"), _platformFactory.GetCredential().Credential);
         }
 
         protected string GetSecretScope(string secretName)
         {
-            return $"{VaultScope}/secrets/{secretName}";
+            return $"{AgentVaultScope}/secrets/{secretName}";
         }
 
-        protected string GetKeyScope(string keyName)
+        protected string GetAgentKeyScope(string keyName)
         {
-            return $"{VaultScope}/keys/{keyName}";
+            return $"{AgentVaultScope}/keys/{keyName}";
+        }
+
+        protected string GetUserKeyScope(string keyName)
+        {
+            return $"{UserVaultScope}/keys/{keyName}";
         }
     }
 }

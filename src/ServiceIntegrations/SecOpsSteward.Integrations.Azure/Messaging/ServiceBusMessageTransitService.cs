@@ -45,14 +45,22 @@ namespace SecOpsSteward.Integrations.Azure.Messaging
 
         // ---
 
-        public Task OnUserEnrolled(ChimeraUserIdentifier user)
+        public async Task OnUserEnrolled(ChimeraUserIdentifier user, ChimeraUserRole role)
         {
-            return AddQueueFor(user);
+            if (role.HasFlag(ChimeraUserRole.MessageDispatcher))
+                await AddQueueFor(user);
+            if (role.HasFlag(ChimeraUserRole.MessageAdmin))
+                await _roleAssignment.ApplyScopedRoleToIdentity(user,
+                    AssignableRole.CanReceiveFromQueue | AssignableRole.CanSendToQueue, ServiceBusScope);
         }
 
-        public Task OnUserRemoved(ChimeraUserIdentifier user)
+        public async Task OnUserRemoved(ChimeraUserIdentifier user, ChimeraUserRole role)
         {
-            return DropQueueFor(user);
+            if (role.HasFlag(ChimeraUserRole.MessageDispatcher))
+                await DropQueueFor(user);
+            if (role.HasFlag(ChimeraUserRole.MessageAdmin))
+                await _roleAssignment.RemoveScopedRoleFromIdentity(user,
+                    AssignableRole.CanReceiveFromQueue | AssignableRole.CanSendToQueue, ServiceBusScope);
         }
 
         public async Task Dequeue(ChimeraEntityIdentifier entityId,

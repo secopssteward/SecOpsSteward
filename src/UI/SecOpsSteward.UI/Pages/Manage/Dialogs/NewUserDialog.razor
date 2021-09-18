@@ -1,6 +1,21 @@
 ﻿<MudDialog>
     <DialogContent>
-        <MudTextField Value="@Username" Label="Username"/>
+        <MudGrid Spacing="2">
+            <MudItem xs="12">
+                <MudTextField Value="@Username" Label="Username"/>
+            </MudItem>
+            <MudItem xs="12">
+                <MudCheckBox @bind-Checked="@GlobalAdmin" Label="Global Admin">
+                    <MudText Typo="Typo.subtitle1">Global Admins can do anything in the SecOps Steward system.</MudText>
+                </MudCheckBox>
+                <MudCheckBox @bind-Checked="@UserAdmin" Label="User Admin" />
+                <MudCheckBox @bind-Checked="@PackageAdmin" Label="Package Admin" />
+                <MudCheckBox @bind-Checked="@AgentAdmin" Label="Agent Admin" />
+                <MudCheckBox @bind-Checked="@MessageAdmin" Label="Message Admin" />
+                <MudCheckBox @bind-Checked="@MessageDispatcher" Label="Message Dispatcher" />
+            </MudItem>
+        </MudGrid>
+        
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="Cancel">Cancel</MudButton>
@@ -13,7 +28,20 @@
     [CascadingParameter]
     MudDialogInstance MudDialog { get; set; }
 
+    [Inject]
+    IRoleAssignmentService RoleAssignment { get; set; }
+
     protected string Username { get; set; } = string.Empty;
+
+    protected IEnumerable<MudChip> SelectedRoles { get; set; } = new List<MudChip>();
+
+    protected ChimeraUserRole Role { get; set; } = ChimeraUserRole.None;
+    protected bool MessageDispatcher { get => Role.HasFlag(ChimeraUserRole.MessageDispatcher); set => Role |= ChimeraUserRole.MessageDispatcher; }
+    protected bool MessageAdmin { get => Role.HasFlag(ChimeraUserRole.MessageAdmin); set => Role |= ChimeraUserRole.MessageAdmin; }
+    protected bool AgentAdmin { get => Role.HasFlag(ChimeraUserRole.AgentAdmin); set => Role |= ChimeraUserRole.AgentAdmin; }
+    protected bool GlobalAdmin { get => Role.HasFlag(ChimeraUserRole.GlobalAdmin); set => Role |= ChimeraUserRole.GlobalAdmin; }
+    protected bool PackageAdmin { get => Role.HasFlag(ChimeraUserRole.PackageAdmin); set => Role |= ChimeraUserRole.PackageAdmin; }
+    protected bool UserAdmin { get => Role.HasFlag(ChimeraUserRole.UserAdmin); set => Role |= ChimeraUserRole.UserAdmin; }
 
     private void Cancel()
     {
@@ -24,7 +52,7 @@
     {
         try
         {
-            await DataBoundApi.AddUser(Username);
+            var userModel = await DataBoundApi.AddUser(Username, Role);
             Snackbar.Add("User enrollment successful.", Severity.Success);
         }
         catch (Exception ex)

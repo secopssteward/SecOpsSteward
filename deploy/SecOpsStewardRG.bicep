@@ -71,7 +71,8 @@ var location = resourceGroup().location
 var hostingPlanName = 'soshosting${randomString}'
 var sqlserverName = 'sossql${randomString}'
 var databaseName = 'sosdb'
-var vaultName = 'sosvault${randomString}'
+var userVaultName = 'sosuvault${randomString}'
+var agentVaultName = 'sosavault${randomString}'
 var serviceBusNamespaceName = 'sosbus${randomString}'
 var storageAccountName = 'sosblobs${randomString}'
 // ----------------------------------------------------------------------------
@@ -179,8 +180,12 @@ resource webapp 'Microsoft.Web/sites@2020-06-01' = {
           value: subscriptionId
         }
         {
-          name: 'Chimera__VaultName'
-          value: keyvault.name
+          name: 'Chimera__AgentVaultName'
+          value: agentkeyvault.name
+        }
+        {
+          name: 'Chimera__UserVaultName'
+          value: userkeyvault.name
         }
         {
           name: 'Chimera__ServiceBusNamespace'
@@ -248,9 +253,9 @@ resource webapp_appinsights 'Microsoft.Insights/components@2018-05-01-preview' =
 }
 
 
-// -----------------------------==[ KEY VAULT ]==-----------------------------
-resource keyvault 'Microsoft.KeyVault/vaults@2019-09-01' = {
-  name: vaultName
+// -----------------------------==[ KEY VAULT - USERS ]==-----------------------------
+resource userkeyvault 'Microsoft.KeyVault/vaults@2019-09-01' = {
+  name: userVaultName
   location: location
   properties: {
     tenantId: subscription().tenantId
@@ -269,42 +274,102 @@ resource keyvault 'Microsoft.KeyVault/vaults@2019-09-01' = {
 // 00482a5a-887f-4fb3-b363-3b7fe8e74483 admin
 // f25e0fa2-a7c8-4377-a976-54943a77a395 contrib
 // 18d7d88d-d35e-4fb5-a5c3-7773c20a72d9 user access admin
-resource roleAssignment_vaultA 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = {
-  name: guid(keyvault.name, '00482a5a')
-  scope: keyvault
+resource userkeyvault_role1 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = {
+  name: guid(userkeyvault.name, '00482a5a')
+  scope: userkeyvault
   properties: {
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '00482a5a-887f-4fb3-b363-3b7fe8e74483')
     principalId: mainUserPrincipal
     principalType: 'User'
   }
   dependsOn: [
-    keyvault
+    userkeyvault
   ]
 }
 
-resource roleAssignment_vaultB 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = {
-  name: guid(keyvault.name, 'f25e0fa2')
-  scope: keyvault
+resource userkeyvault_role2 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = {
+  name: guid(userkeyvault.name, 'f25e0fa2')
+  scope: userkeyvault
   properties: {
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'f25e0fa2-a7c8-4377-a976-54943a77a395')
     principalId: mainUserPrincipal
     principalType: 'User'
   }
   dependsOn: [
-    keyvault
+    userkeyvault
   ]
 }
 
-resource roleAssignment_vaultC 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = {
-  name: guid(keyvault.name, '18d7d88d')
-  scope: keyvault
+resource userkeyvault_role3 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = {
+  name: guid(userkeyvault.name, '18d7d88d')
+  scope: userkeyvault
   properties: {
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '18d7d88d-d35e-4fb5-a5c3-7773c20a72d9')
     principalId: mainUserPrincipal
     principalType: 'User'
   }
   dependsOn: [
-    keyvault
+    userkeyvault
+  ]
+}
+
+// ----------------------------==[ KEY VAULT - AGENTS ]==----------------------------
+resource agentkeyvault 'Microsoft.KeyVault/vaults@2019-09-01' = {
+  name: agentVaultName
+  location: location
+  properties: {
+    tenantId: subscription().tenantId
+    sku: {
+      family: 'A'
+      name: vaultSku
+    }
+    enabledForDeployment: false
+    enabledForDiskEncryption: false
+    enabledForTemplateDeployment: false
+    softDeleteRetentionInDays: 90
+    enableRbacAuthorization: true
+  }
+}
+
+// 00482a5a-887f-4fb3-b363-3b7fe8e74483 admin
+// f25e0fa2-a7c8-4377-a976-54943a77a395 contrib
+// 18d7d88d-d35e-4fb5-a5c3-7773c20a72d9 user access admin
+resource agentkeyvault_role1 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = {
+  name: guid(agentkeyvault.name, '00482a5a')
+  scope: agentkeyvault
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '00482a5a-887f-4fb3-b363-3b7fe8e74483')
+    principalId: mainUserPrincipal
+    principalType: 'User'
+  }
+  dependsOn: [
+    agentkeyvault
+  ]
+}
+
+resource agentkeyvault_role2 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = {
+  name: guid(agentkeyvault.name, 'f25e0fa2')
+  scope: agentkeyvault
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'f25e0fa2-a7c8-4377-a976-54943a77a395')
+    principalId: mainUserPrincipal
+    principalType: 'User'
+  }
+  dependsOn: [
+    agentkeyvault
+  ]
+}
+
+resource agentkeyvault_role3 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = {
+  name: guid(agentkeyvault.name, '18d7d88d')
+  scope: agentkeyvault
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '18d7d88d-d35e-4fb5-a5c3-7773c20a72d9')
+    principalId: mainUserPrincipal
+    principalType: 'User'
+  }
+  dependsOn: [
+    agentkeyvault
   ]
 }
 

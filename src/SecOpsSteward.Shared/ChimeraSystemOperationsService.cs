@@ -73,20 +73,22 @@ namespace SecOpsSteward.Shared
         ///     Create/enroll a new User in the Chimera system
         /// </summary>
         /// <param name="userId">User ID to enroll</param>
+        /// <param name="role">User role</param>
         /// <returns></returns>
-        public Task CreateUser(ChimeraUserIdentifier userId)
+        public Task CreateUser(ChimeraUserIdentifier userId, ChimeraUserRole role)
         {
-            return RunOnAllServices<IHasUserEnrollmentActions>(s => s.OnUserEnrolled(userId));
+            return RunOnAllServices<IHasUserEnrollmentActions>(s => s.OnUserEnrolled(userId, role));
         }
 
         /// <summary>
         ///     Destroy/unenroll a User from the Chimera system
         /// </summary>
         /// <param name="userId">User ID to remove</param>
+        /// <param name="role">User Role</param>
         /// <returns></returns>
-        public Task DestroyUser(ChimeraUserIdentifier userId)
+        public Task DestroyUser(ChimeraUserIdentifier userId, ChimeraUserRole role)
         {
-            return RunOnAllServices<IHasUserEnrollmentActions>(s => s.OnUserRemoved(userId));
+            return RunOnAllServices<IHasUserEnrollmentActions>(s => s.OnUserRemoved(userId, role));
         }
 
         private async Task RunOnAllServices<TService>(Func<TService, Task> cmd)

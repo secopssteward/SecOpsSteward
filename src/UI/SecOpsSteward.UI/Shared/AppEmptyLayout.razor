@@ -33,7 +33,7 @@
             StateHasChanged();
 
             Snackbar.Add("Registering user " + CurrentUser.Email, Severity.Info);
-            await DataBoundApi.AddUser(CurrentUser);
+            await DataBoundApi.AddUser(CurrentUser, ChimeraUserRole.GlobalAdmin);
             Snackbar.Add("Done registering user " + CurrentUser.Email, Severity.Success);
         }
         else
