@@ -20,6 +20,7 @@
             <MudTooltip Text="Contextual help for this page">
                 <MudIconButton Disabled="@(helpContent == null)" Icon="@Icons.Material.Filled.HelpOutline" Color="@helpColor" OnClick="@HelpDrawerToggle" id="helpCircleIcon"/>
             </MudTooltip>
+            <GenerateBugReportComponent />
             <MudIconButton Icon="@Icons.Material.Filled.Logout" Color="Color.Inherit" Link="/signout-oidc"/>
         </MudAppBar>
         <MudDrawer @bind-Open="@_drawerOpen" ClipMode="DrawerClipMode.Docked" Style="z-index: 5000;">
