@@ -15,8 +15,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\UI\SecOpsSteward.Data\SecOpsSteward.Data.csproj" />
     <ProjectReference Include="..\..\ServiceIntegrations\SecOpsSteward.Integrations.Azure\SecOpsSteward.Integrations.Azure.csproj" />
-    <ProjectReference Include="..\..\Plugins\SecOpsSteward.Plugins.Azure.Storage\SecOpsSteward.Plugins.Azure.Storage.csproj" />
-    <ProjectReference Include="..\..\Core\SecOpsSteward.Shared\SecOpsSteward.Shared.csproj" />
+    <ProjectReference Include="..\..\SecOpsSteward.Shared\SecOpsSteward.Shared.csproj" />
   </ItemGroup>
   <ItemGroup>
     <None Update="local.settings.json">

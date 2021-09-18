@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using SecOpsSteward.Data.Models;
 using SecOpsSteward.Data.Workflow;
-using SecOpsSteward.Plugins.Azure;
 using SecOpsSteward.Shared;
 using SecOpsSteward.Shared.Packaging;
 using SecOpsSteward.Shared.Roles;
@@ -16,21 +15,18 @@ namespace SecOpsSteward.Data
     public class DataBoundApi
     {
         private readonly ChimeraSystemOperationsService _chimeraSystem;
-        private readonly AzureCurrentCredentialFactory _credentialFactory;
         private readonly PackageActionsService _packageActionsService;
         private readonly IPackageRepository _packageRepository;
         private readonly IRoleAssignmentService _roleAssignment;
         private readonly IDbContextFactory<SecOpsStewardDbContext> _dbFactory;
 
         public DataBoundApi(
-            AzureCurrentCredentialFactory credentialFactory,
             ChimeraSystemOperationsService chimeraSystem,
             IRoleAssignmentService roleAssignment,
             PackageActionsService packageActionsService,
             IPackageRepository packageRepository,
             IDbContextFactory<SecOpsStewardDbContext> dbFactory)
         {
-            _credentialFactory = credentialFactory;
             _chimeraSystem = chimeraSystem;
             _roleAssignment = roleAssignment;
             _packageActionsService = packageActionsService;
@@ -333,7 +329,6 @@ namespace SecOpsSteward.Data
 
         public async Task RemovePackage(Guid containerId)
         {
-            var credential = _credentialFactory.GetCredential().Credential;
             await _packageRepository.Delete(containerId);
 
             using (var cxt = _dbFactory.CreateDbContext())

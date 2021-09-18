@@ -12,7 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Core\SecOpsSteward.Shared\SecOpsSteward.Shared.csproj" />
+    <ProjectReference Include="..\..\SecOpsSteward.Shared\SecOpsSteward.Shared.csproj" />
   </ItemGroup>
 
   <Target Name="CopyBuiltFiles" AfterTargets="Build">

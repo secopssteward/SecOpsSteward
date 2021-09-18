@@ -5,8 +5,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Core\SecOpsSteward.Plugins.Azure\SecOpsSteward.Plugins.Azure.csproj" />
-    <ProjectReference Include="..\..\Core\SecOpsSteward.Plugins\SecOpsSteward.Plugins.csproj" />
+    <ProjectReference Include="..\SecOpsSteward.Plugins.Azure\SecOpsSteward.Plugins.Azure.csproj" />
+    <ProjectReference Include="..\SecOpsSteward.Plugins\SecOpsSteward.Plugins.csproj" />
   </ItemGroup>
 
 </Project>

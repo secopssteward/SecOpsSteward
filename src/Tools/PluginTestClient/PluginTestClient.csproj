@@ -11,8 +11,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\SecOpsSteward.Shared\SecOpsSteward.Shared.csproj" />
     <ProjectReference Include="..\..\ServiceIntegrations\SecOpsSteward.Integrations.Azure\SecOpsSteward.Integrations.Azure.csproj" />
-    <ProjectReference Include="..\..\Core\SecOpsSteward.Shared\SecOpsSteward.Shared.csproj" />
   </ItemGroup>
 
   <Target Name="CopyBuiltFiles" AfterTargets="Build">
