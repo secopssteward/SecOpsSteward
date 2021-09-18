@@ -1,8 +1,8 @@
-﻿using SecOpsSteward.Plugins.Configurable;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Threading.Tasks;
+using SecOpsSteward.Plugins.Configurable;
 
 namespace SecOpsSteward.Plugins.Azure.Storage
 {
@@ -20,29 +20,21 @@ namespace SecOpsSteward.Plugins.Azure.Storage
         "1.0.0")]
     [ManagedService(typeof(AzureStorageService))]
     [PossibleResultCodes(CommonResultCodes.Success, CommonResultCodes.Failure)]
-    [GeneratedSharedOutputs("Storage/{{$Configuration.ResourceGroup}}/{{$Configuration.StorageAccount}}/{{$Configuration.RegeneratePrimaryKey?key1:key2}}")]
+    [GeneratedSharedOutputs(
+        "Storage/{{$Configuration.ResourceGroup}}/{{$Configuration.StorageAccount}}/{{$Configuration.RegeneratePrimaryKey?key1:key2}}")]
     public class StorageRegenerateKey : SOSPlugin<StorageRegenerateKeyConfiguration>
     {
-        protected AzureCurrentCredentialFactory PlatformFactory { get; set; }
         public StorageRegenerateKey(AzureCurrentCredentialFactory platformFactory)
         {
             PlatformFactory = platformFactory;
             if (platformFactory == null) throw new Exception("Platform handle not found");
         }
-        public StorageRegenerateKey() { }
 
-        public override async Task<PluginOutputStructure> Execute(PluginOutputStructure previousOutput)
+        public StorageRegenerateKey()
         {
-            var azure = PlatformFactory.GetCredential(Configuration.SubscriptionId).GetAzure();
-            var newKeys = await
-                (await Configuration.GetStorageAsync(azure))
-                 .RegenerateKeyAsync(Configuration.RegeneratePrimaryKey ? "key1" : "key2");
-
-            // todo: kerb1/kerb2
-
-            return new PluginOutputStructure(CommonResultCodes.Success)
-                .WithSecureOutput($"Storage/{Configuration.ResourceGroup}/{Configuration.StorageAccount}/{(Configuration.RegeneratePrimaryKey ? "key1" : "key2")}", newKeys[0].Value);
         }
+
+        protected AzureCurrentCredentialFactory PlatformFactory { get; set; }
 
         public override IEnumerable<PluginRbacRequirements> RbacRequirements => new[]
         {
@@ -52,5 +44,20 @@ namespace SecOpsSteward.Plugins.Azure.Storage
                 "Microsoft.Storage/storageAccounts/regenerateKey/action",
                 "Microsoft.Storage/storageAccounts/read")
         };
+
+        public override async Task<PluginOutputStructure> Execute(PluginOutputStructure previousOutput)
+        {
+            var azure = PlatformFactory.GetCredential(Configuration.SubscriptionId).GetAzure();
+            var newKeys = await
+                (await Configuration.GetStorageAsync(azure))
+                .RegenerateKeyAsync(Configuration.RegeneratePrimaryKey ? "key1" : "key2");
+
+            // todo: kerb1/kerb2
+
+            return new PluginOutputStructure(CommonResultCodes.Success)
+                .WithSecureOutput(
+                    $"Storage/{Configuration.ResourceGroup}/{Configuration.StorageAccount}/{(Configuration.RegeneratePrimaryKey ? "key1" : "key2")}",
+                    newKeys[0].Value);
+        }
     }
 }

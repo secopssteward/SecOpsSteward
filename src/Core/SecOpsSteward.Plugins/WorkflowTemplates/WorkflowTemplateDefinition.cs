@@ -1,56 +1,59 @@
-﻿using SecOpsSteward.Plugins.Configurable;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
+using SecOpsSteward.Plugins.Configurable;
 
 namespace SecOpsSteward.Plugins.WorkflowTemplates
 {
     /// <summary>
-    /// Defines a templated workflow which can be inserted into a user-created workflow
+    ///     Defines a templated workflow which can be inserted into a user-created workflow
     /// </summary>
     public class WorkflowTemplateDefinition
     {
         /// <summary>
-        /// Fixed workflow template ID
+        ///     Fixed workflow template ID
         /// </summary>
         public Guid WorkflowTemplateId { get; set; }
 
         /// <summary>
-        /// Name of templated workflow
+        ///     Name of templated workflow
         /// </summary>
         public string Name { get; set; }
 
         /// <summary>
-        /// Templated workflow Configuration
+        ///     Templated workflow Configuration
         /// </summary>
         public ConfigurableObjectParameterCollection Configuration
         {
             get => JsonSerializer.Deserialize<ConfigurableObjectParameterCollection>(ConfigurationJson);
             set => ConfigurationJson = JsonSerializer.Serialize(value);
         }
+
         public string ConfigurationJson { get; set; }
 
         /// <summary>
-        /// Participant plugins for this templated workflow and their configuration mappings
+        ///     Participant plugins for this templated workflow and their configuration mappings
         /// </summary>
-        public List<WorkflowTemplateParticipantDefinition> Participants { get; set; } = new List<WorkflowTemplateParticipantDefinition>();
+        public List<WorkflowTemplateParticipantDefinition> Participants { get; set; } = new();
 
         public WorkflowTemplateDefinition Clone()
         {
-            return new WorkflowTemplateDefinition()
+            return new WorkflowTemplateDefinition
             {
-                WorkflowTemplateId = this.WorkflowTemplateId,
-                Name = this.Name,
-                ConfigurationJson = this.ConfigurationJson,
-                Participants = new List<WorkflowTemplateParticipantDefinition>(this.Participants)
+                WorkflowTemplateId = WorkflowTemplateId,
+                Name = Name,
+                ConfigurationJson = ConfigurationJson,
+                Participants = new List<WorkflowTemplateParticipantDefinition>(Participants)
             };
         }
 
         public WorkflowTemplateDefinition RunWorkflowStep<TParticipant>(
             params KeyValuePair<string, string>[] mappings) where TParticipant : IPlugin, new()
         {
-            Participants.Add(new WorkflowTemplateParticipantDefinition<TParticipant>(mappings.ToDictionary(k => k.Key, v => v.Value)));
+            Participants.Add(
+                new WorkflowTemplateParticipantDefinition<TParticipant>(mappings.ToDictionary(k => k.Key,
+                    v => v.Value)));
             return this;
         }
 
@@ -60,23 +63,29 @@ namespace SecOpsSteward.Plugins.WorkflowTemplates
             return this;
         }
 
-        public override string ToString() => $"Workflow '{Name}' ({Participants.Count})";
+        public override string ToString()
+        {
+            return $"Workflow '{Name}' ({Participants.Count})";
+        }
     }
 
     public class WorkflowTemplateDefinition<TManagedService, TConfiguration> : WorkflowTemplateDefinition
         where TManagedService : IManagedServicePackage
         where TConfiguration : IConfigurableObjectConfiguration, new()
     {
-        public WorkflowTemplateDefinition() : base()
+        public WorkflowTemplateDefinition()
         {
             Configuration = ConfigurableObjectParameterCollection.CreateFromObject(new TConfiguration());
         }
+
         public WorkflowTemplateDefinition(string name) : this()
         {
             Name = name;
             WorkflowTemplateId = IdGenerationExtensions.GenerateWorkflowId<TManagedService>(name);
         }
-        public WorkflowTemplateDefinition(string name, params WorkflowTemplateParticipantDefinition[] participantDefinitions) : this(name)
+
+        public WorkflowTemplateDefinition(string name,
+            params WorkflowTemplateParticipantDefinition[] participantDefinitions) : this(name)
         {
             foreach (var item in participantDefinitions)
                 Participants.Add(item);
@@ -85,7 +94,9 @@ namespace SecOpsSteward.Plugins.WorkflowTemplates
 
     public static class WorkflowTemplateDefinitionExtensions
     {
-        public static KeyValuePair<string, string> MapsTo(this string key, string value) =>
-            new KeyValuePair<string, string>(key, value);
+        public static KeyValuePair<string, string> MapsTo(this string key, string value)
+        {
+            return new(key, value);
+        }
     }
 }

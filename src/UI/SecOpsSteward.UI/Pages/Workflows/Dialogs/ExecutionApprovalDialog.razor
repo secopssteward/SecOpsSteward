@@ -1,7 +1,4 @@
-﻿@using Microsoft.Azure.Management.AppService.Fluent
-@using System.Text.Json
-@using SecOpsSteward.UI.Widgets
-<MudDialog>
+﻿<MudDialog>
     <DialogContent>
         <MudText Typo="Typo.subtitle1" Align="Align.Center">
             A Workflow execution has been received. Would you like to process it?
@@ -16,9 +13,11 @@
         <MudButton Color="Color.Success" OnClick="@Process">Yes</MudButton>
     </DialogActions>
 </MudDialog>
+
 @code {
 
-    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+    [CascadingParameter]
+    MudDialogInstance MudDialog { get; set; }
 
     private void Cancel()
     {
@@ -28,6 +27,7 @@
 
     private void Process()
     {
-        MudDialog.Close(DialogResult.Ok<bool>(true));
+        MudDialog.Close(DialogResult.Ok(true));
     }
+
 }

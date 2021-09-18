@@ -11,7 +11,8 @@ namespace SecOpsSteward.Shared.NonceTracking
 
         public static void AddTempFileNonceTracking(this IServiceCollection serviceCollection, string path = null)
         {
-            serviceCollection.AddSingleton<INonceTrackingService, LocalFileNonceTrackingService>(s => new LocalFileNonceTrackingService(path));
+            serviceCollection.AddSingleton<INonceTrackingService, LocalFileNonceTrackingService>(s =>
+                new LocalFileNonceTrackingService(path));
         }
     }
 }

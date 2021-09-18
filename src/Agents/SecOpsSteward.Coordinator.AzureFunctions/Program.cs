@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -6,41 +9,43 @@ using SecOpsSteward.Integrations.Azure;
 using SecOpsSteward.Plugins.Azure;
 using SecOpsSteward.Shared;
 using SecOpsSteward.Shared.NonceTracking;
-using System;
-using System.Collections.Generic;
-using System.IO;
 
 namespace SecOpsSteward.Coordinator.AzureFunctions
 {
     public class Program
     {
-        internal static ChimeraAgentIdentifier AgentId => new ChimeraAgentIdentifier(Guid.Parse(Environment.GetEnvironmentVariable("AgentId")));
+        internal static ChimeraAgentIdentifier AgentId =>
+            new(Guid.Parse(Environment.GetEnvironmentVariable("AgentId")));
+
         internal static string AgentDescription => Environment.GetEnvironmentVariable("AgentName");
+
         internal static bool IgnoreUserPermissionRestrictions =>
-            Environment.GetEnvironmentVariable("IgnoreUserPermissionRestrictions") != null ?
-            Boolean.Parse(Environment.GetEnvironmentVariable("IgnoreUserPermissionRestrictions")) : false;
+            Environment.GetEnvironmentVariable("IgnoreUserPermissionRestrictions") != null
+                ? bool.Parse(Environment.GetEnvironmentVariable("IgnoreUserPermissionRestrictions"))
+                : false;
 
         internal static IServiceProvider Services { get; private set; }
         protected static IConfiguration Configuration { get; set; }
+
         public static void Main()
         {
             Configuration = new ConfigurationBuilder()
-                    .SetBasePath(Directory.GetCurrentDirectory())
-                    .AddJsonFile("local.settings.json", optional: true, reloadOnChange: true)
-                    .AddEnvironmentVariables()
-                    .Build();
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("local.settings.json", true, true)
+                .AddEnvironmentVariables()
+                .Build();
 
             var host = new HostBuilder()
                 .ConfigureFunctionsWorkerDefaults()
                 .ConfigureServices(services =>
                 {
-                    var config = new ChimeraServiceConfigurator(new Dictionary<string, string>()
+                    var config = new ChimeraServiceConfigurator(new Dictionary<string, string>
                     {
-                        { "SubscriptionId", Configuration.GetSection("Chimera")["SubscriptionId"] },
-                        { "VaultName", Configuration.GetSection("Chimera")["VaultName"] },
-                        { "PackageRepoAccount", Configuration.GetSection("Chimera")["PackageRepoAccount"] },
-                        { "PackageRepoContainer", Configuration.GetSection("Chimera")["PackageRepoContainer"] },
-                        { "ServiceBusNamespace", Configuration.GetSection("Chimera")["ServiceBusNamespace"] }
+                        {"SubscriptionId", Configuration.GetSection("Chimera")["SubscriptionId"]},
+                        {"VaultName", Configuration.GetSection("Chimera")["VaultName"]},
+                        {"PackageRepoAccount", Configuration.GetSection("Chimera")["PackageRepoAccount"]},
+                        {"PackageRepoContainer", Configuration.GetSection("Chimera")["PackageRepoContainer"]},
+                        {"ServiceBusNamespace", Configuration.GetSection("Chimera")["ServiceBusNamespace"]}
                     });
                     services.AddSingleton(config);
 

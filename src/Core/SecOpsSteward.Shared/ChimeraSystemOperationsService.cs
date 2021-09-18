@@ -1,24 +1,24 @@
-﻿using Microsoft.Extensions.Logging;
-using SecOpsSteward.Shared.Configuration;
-using SecOpsSteward.Shared.Services;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using SecOpsSteward.Shared.Configuration;
+using SecOpsSteward.Shared.Services;
 
 namespace SecOpsSteward.Shared
 {
     /// <summary>
-    /// A service which handles invocation of batch operations on all Chimera services
+    ///     A service which handles invocation of batch operations on all Chimera services
     /// </summary>
     public class ChimeraSystemOperationsService
     {
+        private readonly IConfigurationProvider _configurationProvider;
         private readonly ILogger<ChimeraSystemOperationsService> _logger;
         private readonly IEnumerable<IChimeraIntegratedService> _services;
-        private readonly IConfigurationProvider _configurationProvider;
 
         /// <summary>
-        /// A service which handles invocation of batch operations on all Chimera services
+        ///     A service which handles invocation of batch operations on all Chimera services
         /// </summary>
         /// <param name="logger"></param>
         /// <param name="services"></param>
@@ -34,13 +34,14 @@ namespace SecOpsSteward.Shared
         }
 
         /// <summary>
-        /// Retrieve an Agent's configuration and commits it back to the configuration provider once complete
+        ///     Retrieve an Agent's configuration and commits it back to the configuration provider once complete
         /// </summary>
         /// <param name="agent">Agent</param>
         /// <param name="action">Action to perform on configuration</param>
         /// <param name="isReadOnly">If <c>TRUE</c>, no commit action will be taken</param>
         /// <returns></returns>
-        public async Task WithConfiguration(ChimeraAgentIdentifier agent, Action<AgentConfiguration> action, bool isReadOnly = false)
+        public async Task WithConfiguration(ChimeraAgentIdentifier agent, Action<AgentConfiguration> action,
+            bool isReadOnly = false)
         {
             var config = await _configurationProvider.GetConfiguration(agent);
             action(config);
@@ -49,36 +50,44 @@ namespace SecOpsSteward.Shared
         }
 
         /// <summary>
-        /// Create a new Chimera Agent
+        ///     Create a new Chimera Agent
         /// </summary>
         /// <param name="agentId">New agent ID</param>
         /// <returns></returns>
-        public Task CreateAgent(ChimeraAgentIdentifier agentId) =>
-            RunOnAllServices<IHasAgentCreationActions>(s => s.OnAgentCreated(agentId));
+        public Task CreateAgent(ChimeraAgentIdentifier agentId)
+        {
+            return RunOnAllServices<IHasAgentCreationActions>(s => s.OnAgentCreated(agentId));
+        }
 
         /// <summary>
-        /// Destroy an existing Chimera Agent
+        ///     Destroy an existing Chimera Agent
         /// </summary>
         /// <param name="agentId">Agent ID to destroy</param>
         /// <returns></returns>
-        public Task DestroyAgent(ChimeraAgentIdentifier agentId) =>
-            RunOnAllServices<IHasAgentCreationActions>(s => s.OnAgentRemoved(agentId));
+        public Task DestroyAgent(ChimeraAgentIdentifier agentId)
+        {
+            return RunOnAllServices<IHasAgentCreationActions>(s => s.OnAgentRemoved(agentId));
+        }
 
         /// <summary>
-        /// Create/enroll a new User in the Chimera system
+        ///     Create/enroll a new User in the Chimera system
         /// </summary>
         /// <param name="userId">User ID to enroll</param>
         /// <returns></returns>
-        public Task CreateUser(ChimeraUserIdentifier userId) =>
-            RunOnAllServices<IHasUserEnrollmentActions>(s => s.OnUserEnrolled(userId));
+        public Task CreateUser(ChimeraUserIdentifier userId)
+        {
+            return RunOnAllServices<IHasUserEnrollmentActions>(s => s.OnUserEnrolled(userId));
+        }
 
         /// <summary>
-        /// Destroy/unenroll a User from the Chimera system
+        ///     Destroy/unenroll a User from the Chimera system
         /// </summary>
         /// <param name="userId">User ID to remove</param>
         /// <returns></returns>
-        public Task DestroyUser(ChimeraUserIdentifier userId) =>
-            RunOnAllServices<IHasUserEnrollmentActions>(s => s.OnUserRemoved(userId));
+        public Task DestroyUser(ChimeraUserIdentifier userId)
+        {
+            return RunOnAllServices<IHasUserEnrollmentActions>(s => s.OnUserRemoved(userId));
+        }
 
         private async Task RunOnAllServices<TService>(Func<TService, Task> cmd)
             where TService : IChimeraIntegratedService
@@ -95,7 +104,9 @@ namespace SecOpsSteward.Shared
                     _logger.LogTrace("END running service {service}", g.GetType().Name);
                 }
                 catch (Exception ex)
-                { _logger.LogError(ex, $"Error executing command for {g.GetType().Name}"); }
+                {
+                    _logger.LogError(ex, $"Error executing command for {g.GetType().Name}");
+                }
             }));
         }
     }

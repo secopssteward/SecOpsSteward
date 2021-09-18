@@ -1,11 +1,11 @@
-﻿using SecOpsSteward.Shared.Packaging.Metadata;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using SecOpsSteward.Shared.Packaging.Metadata;
 
 namespace SecOpsSteward.Shared.Packaging
 {
@@ -15,7 +15,8 @@ namespace SecOpsSteward.Shared.Packaging
         private const string KEY_FILE = "package-index.public.key";
         private const string PACKAGE_CONTAINER = "packages";
 
-        private string _connectionString;
+        private readonly string _connectionString;
+
         public PublicPackageRepository(string connectionString)
         {
             _connectionString = connectionString;
@@ -23,7 +24,7 @@ namespace SecOpsSteward.Shared.Packaging
 
 
         /// <summary>
-        /// List packages from a public repository source
+        ///     List packages from a public repository source
         /// </summary>
         /// <returns>List of Package metadata keyed by Package filename</returns>
         public async Task<Dictionary<string, ContainerMetadata>> ListPackages()
@@ -41,7 +42,8 @@ namespace SecOpsSteward.Shared.Packaging
                 var allMetadata = await Task.WhenAll(pkgName.Where(p => p.EndsWith(".meta")).Select(async p =>
                 {
                     var metadata = await GetMetadata(p);
-                    return new KeyValuePair<string, ContainerMetadata>(Path.GetFileNameWithoutExtension(p) + ".zip", metadata);
+                    return new KeyValuePair<string, ContainerMetadata>(Path.GetFileNameWithoutExtension(p) + ".zip",
+                        metadata);
                 }));
 
                 return new Dictionary<string, ContainerMetadata>(allMetadata);
@@ -50,7 +52,7 @@ namespace SecOpsSteward.Shared.Packaging
 
 
         /// <summary>
-        /// Get the public key for the configured public repository
+        ///     Get the public key for the configured public repository
         /// </summary>
         /// <returns></returns>
         public async Task<byte[]> GetIndexKey()
@@ -64,9 +66,9 @@ namespace SecOpsSteward.Shared.Packaging
             }
         }
 
-        
+
         /// <summary>
-        /// Get the package by its filename
+        ///     Get the package by its filename
         /// </summary>
         /// <param name="packageFileName">Package filename</param>
         /// <returns>Loaded container</returns>
@@ -79,7 +81,7 @@ namespace SecOpsSteward.Shared.Packaging
                 var ms = new MemoryStream();
                 var data = await client.GetStreamAsync(target);
                 data.CopyTo(ms);
-                ms.Seek(0, System.IO.SeekOrigin.Begin);
+                ms.Seek(0, SeekOrigin.Begin);
                 return new ChimeraContainer(ms);
             }
         }
@@ -92,7 +94,7 @@ namespace SecOpsSteward.Shared.Packaging
                 var ms = new MemoryStream();
                 var data = await client.GetStreamAsync(target);
                 data.CopyTo(ms);
-                ms.Seek(0, System.IO.SeekOrigin.Begin);
+                ms.Seek(0, SeekOrigin.Begin);
                 return ChimeraSharedHelpers.GetFromSerializedBytes<ContainerMetadata>(ms.ToArray());
             }
         }

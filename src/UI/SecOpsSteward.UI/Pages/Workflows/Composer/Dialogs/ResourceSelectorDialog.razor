@@ -1,6 +1,8 @@
-﻿<MudDialog Class="pb-0 mb-0" Style="min-width: 25em;">
+﻿@using SecOpsSteward.Shared.Packaging
+@using SecOpsSteward.Plugins.Discovery
+<MudDialog Class="pb-0 mb-0" Style="min-width: 25em;">
     <DialogContent>
-        <ServiceResourceSelectorWidget Service="@Service" SelectedResource="@Resource" SelectedResourceChanged="@SetResource" />
+        <ServiceResourceSelectorWidget Service="@Service" SelectedResource="@Resource" SelectedResourceChanged="@SetResource"/>
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="@Cancel">Cancel</MudButton>
@@ -8,15 +10,10 @@
     </DialogActions>
 </MudDialog>
 
-@using SecOpsSteward.Plugins
-@using SecOpsSteward.Shared.Packaging
-@using SecOpsSteward.UI.Pages.Workflows.Composer.Nodes
-@using SecOpsSteward.UI.Widgets
-@using SecOpsSteward.Plugins.Configurable
-@using SecOpsSteward.Plugins.Discovery
-@using Microsoft.Azure.Management.ResourceManager.Fluent
 @code {
-    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+
+    [CascadingParameter]
+    MudDialogInstance MudDialog { get; set; }
 
     [Inject]
     public AzureCurrentCredentialFactory PlatformFactory { get; set; }
@@ -32,14 +29,16 @@
     protected void SetResource(DiscoveredServiceConfiguration resource)
     {
         Resource = resource;
-    }
+    }
+
     protected void ApplySettings()
     {
-        MudDialog.Close(DialogResult.Ok<DiscoveredServiceConfiguration>(Resource));
+        MudDialog.Close(DialogResult.Ok(Resource));
     }
 
     private void Cancel()
     {
         MudDialog.Cancel();
     }
+
 }

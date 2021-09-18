@@ -1,4 +1,6 @@
-﻿using Blazor.Diagrams.Core;
+﻿using System.Collections.Generic;
+using System.Linq;
+using Blazor.Diagrams.Core;
 using Blazor.Diagrams.Core.Geometry;
 using Blazor.Diagrams.Core.Models;
 using SecOpsSteward.Data.Models;
@@ -7,35 +9,16 @@ using SecOpsSteward.Shared;
 using SecOpsSteward.Shared.Messages;
 using SecOpsSteward.UI.Pages.Workflows.Composer.Links;
 using SecOpsSteward.UI.Pages.Workflows.Composer.Nodes;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace SecOpsSteward.UI.Pages.Workflows.Composer
 {
     public static class SavedWorkflowExtensions
     {
-        private class SavedNodeWithLink : SavedNode
-        {
-            public Dictionary<string, List<SavedNodeWithLink>> LinksOut { get; set; } =
-                new Dictionary<string, List<SavedNodeWithLink>>();
-
-            public ExecutionStep AuthorizingMessage { get; set; }
-
-            public SavedNodeWithLink(SavedNode n)
-            {
-                this.Id = n.Id;
-                this.AgentId = n.AgentId;
-                this.PackageId = n.PackageId;
-                this.Parameters = n.Parameters;
-                this.WorkflowStepId = n.WorkflowStepId;
-            }
-        }
-
         public static SavedWorkflow SaveWorkflow(this Diagram diagram)
         {
             var savedWf = new SavedWorkflow();
             savedWf.Nodes = diagram.Nodes.Cast<WorkflowComposerNode>().Select(model =>
-                new SavedNode()
+                new SavedNode
                 {
                     Id = model.Id,
                     X = model.Position.X,
@@ -49,7 +32,7 @@ namespace SecOpsSteward.UI.Pages.Workflows.Composer
                     Parameters = model.Parameters
                 }).ToList();
             savedWf.Links = diagram.Links.Select(link =>
-                new SavedLink()
+                new SavedLink
                 {
                     Id = link.Id,
                     SourceNodeId = link.SourceNode.Id,
@@ -60,7 +43,8 @@ namespace SecOpsSteward.UI.Pages.Workflows.Composer
             return savedWf;
         }
 
-        public static void LoadWorkflow(this Diagram diagram, SavedWorkflow workflow, IEnumerable<PluginMetadataModel> packages)
+        public static void LoadWorkflow(this Diagram diagram, SavedWorkflow workflow,
+            IEnumerable<PluginMetadataModel> packages)
         {
             foreach (var node in workflow.Nodes)
                 diagram.Nodes.Add(AsWorkflowComposerNode(node, packages));
@@ -76,7 +60,8 @@ namespace SecOpsSteward.UI.Pages.Workflows.Composer
             }
         }
 
-        public static WorkflowComposerNode AsWorkflowComposerNode(this SavedNode node, IEnumerable<PluginMetadataModel> packages)
+        public static WorkflowComposerNode AsWorkflowComposerNode(this SavedNode node,
+            IEnumerable<PluginMetadataModel> packages)
         {
             var wfNode = new WorkflowComposerNode(
                 node.Id,
@@ -90,8 +75,12 @@ namespace SecOpsSteward.UI.Pages.Workflows.Composer
             return wfNode;
         }
 
-        public static ExecutionStepCollection CreateStepCollectionFromWorkflow(this WorkflowModel workflowModel) =>
-            CreateStepCollectionFromWorkflow(ChimeraSharedHelpers.GetFromSerializedString<SavedWorkflow>(workflowModel.WorkflowJson));
+        public static ExecutionStepCollection CreateStepCollectionFromWorkflow(this WorkflowModel workflowModel)
+        {
+            return CreateStepCollectionFromWorkflow(
+                ChimeraSharedHelpers.GetFromSerializedString<SavedWorkflow>(workflowModel.WorkflowJson));
+        }
+
         public static ExecutionStepCollection CreateStepCollectionFromWorkflow(this SavedWorkflow savedWorkflow)
         {
             //var savedWorkflow = ChimeraSharedHelpers.GetFromSerializedString<SavedWorkflow>(model.WorkflowJson);
@@ -108,26 +97,49 @@ namespace SecOpsSteward.UI.Pages.Workflows.Composer
                 }
             }
 
-            var allLinkTargets = nodesWithLinks.SelectMany(l => l.LinksOut.SelectMany(lo => lo.Value.Select(v => v.Id)));
+            var allLinkTargets =
+                nodesWithLinks.SelectMany(l => l.LinksOut.SelectMany(lo => lo.Value.Select(v => v.Id)));
             var noLinksIn = nodesWithLinks.Where(l => !allLinkTargets.Contains(l.Id));
             var rootStep = noLinksIn.FirstOrDefault();
 
             var steps = new ExecutionStepCollection();
-            var parent = steps.AddStepWithoutSigning(rootStep.AgentId, rootStep.PackageId, null, ChimeraSharedHelpers.SerializeToString(rootStep.Parameters.AsDictionary()));
+            var parent = steps.AddStepWithoutSigning(rootStep.AgentId, rootStep.PackageId, null,
+                ChimeraSharedHelpers.SerializeToString(rootStep.Parameters.AsDictionary()));
             rootStep.AuthorizingMessage = parent;
             foreach (var next in rootStep.LinksOut)
                 AddStepsToCollection(steps, parent, next);
             return steps;
         }
-        private static void AddStepsToCollection(ExecutionStepCollection steps, ExecutionStep parentStep, KeyValuePair<string, List<SavedNodeWithLink>> lastOutputs)
+
+        private static void AddStepsToCollection(ExecutionStepCollection steps, ExecutionStep parentStep,
+            KeyValuePair<string, List<SavedNodeWithLink>> lastOutputs)
         {
             foreach (var thisStep in lastOutputs.Value)
             {
-                var parent = steps.AddStepWithoutSigning(parentStep, lastOutputs.Key, thisStep.AgentId, thisStep.PackageId, null, ChimeraSharedHelpers.SerializeToString(thisStep.Parameters.AsDictionary()));
+                var parent = steps.AddStepWithoutSigning(parentStep, lastOutputs.Key, thisStep.AgentId,
+                    thisStep.PackageId, null,
+                    ChimeraSharedHelpers.SerializeToString(thisStep.Parameters.AsDictionary()));
                 thisStep.AuthorizingMessage = parent;
                 foreach (var next in thisStep.LinksOut)
                     AddStepsToCollection(steps, parent, next);
             }
+        }
+
+        private class SavedNodeWithLink : SavedNode
+        {
+            public SavedNodeWithLink(SavedNode n)
+            {
+                Id = n.Id;
+                AgentId = n.AgentId;
+                PackageId = n.PackageId;
+                Parameters = n.Parameters;
+                WorkflowStepId = n.WorkflowStepId;
+            }
+
+            public Dictionary<string, List<SavedNodeWithLink>> LinksOut { get; } =
+                new();
+
+            public ExecutionStep AuthorizingMessage { get; set; }
         }
     }
 }

@@ -1,20 +1,22 @@
-﻿using Microsoft.Extensions.Logging;
-using SecOpsSteward.Plugins;
-using SecOpsSteward.Plugins.Configurable;
-using SecOpsSteward.Plugins.Discovery;
-using SecOpsSteward.Plugins.WorkflowTemplates;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using SecOpsSteward.Plugins;
+using SecOpsSteward.Plugins.Configurable;
+using SecOpsSteward.Plugins.Discovery;
+using SecOpsSteward.Plugins.WorkflowTemplates;
 
 namespace SecOpsSteward.Shared.DiscoveryWorkflow
 {
     public class DiscoverySequencerService
     {
-        private readonly IServiceProvider _services;
+        private static readonly Regex ConfigurationInsertPattern = new(@"\&\&\/(?<name>.*)\/(?<value>.*)");
         private readonly ILogger<DiscoverySequencerService> _logger;
+        private readonly IServiceProvider _services;
+
         public DiscoverySequencerService(IServiceProvider services, ILogger<DiscoverySequencerService> logger)
         {
             _logger = logger;
@@ -24,33 +26,42 @@ namespace SecOpsSteward.Shared.DiscoveryWorkflow
         // ----------------------------------------------------------------------------------------------------
         // ---------------------------------- SERVICE ENUMERATION ---------------------------------------------
         // ----------------------------------------------------------------------------------------------------
-        public async Task<List<DiscoveredServiceConfiguration>> EnumerateServices(IEnumerable<IManagedServicePackage> services)
+        public async Task<List<DiscoveredServiceConfiguration>> EnumerateServices(
+            IEnumerable<IManagedServicePackage> services)
         {
             // Get first-level discovered configurations
             var results = (await Task.WhenAll(services.Select(s => Task.Run(async () =>
-            {
-                try { return await s.Discover(); }
-                catch (Exception ex)
                 {
-                    _logger.LogCritical($"Error running discovery for '{s.GetDescriptiveName()}'", ex);
-                }
-                return new List<DiscoveredServiceConfiguration>();
-            })))).SelectMany(s => s)
-                 .Where(s => s != null)
-                 .ToList();
+                    try
+                    {
+                        return await s.Discover();
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogCritical($"Error running discovery for '{s.GetDescriptiveName()}'", ex);
+                    }
+
+                    return new List<DiscoveredServiceConfiguration>();
+                })))).SelectMany(s => s)
+                .Where(s => s != null)
+                .ToList();
 
             // Check for specific configurations based on the first pass
             var moreResults = (await Task.WhenAll(services.Select(s => Task.Run(async () =>
-            {
-                try { return await s.Discover(results); }
-                catch (Exception ex)
                 {
-                    _logger.LogCritical($"Error running second-level discovery for '{s.GetDescriptiveName()}'", ex);
-                }
-                return new List<DiscoveredServiceConfiguration>();
-            })))).SelectMany(s => s)
-                 .Where(s => s != null)
-                 .ToList();
+                    try
+                    {
+                        return await s.Discover(results);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogCritical($"Error running second-level discovery for '{s.GetDescriptiveName()}'", ex);
+                    }
+
+                    return new List<DiscoveredServiceConfiguration>();
+                })))).SelectMany(s => s)
+                .Where(s => s != null)
+                .ToList();
 
             // TODO: Recurse until we don't get any results?
 
@@ -67,17 +78,17 @@ namespace SecOpsSteward.Shared.DiscoveryWorkflow
         }
 
 
-
         // ----------------------------------------------------------------------------------------------------
         // ------------------------------ GENERATE SERVICE LINKS AND PATHS ------------------------------------
         // ----------------------------------------------------------------------------------------------------
-        public List<List<DiscoveredServiceConfiguration>> CreateServiceLinksAndPaths(List<DiscoveredServiceConfiguration> discoveredServices)
+        public List<List<DiscoveredServiceConfiguration>> CreateServiceLinksAndPaths(
+            List<DiscoveredServiceConfiguration> discoveredServices)
         {
             // identify links between 2 elements
             foreach (var entity in discoveredServices)
             {
                 var outgoing = entity.GetOutgoingLinks();
-                foreach (var match in discoveredServices.Except(new[] { entity }))
+                foreach (var match in discoveredServices.Except(new[] {entity}))
                     entity.ResolvedOutgoingLinks.AddRange(outgoing.Select(o => match.ResolveLinkToService(o)));
                 entity.ResolvedOutgoingLinks.RemoveAll(l => l == null);
             }
@@ -105,19 +116,12 @@ namespace SecOpsSteward.Shared.DiscoveryWorkflow
                 var node = queue.Dequeue();
                 node.Item1.Add(node.Item2);
                 if (node.Item2.ResolvedOutgoingLinks.Any())
-                {
                     foreach (var child in node.Item2.ResolvedOutgoingLinks)
-                    {
                         queue.Enqueue(Tuple.Create(node.Item1, child.Destination));
-                    }
-                }
                 else
-                {
                     yield return node.Item1;
-                }
             }
         }
-
 
 
         // ----------------------------------------------------------------------------------------------------
@@ -130,12 +134,13 @@ namespace SecOpsSteward.Shared.DiscoveryWorkflow
         }
 
         /// <summary>
-        /// Generates a route segment from a template without any mapped descendants (i.e. this is one single option)
+        ///     Generates a route segment from a template without any mapped descendants (i.e. this is one single option)
         /// </summary>
         /// <param name="service">Service to generate template for</param>
         /// <param name="templateDefinitionPrototype">Workflow template definition to generate</param>
         /// <returns></returns>
-        private RouteSegmentPossibility GenerateTemplateWithoutDependencies(DiscoveredServiceConfiguration service, WorkflowTemplateDefinition templateDefinitionPrototype)
+        private RouteSegmentPossibility GenerateTemplateWithoutDependencies(DiscoveredServiceConfiguration service,
+            WorkflowTemplateDefinition templateDefinitionPrototype)
         {
             var templateDefinition = templateDefinitionPrototype.Clone();
             var segment = new RouteSegmentPossibility();
@@ -154,17 +159,19 @@ namespace SecOpsSteward.Shared.DiscoveryWorkflow
                 if (templateParticipant.PackageId == Guid.Empty)
                     continue;
 
-                var participantPlugin = service.EntityService.CreatePlugin(_services, templateParticipant.PackageId, service.Configuration);
+                var participantPlugin =
+                    service.EntityService.CreatePlugin(_services, templateParticipant.PackageId, service.Configuration);
                 var pluginConfigWithServiceValues = participantPlugin.GetConfigurationObject();
-                segment.RouteSegmentOutputs.AddRange(participantPlugin.GetGeneratedSharedOutputs().Select(o => pluginConfigWithServiceValues.PopulateStringTemplate(o)));
+                segment.RouteSegmentOutputs.AddRange(participantPlugin.GetGeneratedSharedOutputs()
+                    .Select(o => pluginConfigWithServiceValues.PopulateStringTemplate(o)));
                 segment.RouteSegmentInputs.AddRange(participantPlugin.GetRequiredSharedInputs());
             }
+
             segment.RouteSegmentOutputs = segment.RouteSegmentOutputs.Distinct().ToList();
 
             return segment;
         }
 
-        private static Regex ConfigurationInsertPattern = new Regex(@"\&\&\/(?<name>.*)\/(?<value>.*)");
         private List<RouteSegmentPossibility> RecursivelyGenerateSegmentsFromServices(
             Queue<DiscoveredServiceConfiguration> servicesInOrder,
             List<string> outputsAvailableSoFar = null)
@@ -223,14 +230,16 @@ namespace SecOpsSteward.Shared.DiscoveryWorkflow
                         // apply this recent output value to any segment input which starts with
                         // /Configuration/* -- these special inputs represent receivers of underlying templates
 
-                        foreach (var segmentInput in segment.RouteSegmentInputs.Where(c => ConfigurationInsertPattern.IsMatch(c)))
+                        foreach (var segmentInput in segment.RouteSegmentInputs.Where(c =>
+                            ConfigurationInsertPattern.IsMatch(c)))
                         {
                             // /Configuration/<NameField>/<ValueField> will write the output to ValueField and its name match to NameField
                             var group = ConfigurationInsertPattern.Match(segmentInput);
                             var configNameField = group.Groups["name"].Value;
                             var configValueField = group.Groups["value"].Value;
 
-                            var resolvedLinkName = serviceConfiguration.ResolvedOutgoingLinks.First().SourceLinkConfigurationName;
+                            var resolvedLinkName = serviceConfiguration.ResolvedOutgoingLinks.First()
+                                .SourceLinkConfigurationName;
                             segment.TemplateConfigurationValues[configNameField] = resolvedLinkName;
                             segment.TemplateConfigurationValues[configValueField] = value;
                         }
@@ -257,10 +266,10 @@ namespace SecOpsSteward.Shared.DiscoveryWorkflow
 
     public class RouteSegmentPossibility : List<WorkflowTemplateParticipantDefinition>
     {
-        public List<string> RouteSegmentOutputs { get; set; } = new List<string>();
-        public List<string> RouteSegmentInputs { get; set; } = new List<string>();
+        public List<string> RouteSegmentOutputs { get; set; } = new();
+        public List<string> RouteSegmentInputs { get; set; } = new();
 
-        public Dictionary<string, object> TemplateConfigurationValues { get; set; } = new Dictionary<string, object>();
+        public Dictionary<string, object> TemplateConfigurationValues { get; set; } = new();
 
         public RouteSegmentPossibility Clone()
         {

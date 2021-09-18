@@ -1,26 +1,16 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using System;
+using System.Linq;
+using Microsoft.Extensions.DependencyInjection;
 using SecOpsSteward.Plugins;
 using SecOpsSteward.Plugins.Configurable;
-using System;
-using System.Linq;
 
 namespace SecOpsSteward.Shared.Packaging.Wrappers
 {
     /// <summary>
-    /// Wraps Service interfaces to handle constructing pointers to methods in the Service
+    ///     Wraps Service interfaces to handle constructing pointers to methods in the Service
     /// </summary>
     public class ContainerServiceWrapper
     {
-        /// <summary>
-        /// CLR Type which represents the Service itself
-        /// </summary>
-        public Type ServiceType { get; private set; }
-
-        /// <summary>
-        /// CLR Type which represents the configuration required for the Service
-        /// </summary>
-        public Type ConfigurationType { get; private set; }
-
         public ContainerServiceWrapper(Type serviceType)
         {
             Type genericServiceType;
@@ -34,7 +24,17 @@ namespace SecOpsSteward.Shared.Packaging.Wrappers
         }
 
         /// <summary>
-        /// Emit an empty configuration based on the Service's ConfigurationType
+        ///     CLR Type which represents the Service itself
+        /// </summary>
+        public Type ServiceType { get; }
+
+        /// <summary>
+        ///     CLR Type which represents the configuration required for the Service
+        /// </summary>
+        public Type ConfigurationType { get; }
+
+        /// <summary>
+        ///     Emit an empty configuration based on the Service's ConfigurationType
         /// </summary>
         /// <returns>Blank configuration</returns>
         public IConfigurableObjectConfiguration EmitConfiguration()
@@ -43,15 +43,18 @@ namespace SecOpsSteward.Shared.Packaging.Wrappers
         }
 
         /// <summary>
-        /// Emit a populated configuration for a given Service based on its serialized JSON
+        ///     Emit a populated configuration for a given Service based on its serialized JSON
         /// </summary>
         /// <param name="serializedConfiguration">Serialized JSON configuration</param>
         /// <returns>Populated configuration</returns>
-        public IConfigurableObjectConfiguration EmitConfiguration(string serializedConfiguration) =>
-            ChimeraSharedHelpers.GetFromSerializedString(serializedConfiguration, ConfigurationType) as IConfigurableObjectConfiguration;
+        public IConfigurableObjectConfiguration EmitConfiguration(string serializedConfiguration)
+        {
+            return ChimeraSharedHelpers.GetFromSerializedString(serializedConfiguration, ConfigurationType) as
+                IConfigurableObjectConfiguration;
+        }
 
         /// <summary>
-        /// Emits an instance of the Service type
+        ///     Emits an instance of the Service type
         /// </summary>
         /// <returns>Service instance</returns>
         public IManagedServicePackage Emit(IServiceProvider services)
@@ -60,7 +63,7 @@ namespace SecOpsSteward.Shared.Packaging.Wrappers
         }
 
         /// <summary>
-        /// Emits an instance of the Service type without the service provider (cannot discover)
+        ///     Emits an instance of the Service type without the service provider (cannot discover)
         /// </summary>
         /// <returns>Service instance</returns>
         public IManagedServicePackage Emit()
@@ -69,7 +72,7 @@ namespace SecOpsSteward.Shared.Packaging.Wrappers
         }
 
         /// <summary>
-        /// Emits an instance of the Service type, with its configuration applied
+        ///     Emits an instance of the Service type, with its configuration applied
         /// </summary>
         /// <param name="serializedConfiguration">Serialized JSON configuration for Service</param>
         /// <returns>Configured Service instance</returns>
@@ -79,7 +82,8 @@ namespace SecOpsSteward.Shared.Packaging.Wrappers
             var configProp = ServiceType.GetProperty("Configuration");
             if (!string.IsNullOrEmpty(serializedConfiguration))
             {
-                var configDeserialized = ChimeraSharedHelpers.GetFromSerializedString(serializedConfiguration, ConfigurationType);
+                var configDeserialized =
+                    ChimeraSharedHelpers.GetFromSerializedString(serializedConfiguration, ConfigurationType);
                 configProp.SetValue(instance, configDeserialized);
             }
             else
@@ -91,7 +95,7 @@ namespace SecOpsSteward.Shared.Packaging.Wrappers
         }
 
         /// <summary>
-        /// Get the contract associated with configuring a Service
+        ///     Get the contract associated with configuring a Service
         /// </summary>
         /// <returns>List of parameters which can serve as inputs to a Service</returns>
         public ConfigurableObjectParameterCollection GetContract()

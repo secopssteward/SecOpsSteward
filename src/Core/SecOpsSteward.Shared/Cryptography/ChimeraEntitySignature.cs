@@ -3,55 +3,56 @@
 namespace SecOpsSteward.Shared.Cryptography
 {
     /// <summary>
-    /// A single signature on some signable entity
+    ///     A single signature on some signable entity
     /// </summary>
     public class ChimeraEntitySignature
     {
         /// <summary>
-        /// Signature content
+        ///     Signature content
         /// </summary>
         public byte[] SignatureBytes { get; set; }
 
         /// <summary>
-        /// Signer who created the signature
+        ///     Signer who created the signature
         /// </summary>
         public ChimeraEntityIdentifier Signer { get; set; }
 
         /// <summary>
-        /// Some display text to identify the signer
+        ///     Some display text to identify the signer
         /// </summary>
         public string SignerDisplay { get; set; }
 
         /// <summary>
-        /// When the signature was generated
+        ///     When the signature was generated
         /// </summary>
         public DateTimeOffset Timestamp { get; set; }
 
         /// <summary>
-        /// If this object represents a completed signature (not necessarily valid)
+        ///     If this object represents a completed signature (not necessarily valid)
         /// </summary>
         public bool IsSigned => SignatureBytes != null && SignatureBytes.Length > 0;
 
         /// <summary>
-        /// Get the metadata for a signature (all but the signature itself)
+        ///     Get the metadata for a signature (all but the signature itself)
         /// </summary>
         /// <returns></returns>
-        public ChimeraEntitySignature GetSignatureMetadata() =>
-            new ChimeraEntitySignature()
+        public ChimeraEntitySignature GetSignatureMetadata()
+        {
+            return new ChimeraEntitySignature()
             {
                 Signer = Signer,
                 SignerDisplay = SignerDisplay,
                 Timestamp = Timestamp
             };
+        }
 
         public override string ToString()
         {
             if (IsSigned)
                 return $"Signed by {Signer} ({SignerDisplay}) on {Timestamp}. ({SignatureBytes.Length} bytes)";
-            else if (Signer != null)
+            if (Signer != null)
                 return $"Signature not applied. Prospective signer is {Signer}.";
-            else
-                return $"Signature not applied.";
+            return "Signature not applied.";
         }
     }
 }

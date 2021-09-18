@@ -1,7 +1,7 @@
 ﻿@using SecOpsSteward.Plugins.Configurable
 <MudDialog Style="min-width: 25em;">
     <DialogContent>
-        <ParameterCollectionEditor ParameterCollection="@Parameters" />
+        <ParameterCollectionEditor ParameterCollection="@Parameters"/>
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="@Cancel">Cancel</MudButton>
@@ -11,7 +11,8 @@
 
 @code
 {
-    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+    [CascadingParameter]
+    MudDialogInstance MudDialog { get; set; }
 
     [Parameter]
     public WorkflowTemplateModel WorkflowTemplate { get; set; }
@@ -26,7 +27,7 @@
 
     protected void Apply()
     {
-        MudDialog.Close(DialogResult.Ok<ConfigurableObjectParameterCollection>(Parameters));
+        MudDialog.Close(DialogResult.Ok(Parameters));
     }
 
     private void Cancel()

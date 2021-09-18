@@ -9,14 +9,16 @@
       "type": "string",
       "defaultValue": "sos-webapp",
       "metadata": {
-        "description": "Name of the resource group for the resource. It is recommended to put resources under same resource group for better tracking."
+        "description":
+          "Name of the resource group for the resource. It is recommended to put resources under same resource group for better tracking."
       }
     },
     "resourceGroupLocation": {
       "type": "string",
       "defaultValue": "eastus",
       "metadata": {
-        "description": "Location of the resource group. Resource groups could have different location than resources, however by default we use API versions from latest hybrid profile which support all locations for resource types we support."
+        "description":
+          "Location of the resource group. Resource groups could have different location than resources, however by default we use API versions from latest hybrid profile which support all locations for resource types we support."
       }
     },
     "resourceName": {
@@ -30,13 +32,16 @@
       "type": "string",
       "defaultValue": "[parameters('resourceGroupLocation')]",
       "metadata": {
-        "description": "Location of the resource. By default use resource group's location, unless the resource provider is not supported there."
+        "description":
+          "Location of the resource. By default use resource group's location, unless the resource provider is not supported there."
       }
     }
   },
   "variables": {
-    "appServicePlan_name": "[concat('Plan', uniqueString(concat(parameters('resourceName'), subscription().subscriptionId)))]",
-    "appServicePlan_ResourceId": "[concat('/subscriptions/', subscription().subscriptionId, '/resourceGroups/', parameters('resourceGroupName'), '/providers/Microsoft.Web/serverFarms/', variables('appServicePlan_name'))]"
+    "appServicePlan_name":
+      "[concat('Plan', uniqueString(concat(parameters('resourceName'), subscription().subscriptionId)))]",
+    "appServicePlan_ResourceId":
+      "[concat('/subscriptions/', subscription().subscriptionId, '/resourceGroups/', parameters('resourceGroupName'), '/providers/Microsoft.Web/serverFarms/', variables('appServicePlan_name'))]"
   },
   "resources": [
     {
@@ -47,7 +52,8 @@
     },
     {
       "type": "Microsoft.Resources/deployments",
-      "name": "[concat(parameters('resourceGroupName'), 'Deployment', uniqueString(concat(parameters('resourceName'), subscription().subscriptionId)))]",
+      "name":
+        "[concat(parameters('resourceGroupName'), 'Deployment', uniqueString(concat(parameters('resourceName'), subscription().subscriptionId)))]",
       "resourceGroup": "[parameters('resourceGroupName')]",
       "apiVersion": "2019-10-01",
       "dependsOn": [

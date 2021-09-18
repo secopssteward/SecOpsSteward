@@ -1,6 +1,7 @@
-﻿using FluentAssertions;
+﻿using System;
+using System.Collections.Generic;
+using FluentAssertions;
 using SecOpsSteward.Plugins;
-using System;
 using Xunit;
 
 namespace SecOpsSteward.Tests.Core
@@ -19,12 +20,12 @@ namespace SecOpsSteward.Tests.Core
         {
             var values = new PluginOutputStructure(string.Empty)
             {
-                SharedOutputs = new PluginOutputStructure.PluginSharedOutputs()
+                SharedOutputs = new PluginOutputStructure.PluginSharedOutputs
                 {
-                    Outputs = new System.Collections.Generic.Dictionary<string, string>()
+                    Outputs = new Dictionary<string, string>
                     {
-                        { "/A/B/C", "123" },
-                        { "/D/E/F", "456" }
+                        {"/A/B/C", "123"},
+                        {"/D/E/F", "456"}
                     }
                 }
             };
@@ -38,12 +39,12 @@ namespace SecOpsSteward.Tests.Core
         {
             var values = new PluginOutputStructure(string.Empty)
             {
-                SharedOutputs = new PluginOutputStructure.PluginSharedOutputs()
+                SharedOutputs = new PluginOutputStructure.PluginSharedOutputs
                 {
-                    Outputs = new System.Collections.Generic.Dictionary<string, string>()
+                    Outputs = new Dictionary<string, string>
                     {
-                        { "/A/B/C", "123" },
-                        { "/D/E/F", "456" }
+                        {"/A/B/C", "123"},
+                        {"/D/E/F", "456"}
                     }
                 }
             };
@@ -56,14 +57,14 @@ namespace SecOpsSteward.Tests.Core
         public void TemplateHasCorrectInputs()
         {
             TemplatedStrings.GetRequiredInputsForTemplateString("{{$/A/B/C}} aabbcc {{$/D/E/F}}")
-                .Should().BeEquivalentTo(new[] { "/A/B/C", "/D/E/F" });
+                .Should().BeEquivalentTo("/A/B/C", "/D/E/F");
         }
 
         [Fact]
         public void TemplateWithDuplicatesHasCorrectInputs()
         {
             TemplatedStrings.GetRequiredInputsForTemplateString("{{$/A/B/C}} aabbcc {{$/D/E/F}} ccbbaa {{$/A/B/C}}")
-                .Should().BeEquivalentTo(new[] { "/A/B/C", "/D/E/F" });
+                .Should().BeEquivalentTo("/A/B/C", "/D/E/F");
         }
 
         [Fact]
@@ -71,12 +72,12 @@ namespace SecOpsSteward.Tests.Core
         {
             var values = new PluginOutputStructure(string.Empty)
             {
-                SharedOutputs = new PluginOutputStructure.PluginSharedOutputs()
+                SharedOutputs = new PluginOutputStructure.PluginSharedOutputs
                 {
-                    Outputs = new System.Collections.Generic.Dictionary<string, string>()
+                    Outputs = new Dictionary<string, string>
                     {
-                        { "/A/B/C", "123" },
-                        { "/D/E/F", "456" }
+                        {"/A/B/C", "123"},
+                        {"/D/E/F", "456"}
                     }
                 }
             };
@@ -90,12 +91,12 @@ namespace SecOpsSteward.Tests.Core
         {
             var values = new PluginOutputStructure(string.Empty)
             {
-                SharedOutputs = new PluginOutputStructure.PluginSharedOutputs()
+                SharedOutputs = new PluginOutputStructure.PluginSharedOutputs
                 {
-                    Outputs = new System.Collections.Generic.Dictionary<string, string>()
+                    Outputs = new Dictionary<string, string>
                     {
-                        { "/A/B/C", "123" },
-                        { "/D/E/F", "456" }
+                        {"/A/B/C", "123"},
+                        {"/D/E/F", "456"}
                     }
                 }
             };

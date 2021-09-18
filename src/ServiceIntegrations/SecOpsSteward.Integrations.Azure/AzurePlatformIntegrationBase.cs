@@ -7,14 +7,10 @@ namespace SecOpsSteward.Integrations.Azure
 {
     public class AzurePlatformIntegrationBase
     {
-        protected readonly ILogger Logger;
-
         protected readonly ChimeraServiceConfigurator _configurator;
-        protected readonly IRoleAssignmentService _roleAssignment;
         protected readonly AzureCurrentCredentialFactory _platformFactory;
-
-        protected string CfgSubscriptionId => _configurator["SubscriptionId"];
-        protected string CfgResourceGroup => _configurator["ResourceGroup"];
+        protected readonly IRoleAssignmentService _roleAssignment;
+        protected readonly ILogger Logger;
 
         protected AzurePlatformIntegrationBase(
             ILogger logger,
@@ -37,6 +33,9 @@ namespace SecOpsSteward.Integrations.Azure
             _configurator = configurator;
             _platformFactory = platformFactory;
         }
+
+        protected string CfgSubscriptionId => _configurator["SubscriptionId"];
+        protected string CfgResourceGroup => _configurator["ResourceGroup"];
 
         protected string BaseScope =>
             "/subscriptions/" + CfgSubscriptionId +

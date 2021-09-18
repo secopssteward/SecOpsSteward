@@ -2,15 +2,15 @@
 using System.Security.Cryptography;
 using System.Text;
 
-namespace SecOpsSteward.Shared.Cryptography
+namespace SecOpsSteward.Shared.Cryptography.Extensions
 {
     /// <summary>
-    /// Extensions for signing and validating packages with a public package index key
+    ///     Extensions for signing and validating packages with a public package index key
     /// </summary>
     public static class IPubliclySignableExtensions
     {
         /// <summary>
-        /// Verify public signature
+        ///     Verify public signature
         /// </summary>
         /// <param name="signable">Object to verify</param>
         /// <param name="publicKey">Package index public key</param>
@@ -25,19 +25,20 @@ namespace SecOpsSteward.Shared.Cryptography
             using (RSA rsa = new RSACryptoServiceProvider())
             {
                 rsa.FromXmlString(Encoding.ASCII.GetString(publicKey));
-                return rsa.VerifyHash(digest, signable.PublicSignature.SignatureBytes, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+                return rsa.VerifyHash(digest, signable.PublicSignature.SignatureBytes, HashAlgorithmName.SHA256,
+                    RSASignaturePadding.Pkcs1);
             }
         }
 
         /// <summary>
-        /// Sign with a package index signing key
+        ///     Sign with a package index signing key
         /// </summary>
         /// <param name="signable">Object to sign</param>
         /// <param name="signingEntity">Name of signing entity</param>
         /// <param name="privateKey">Private key data</param>
         public static void PubliclySign(this IPubliclySignable signable, string signingEntity, byte[] privateKey)
         {
-            var newSignature = new PublicSignature()
+            var newSignature = new PublicSignature
             {
                 Timestamp = DateTimeOffset.Now,
                 Signer = signingEntity
@@ -52,6 +53,7 @@ namespace SecOpsSteward.Shared.Cryptography
                 rsa.FromXmlString(Encoding.ASCII.GetString(privateKey));
                 newSignature.SignatureBytes = rsa.SignHash(digest, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
             }
+
             signable.PublicSignature = newSignature;
         }
     }

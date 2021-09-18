@@ -3,39 +3,40 @@
     public class ServiceEntityLink
     {
         /// <summary>
-        /// Source Service
+        ///     Source Service
         /// </summary>
         public DiscoveredServiceConfiguration Source { get; set; }
 
         /// <summary>
-        /// Link from source
+        ///     Link from source
         /// </summary>
         public string SourceLinkContext { get; set; }
 
         /// <summary>
-        /// Configuration string this link comes from, if present
+        ///     Configuration string this link comes from, if present
         /// </summary>
         public string SourceLinkConfigurationName { get; set; }
 
         // ---
 
         /// <summary>
-        /// Destination Service
+        ///     Destination Service
         /// </summary>
         public DiscoveredServiceConfiguration Destination { get; set; }
 
         /// <summary>
-        /// Link to destination
+        ///     Link to destination
         /// </summary>
         public string DestinationLinkContext { get; set; }
 
         /// <summary>
-        /// Configuration string this link comes from, if present
+        ///     Configuration string this link comes from, if present
         /// </summary>
         public string DestinationLinkConfigurationName { get; set; }
 
-        public ServiceEntityLink Clone() =>
-            new ServiceEntityLink()
+        public ServiceEntityLink Clone()
+        {
+            return new()
             {
                 Source = Source,
                 Destination = Destination,
@@ -44,10 +45,12 @@
                 DestinationLinkContext = DestinationLinkContext,
                 DestinationLinkConfigurationName = DestinationLinkConfigurationName
             };
+        }
 
         public override string ToString()
         {
-            return $"Svc Link from \"{Source}\" (via \"{SourceLinkContext}\") to \"{Destination}\" (via \"{DestinationLinkContext}\")";
+            return
+                $"Svc Link from \"{Source}\" (via \"{SourceLinkContext}\") to \"{Destination}\" (via \"{DestinationLinkContext}\")";
         }
     }
 }

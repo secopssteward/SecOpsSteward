@@ -16,18 +16,24 @@
 
 <MudContainer MaxWidth="MaxWidth.Large">
     <MudGrid>
-        <MudItem md="12" lg="@((SelectedModel != null ? 6 : 12))">
-            <MudPaper Elevation="2" Class="p-0" Style="text-align:right;">
+        <MudItem md="12" lg="@(SelectedModel != null ? 6 : 12)">
+            <MudPaper Elevation="2" Class="p-0" Style="text-align: right;">
                 <MudTable @ref="_table" Elevation="0" Items="@UserModels" @bind-SelectedItem="@SelectedModel" Hover="true" Striped="true">
                     <ToolBarContent>
                         <MudText Typo="Typo.h6">Users</MudText>
-                        <MudSpacer />
+                        <MudSpacer/>
                         <MudButton Color="Color.Primary" StartIcon="@Icons.Material.Filled.VerifiedUser" Disabled="@Startup.LockDiscovery" OnClick="@EnrollUser" Class="mr-2 my-1">Enroll User</MudButton>
                     </ToolBarContent>
                     <HeaderContent>
-                        <MudTh><MudTableSortLabel SortBy="new Func<UserModel, object>(x=>x.UserId)">User ID</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel InitialDirection="SortDirection.Ascending" SortBy="new Func<UserModel, object>(x=>x.Username)">Username</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<UserModel, object>(x=>x.DisplayName)">Display Name</MudTableSortLabel></MudTh>
+                        <MudTh>
+                            <MudTableSortLabel SortBy="new Func<UserModel, object>(x => x.UserId)">User ID</MudTableSortLabel>
+                        </MudTh>
+                        <MudTh>
+                            <MudTableSortLabel InitialDirection="SortDirection.Ascending" SortBy="new Func<UserModel, object>(x => x.Username)">Username</MudTableSortLabel>
+                        </MudTh>
+                        <MudTh>
+                            <MudTableSortLabel SortBy="new Func<UserModel, object>(x => x.DisplayName)">Display Name</MudTableSortLabel>
+                        </MudTh>
                         <MudTh></MudTh>
                     </HeaderContent>
                     <RowTemplate>
@@ -35,24 +41,24 @@
                         <MudTd DataLabel="Username">@context.Username</MudTd>
                         <MudTd DataLabel="Display Name">@context.DisplayName</MudTd>
                         <MudTd>
-                            <div class="ml-auto mr-auto" style="width: fit-content">          
+                            <div class="ml-auto mr-auto" style="width: fit-content">
                                 <MudTooltip Text="Delete" Placement="Placement.End">
                                     <MudIconButton Color="Color.Error" @onclick="@(() => RemoveUser(context))" Icon="@Icons.Material.Filled.Delete" Size="Size.Small"></MudIconButton>
-                                </MudTooltip>              
+                                </MudTooltip>
                             </div>
                         </MudTd>
                     </RowTemplate>
                     <PagerContent>
-                        <MudTablePager PageSizeOptions="new int[]{10, 25, 50, 100}" />
+                        <MudTablePager PageSizeOptions="new[] {10, 25, 50, 100}"/>
                     </PagerContent>
-				</MudTable>
-			</MudPaper>
+                </MudTable>
+            </MudPaper>
         </MudItem>
         @if (SelectedModel != null)
         {
             <MudItem md="12" lg="6">
                 <MudPaper Elevation="2" Class="p-0">
-                    <ManagePermissions User="@SelectedModel" />
+                    <ManagePermissions User="@SelectedModel"/>
                 </MudPaper>
             </MudItem>
         }
@@ -62,7 +68,7 @@
 @code
 {
     private MudTable<UserModel> _table;
-    public List<UserModel> UserModels { get; set; } = new List<UserModel>();
+    public List<UserModel> UserModels { get; set; } = new();
     public UserModel SelectedModel { get; set; }
 
     protected override async Task OnInitializedAsync()
@@ -72,7 +78,7 @@
 
     protected async Task EnrollUser()
     {
-        IDialogReference result = DialogService.Show<NewUserDialog>("Enroll User");
+        var result = DialogService.Show<NewUserDialog>("Enroll User");
         if (!result.Result.IsCanceled) await Refresh();
     }
 
@@ -99,6 +105,13 @@
         await Refresh();
     }
 
-    protected Task AddUser(UserModel u) => TryExecute(()=> DataBoundApi.AddUser(u.Username), "User enrollment completed", "User enrollment failed");
-    protected Task RemoveUser(UserModel u) => TryExecute(()=> DataBoundApi.RemoveUser(u.UserId), "User removal completed", "User removal failed");
+    protected Task AddUser(UserModel u)
+    {
+        return TryExecute(() => DataBoundApi.AddUser(u.Username), "User enrollment completed", "User enrollment failed");
+    }
+
+    protected Task RemoveUser(UserModel u)
+    {
+        return TryExecute(() => DataBoundApi.RemoveUser(u.UserId), "User removal completed", "User removal failed");
+    }
 }

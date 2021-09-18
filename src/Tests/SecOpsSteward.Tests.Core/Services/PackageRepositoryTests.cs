@@ -1,6 +1,6 @@
-﻿using FluentAssertions;
+﻿using System;
+using FluentAssertions;
 using SecOpsSteward.Shared.Packaging;
-using System;
 using Xunit;
 
 namespace SecOpsSteward.Tests.Core.Services
@@ -9,8 +9,10 @@ namespace SecOpsSteward.Tests.Core.Services
     {
         private readonly IPackageRepository _packageRepo;
 
-        public PackageRepositoryTests(IPackageRepository packageRepo) =>
+        public PackageRepositoryTests(IPackageRepository packageRepo)
+        {
             _packageRepo = packageRepo;
+        }
 
         [Fact]
         public void RepositoryShouldBeEmptyAtStart()

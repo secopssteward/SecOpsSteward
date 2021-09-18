@@ -1,14 +1,14 @@
-﻿using SecOpsSteward.Shared.Cryptography;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using SecOpsSteward.Shared.Cryptography;
 
 namespace SecOpsSteward.Shared.Messages
 {
     /// <summary>
-    /// Actions which can be taken on a received message
+    ///     Actions which can be taken on a received message
     /// </summary>
     [Flags]
     public enum MessageActions
@@ -20,19 +20,19 @@ namespace SecOpsSteward.Shared.Messages
     }
 
     /// <summary>
-    /// Handles message transit to and from Agents
+    ///     Handles message transit to and from Agents
     /// </summary>
     public interface IMessageTransitService
     {
         /// <summary>
-        /// Queue encrypted signed envelope to the proper location based on envelope's Receiver ID
+        ///     Queue encrypted signed envelope to the proper location based on envelope's Receiver ID
         /// </summary>
         /// <param name="envelope">Envelope to enqueue</param>
         /// <returns></returns>
         Task Enqueue(EncryptedMessageEnvelope envelope);
 
         /// <summary>
-        /// Dequeue an envelope from an entity's message queue
+        ///     Dequeue an envelope from an entity's message queue
         /// </summary>
         /// <param name="entityId">Entity ID</param>
         /// <param name="action">Action to take with message</param>
@@ -48,13 +48,14 @@ namespace SecOpsSteward.Shared.Messages
             return transitService.Enqueue(envelope);
         }
 
-        public static async Task DequeuePoll(this IMessageTransitService transitService, ChimeraEntityIdentifier entity, Func<EncryptedMessageEnvelope, CancellationTokenSource, Task<MessageActions>> action, TimeSpan timeout)
+        public static async Task DequeuePoll(this IMessageTransitService transitService, ChimeraEntityIdentifier entity,
+            Func<EncryptedMessageEnvelope, CancellationTokenSource, Task<MessageActions>> action, TimeSpan timeout)
         {
             var cancellation = new CancellationTokenSource();
             var endTime = DateTimeOffset.UtcNow + timeout;
             while (DateTimeOffset.UtcNow < endTime && !cancellation.IsCancellationRequested)
             {
-                await transitService.Dequeue(entity, async (envelope) =>
+                await transitService.Dequeue(entity, async envelope =>
                 {
                     if (envelope == null) return MessageActions.Unknown;
                     return await action(envelope, cancellation);
@@ -63,7 +64,9 @@ namespace SecOpsSteward.Shared.Messages
             }
         }
 
-        public static async Task DequeuePoll(this IMessageTransitService transitService, ChimeraEntityIdentifier entity, Func<EncryptedMessageEnvelope, CancellationTokenSource, Task<MessageActions>> action, TimeSpan timeout, params Guid[] envelopeIds)
+        public static async Task DequeuePoll(this IMessageTransitService transitService, ChimeraEntityIdentifier entity,
+            Func<EncryptedMessageEnvelope, CancellationTokenSource, Task<MessageActions>> action, TimeSpan timeout,
+            params Guid[] envelopeIds)
         {
             var envelopesFound = new List<Guid>();
             await transitService.DequeuePoll(entity, async (envelope, cancellation) =>
@@ -74,7 +77,9 @@ namespace SecOpsSteward.Shared.Messages
             }, timeout);
         }
 
-        public static async Task DequeuePoll(this IMessageTransitService transitService, ChimeraEntityIdentifier entity, Func<EncryptedMessageEnvelope, CancellationTokenSource, MessageActions> action, TimeSpan timeout, params Guid[] envelopeIds)
+        public static async Task DequeuePoll(this IMessageTransitService transitService, ChimeraEntityIdentifier entity,
+            Func<EncryptedMessageEnvelope, CancellationTokenSource, MessageActions> action, TimeSpan timeout,
+            params Guid[] envelopeIds)
         {
             await transitService.DequeuePoll(entity, (envelope, cancellation) =>
             {

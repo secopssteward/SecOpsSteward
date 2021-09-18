@@ -3,29 +3,30 @@ using System.IO;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
 
-namespace SecOpsSteward.Shared.Cryptography
+namespace SecOpsSteward.Shared.Cryptography.Extensions
 {
     /// <summary>
-    /// Denotes an object in the system which can be encrypted
+    ///     Denotes an object in the system which can be encrypted
     /// </summary>
     public interface IEncryptable
     {
     }
 
     /// <summary>
-    /// Extensions to encrypt arbitrary objects
+    ///     Extensions to encrypt arbitrary objects
     /// </summary>
     public static class IEncryptableObjectExtensions
     {
         /// <summary>
-        /// Encrypt some object with a given key
+        ///     Encrypt some object with a given key
         /// </summary>
         /// <typeparam name="TEncryptable">Type of object to encrypt</typeparam>
         /// <param name="encryptable">Object instance</param>
         /// <param name="service">Cryptographic provider service</param>
         /// <param name="key">Key to encrypt with</param>
         /// <returns></returns>
-        public static async Task<EncryptedObject> Encrypt<TEncryptable>(this TEncryptable encryptable, ICryptographicService service, ChimeraEntityIdentifier key)
+        public static async Task<EncryptedObject> Encrypt<TEncryptable>(this TEncryptable encryptable,
+            ICryptographicService service, ChimeraEntityIdentifier key)
             where TEncryptable : IEncryptable
         {
             var objectBytes = ChimeraSharedHelpers.SerializeToBytes(encryptable);
@@ -33,7 +34,7 @@ namespace SecOpsSteward.Shared.Cryptography
             var wrappedKey = await service.WrapKey(key, newKey);
             var encryptedBytes = EncryptAes(newKey, objectBytes);
 
-            return new EncryptedObject()
+            return new EncryptedObject
             {
                 RecipientId = key,
                 MessageType = encryptable.GetType().Name,
@@ -43,13 +44,14 @@ namespace SecOpsSteward.Shared.Cryptography
         }
 
         /// <summary>
-        /// Decrypt some object based on the recipient's key
+        ///     Decrypt some object based on the recipient's key
         /// </summary>
         /// <typeparam name="TObject">Type of object expected after decryption</typeparam>
         /// <param name="encrypted">Encrypted object instance</param>
         /// <param name="service">Cryptographic provider service</param>
         /// <returns></returns>
-        public static async Task<TObject> Decrypt<TObject>(this EncryptedObject encrypted, ICryptographicService service)
+        public static async Task<TObject> Decrypt<TObject>(this EncryptedObject encrypted,
+            ICryptographicService service)
             where TObject : IEncryptable
         {
             var unwrappedKey = await service.UnwrapKey(encrypted.RecipientId, encrypted.WrappedKey);
@@ -59,20 +61,24 @@ namespace SecOpsSteward.Shared.Cryptography
         }
 
         #region Symmetric Cryptography (Wrapped)
-        private static AesManaged GetAes() =>
-            new AesManaged()
+
+        private static AesManaged GetAes()
+        {
+            return new()
             {
                 Mode = CipherMode.CBC,
                 Padding = PaddingMode.PKCS7
             };
+        }
+
         private static byte[] EncryptAes(byte[] key, byte[] plainText)
         {
-            using (AesManaged aes = GetAes())
+            using (var aes = GetAes())
             {
                 aes.Key = key;
                 // IV size is AES block size in bytes (128 bits/8)
                 // IV is appended to ciphertext based on presumptively known IV block size
-                ICryptoTransform encryptor = aes.CreateEncryptor();
+                var encryptor = aes.CreateEncryptor();
                 var result = PerformCryptography(encryptor, plainText);
 
                 var iv = aes.IV;
@@ -86,7 +92,7 @@ namespace SecOpsSteward.Shared.Cryptography
 
         private static byte[] DecryptAes(byte[] key, byte[] cipherText)
         {
-            using (AesManaged aes = GetAes())
+            using (var aes = GetAes())
             {
                 aes.Key = key;
 
@@ -97,7 +103,7 @@ namespace SecOpsSteward.Shared.Cryptography
                 Array.Resize(ref cipherText, cipherText.Length - iv.Length);
                 aes.IV = iv;
 
-                ICryptoTransform decryptor = aes.CreateDecryptor();
+                var decryptor = aes.CreateDecryptor();
                 return PerformCryptography(decryptor, cipherText);
             }
         }
@@ -112,6 +118,7 @@ namespace SecOpsSteward.Shared.Cryptography
             cryptoStream.Flush();
             return memoryStream.ToArray();
         }
+
         #endregion
     }
 }

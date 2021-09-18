@@ -5,20 +5,20 @@
         @* Timestamp *@
         <MudItem xs="12">
             <MudGrid Spacing="0">
-                <MudItem xs="2" Class="my-auto" Style="text-align:center">
-                    <MudIcon Icon="@Icons.Material.Filled.Timer" />
+                <MudItem xs="2" Class="my-auto" Style="text-align: center">
+                    <MudIcon Icon="@Icons.Material.Filled.Timer"/>
                 </MudItem>
                 <MudItem xs="8" Class="font-size:0.8em;">
                     <MudGrid Spacing="0">
-                        <MudItem xs="12" Class="pb-0" Style="text-align:center;">
-                                @StepReceipt.ExecutionStarted.DateTime
-			            </MudItem>
-                        <MudItem xs="12" Class="py-0" Style="text-align:center;">
-                                @StepReceipt.ExecutionEnded.DateTime
-			            </MudItem>
+                        <MudItem xs="12" Class="pb-0" Style="text-align: center;">
+                            @StepReceipt.ExecutionStarted.DateTime
+                        </MudItem>
+                        <MudItem xs="12" Class="py-0" Style="text-align: center;">
+                            @StepReceipt.ExecutionEnded.DateTime
+                        </MudItem>
                     </MudGrid>
                 </MudItem>
-                <MudItem xs="2" Class="my-2" Style="text-align:center">
+                <MudItem xs="2" Class="my-2" Style="text-align: center">
                     <b>@(Math.Floor((StepReceipt.ExecutionEnded - StepReceipt.ExecutionStarted).TotalSeconds))s</b>
                 </MudItem>
             </MudGrid>
@@ -27,22 +27,22 @@
         @* Result *@
         <MudItem xs="12">
             <MudGrid Spacing="0">
-                <MudItem xs="2" Class="my-auto" Style="text-align:center">
-                    <MudIcon Icon="@Icons.Material.Filled.Lightbulb" Color="@((StepReceipt.StepExecutionResult == ResultCodes.RanPluginOk) ? Color.Success : Color.Warning)" />
+                <MudItem xs="2" Class="my-auto" Style="text-align: center">
+                    <MudIcon Icon="@Icons.Material.Filled.Lightbulb" Color="@(StepReceipt.StepExecutionResult == ResultCodes.RanPluginOk ? Color.Success : Color.Warning)"/>
                 </MudItem>
-                <MudItem xs="10" Class="my-auto" Style="text-align:center">
+                <MudItem xs="10" Class="my-auto" Style="text-align: center">
                     Plugin result was '<b>@StepReceipt.PluginResult?.ResultCode</b>'.
                 </MudItem>
             </MudGrid>
-	    </MudItem>
+        </MudItem>
 
         @* Shared Outputs *@
         @if (StepReceipt.PluginResult.SharedOutputs != null && StepReceipt.PluginResult.SharedOutputs.Outputs.Any())
         {
             <MudItem xs="12">
                 <MudGrid Spacing="0">
-                    <MudItem xs="2" Class="my-auto" Style="text-align:center">
-                        <MudIcon Icon="@Icons.Material.Filled.Subscript" />
+                    <MudItem xs="2" Class="my-auto" Style="text-align: center">
+                        <MudIcon Icon="@Icons.Material.Filled.Subscript"/>
                     </MudItem>
                     <MudItem xs="10">
                         <MudGrid Spacing="0">
@@ -57,7 +57,7 @@
                                             <code>@variable.Value</code>
                                         </MudItem>
                                     </MudGrid>
-                                </MudItem> 
+                                </MudItem>
                             }
                         </MudGrid>
                     </MudItem>
@@ -68,26 +68,28 @@
         @* Signature *@
         <MudItem xs="12">
             <MudGrid Spacing="0">
-                <MudItem xs="2" Class="my-auto" Style="text-align:center">
-                    <MudIcon Icon="@Icons.Material.Filled.Draw" Color="@((StepReceipt.StepExecutionResult == ResultCodes.RanPluginOk) ? Color.Success : Color.Warning)" />
+                <MudItem xs="2" Class="my-auto" Style="text-align: center">
+                    <MudIcon Icon="@Icons.Material.Filled.Draw" Color="@(StepReceipt.StepExecutionResult == ResultCodes.RanPluginOk ? Color.Success : Color.Warning)"/>
                 </MudItem>
                 <MudItem xs="10">
                     <MudGrid Spacing="0">
-                        <MudItem xs="12" Style="text-align:center">
+                        <MudItem xs="12" Style="text-align: center">
                             @StepReceipt.Signature.Timestamp
-				        </MudItem>
-                        <MudItem xs="12" Style="text-align:center">
+                        </MudItem>
+                        <MudItem xs="12" Style="text-align: center">
                             @StepReceipt.Signature.SignerDisplay (@StepReceipt.Signature.Signer.Id.ShortId())
-				        </MudItem>
+                        </MudItem>
                     </MudGrid>
-				</MudItem>
-			</MudGrid>
-		</MudItem>
+                </MudItem>
+            </MudGrid>
+        </MudItem>
     </MudGrid>
 
 </MudContainer>
 
 @code {
+
     [Parameter]
-    public SecOpsSteward.Shared.Messages.ExecutionStepReceipt StepReceipt { get; set; }
+    public ExecutionStepReceipt StepReceipt { get; set; }
+
 }

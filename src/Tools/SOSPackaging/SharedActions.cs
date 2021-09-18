@@ -1,11 +1,11 @@
-﻿using Azure.Storage.Blobs;
-using SecOpsSteward.Shared;
-using SecOpsSteward.Shared.Cryptography;
-using SecOpsSteward.Shared.Packaging;
-using Spectre.Console.Cli;
-using System;
+﻿using System;
 using System.IO;
 using System.Text.Json;
+using Azure.Storage.Blobs;
+using SecOpsSteward.Shared;
+using SecOpsSteward.Shared.Cryptography.Extensions;
+using SecOpsSteward.Shared.Packaging;
+using Spectre.Console.Cli;
 
 namespace SOSPackaging
 {
@@ -15,7 +15,9 @@ namespace SOSPackaging
         {
             ChimeraContainer package;
             if (Directory.Exists(path))
+            {
                 package = ChimeraContainer.CreateFromFolder(path);
+            }
             else
             {
                 var fs = new FileStream(path, FileMode.Open);
@@ -33,14 +35,17 @@ namespace SOSPackaging
                 package.ContainerStream.CopyTo(fs);
             }
 
-            return Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "pkg-" + package.GetMetadata().ContainerId.ContainerId + ".zip";
+            return Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "pkg-" +
+                   package.GetMetadata().ContainerId.ContainerId + ".zip";
         }
 
         public static void Sign(string path, string privateKeyBase64, string signer)
         {
             var ms = new MemoryStream();
             using (var fs = new FileStream(path, FileMode.Open))
+            {
                 fs.CopyTo(ms);
+            }
 
             ms.Seek(0, SeekOrigin.Begin);
             var package = new ChimeraContainer(ms);
@@ -51,7 +56,9 @@ namespace SOSPackaging
             ms.Seek(0, SeekOrigin.Begin);
 
             using (var fs = new FileStream(path, FileMode.OpenOrCreate))
+            {
                 ms.CopyTo(fs);
+            }
         }
 
         public static int Verify(string path, string publicKeyBase64)
@@ -62,7 +69,7 @@ namespace SOSPackaging
                 var metadata = package.GetMetadata();
                 if (metadata.PubliclyVerify(Convert.FromBase64String(publicKeyBase64)))
                     return 0;
-                else return 1;
+                return 1;
             }
         }
 
@@ -93,7 +100,8 @@ namespace SOSPackaging
 
             byte[] configBytes;
             var span = new Span<byte>(new byte[config.Length]);
-            if (Convert.TryFromBase64String(config.PadRight(config.Length / 4 * 4 + (config.Length % 4 == 0 ? 0 : 4), '='), span, out _))
+            if (Convert.TryFromBase64String(
+                config.PadRight(config.Length / 4 * 4 + (config.Length % 4 == 0 ? 0 : 4), '='), span, out _))
                 configBytes = Convert.FromBase64String(config);
             else
                 configBytes = File.ReadAllBytes(config);

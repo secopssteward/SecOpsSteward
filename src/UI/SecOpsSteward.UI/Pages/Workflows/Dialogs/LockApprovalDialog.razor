@@ -1,10 +1,7 @@
-﻿@using Microsoft.Azure.Management.AppService.Fluent
-@using System.Text.Json
-@using SecOpsSteward.UI.Widgets
-<MudDialog>
+﻿<MudDialog>
     <DialogContent>
         <MudText Typo="Typo.subtitle1" Align="Align.Center">
-            Would you like to lock this workflow? You will no longer be able to edit it. 
+            Would you like to lock this workflow? You will no longer be able to edit it.
             It will be cryptographically signed by @CurrentUser.Email and will be eligible to run recurrently.
             If you want to modify this workflow, you will need to create a new workflow based from this one.
         </MudText>
@@ -14,9 +11,11 @@
         <MudButton Color="Color.Success" OnClick="@Process">Yes</MudButton>
     </DialogActions>
 </MudDialog>
+
 @code {
 
-    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+    [CascadingParameter]
+    MudDialogInstance MudDialog { get; set; }
 
     private void Cancel()
     {
@@ -26,6 +25,7 @@
 
     private void Process()
     {
-        MudDialog.Close(DialogResult.Ok<bool>(true));
+        MudDialog.Close(DialogResult.Ok(true));
     }
+
 }

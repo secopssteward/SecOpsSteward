@@ -1,6 +1,11 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using SecOpsSteward.Integrations.Azure.Configuration;
+using SecOpsSteward.Integrations.Azure.Cryptography;
+using SecOpsSteward.Integrations.Azure.Messaging;
+using SecOpsSteward.Integrations.Azure.Roles;
+using SecOpsSteward.Integrations.Azure.Storage;
 using SecOpsSteward.Shared.Configuration;
-using SecOpsSteward.Shared.Cryptography;
+using SecOpsSteward.Shared.Cryptography.Extensions;
 using SecOpsSteward.Shared.Messages;
 using SecOpsSteward.Shared.Packaging;
 using SecOpsSteward.Shared.Roles;
@@ -12,17 +17,17 @@ namespace SecOpsSteward.Integrations.Azure
     {
         public static void AddAzurePlatformIntegrations(this IServiceCollection services)
         {
-            services.AddScoped<IConfigurationProvider, Configuration.AzureKeyVaultConfigurationService>();
-            services.AddScoped<ICryptographicService, Cryptography.AzureKeyVaultCryptographicService>();
-            services.AddScoped<IMessageTransitService, Messaging.ServiceBusMessageTransitService>();
-            services.AddScoped<IRoleAssignmentService, Roles.AzureActiveDirectoryRoleAssignmentService>();
-            services.AddScoped<IPackageRepository, Storage.WebPackageManager>();
+            services.AddScoped<IConfigurationProvider, AzureKeyVaultConfigurationService>();
+            services.AddScoped<ICryptographicService, AzureKeyVaultCryptographicService>();
+            services.AddScoped<IMessageTransitService, ServiceBusMessageTransitService>();
+            services.AddScoped<IRoleAssignmentService, AzureActiveDirectoryRoleAssignmentService>();
+            services.AddScoped<IPackageRepository, WebPackageManager>();
 
             // Below have agent or user actions when those operations are performed
-            services.AddScoped<IChimeraIntegratedService, Configuration.AzureKeyVaultConfigurationService>();
-            services.AddScoped<IChimeraIntegratedService, Cryptography.AzureKeyVaultCryptographicService>();
-            services.AddScoped<IChimeraIntegratedService, Messaging.ServiceBusMessageTransitService>();
-            services.AddScoped<IChimeraIntegratedService, Storage.WebPackageManager>();
+            services.AddScoped<IChimeraIntegratedService, AzureKeyVaultConfigurationService>();
+            services.AddScoped<IChimeraIntegratedService, AzureKeyVaultCryptographicService>();
+            services.AddScoped<IChimeraIntegratedService, ServiceBusMessageTransitService>();
+            services.AddScoped<IChimeraIntegratedService, WebPackageManager>();
         }
     }
 }

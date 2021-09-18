@@ -1,46 +1,16 @@
-﻿using SecOpsSteward.Plugins;
-using SecOpsSteward.Plugins.Configurable;
-using SecOpsSteward.Plugins.WorkflowTemplates;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using SecOpsSteward.Plugins;
+using SecOpsSteward.Plugins.Configurable;
+using SecOpsSteward.Plugins.WorkflowTemplates;
 
 namespace SecOpsSteward.Shared.Packaging.Metadata
 {
     public class ServiceMetadata
     {
         /// <summary>
-        /// Service identifier
-        /// </summary>
-        public ChimeraPackageIdentifier ServiceId { get; set; }
-
-        /// <summary>
-        /// Service display name
-        /// </summary>
-        public string Name { get; set; }
-
-        /// <summary>
-        /// Description of what the Service does
-        /// </summary>
-        public string Description { get; set; }
-
-        /// <summary>
-        /// Parameters used to configure the Service
-        /// </summary>
-        public ConfigurableObjectParameterCollection ParameterCollection { get; set; } = new ConfigurableObjectParameterCollection();
-
-        /// <summary>
-        /// Plugin IDs supported by this Service
-        /// </summary>
-        public List<ChimeraPackageIdentifier> PluginIds { get; set; }
-
-        /// <summary>
-        /// Templates which this service users
-        /// </summary>
-        public List<WorkflowTemplateDefinition> Templates { get; set; }
-
-        /// <summary>
-        /// Information stored to describe a Service
+        ///     Information stored to describe a Service
         /// </summary>
         /// <param name="service">IManagedServicePackage to extract information from</param>
         public ServiceMetadata(IManagedServicePackage service)
@@ -49,11 +19,46 @@ namespace SecOpsSteward.Shared.Packaging.Metadata
             Name = service.GetDescriptiveName();
             Description = service.GetDescriptiveDescription();
             ParameterCollection = service.GetConfigurationDescription();
-            var pluginTypes = service.GetType().Assembly.GetTypes().Where(t => t.GetInterfaces().Contains(typeof(IPlugin)));
-            PluginIds = new List<ChimeraPackageIdentifier>(pluginTypes.Select(p => new ChimeraPackageIdentifier(p.GenerateId())));
+            var pluginTypes = service.GetType().Assembly.GetTypes()
+                .Where(t => t.GetInterfaces().Contains(typeof(IPlugin)));
+            PluginIds = new List<ChimeraPackageIdentifier>(pluginTypes.Select(p =>
+                new ChimeraPackageIdentifier(p.GenerateId())));
             Templates = service.Templates;
         }
-        public ServiceMetadata() { }
+
+        public ServiceMetadata()
+        {
+        }
+
+        /// <summary>
+        ///     Service identifier
+        /// </summary>
+        public ChimeraPackageIdentifier ServiceId { get; set; }
+
+        /// <summary>
+        ///     Service display name
+        /// </summary>
+        public string Name { get; set; }
+
+        /// <summary>
+        ///     Description of what the Service does
+        /// </summary>
+        public string Description { get; set; }
+
+        /// <summary>
+        ///     Parameters used to configure the Service
+        /// </summary>
+        public ConfigurableObjectParameterCollection ParameterCollection { get; set; } = new();
+
+        /// <summary>
+        ///     Plugin IDs supported by this Service
+        /// </summary>
+        public List<ChimeraPackageIdentifier> PluginIds { get; set; }
+
+        /// <summary>
+        ///     Templates which this service users
+        /// </summary>
+        public List<WorkflowTemplateDefinition> Templates { get; set; }
 
         public void CheckIntegrity()
         {

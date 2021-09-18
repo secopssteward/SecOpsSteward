@@ -4,12 +4,12 @@ using System.Threading.Tasks;
 namespace SecOpsSteward.Shared.NonceTracking
 {
     /// <summary>
-    /// Tracks nonces to prevent replay attacks on messages
+    ///     Tracks nonces to prevent replay attacks on messages
     /// </summary>
     public interface INonceTrackingService
     {
         /// <summary>
-        /// Validates a nonce
+        ///     Validates a nonce
         /// </summary>
         /// <param name="nonce">Nonce to validate</param>
         /// <param name="agentId">Agent ID</param>

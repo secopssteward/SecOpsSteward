@@ -1,9 +1,8 @@
-﻿@using SecOpsSteward.Plugins
+﻿@using Microsoft.Azure.Management.ResourceManager.Fluent
 @using SecOpsSteward.Plugins.Discovery
-@using Microsoft.Azure.Management.Fluent
-@using Microsoft.Azure.Management.ResourceManager.Fluent
 @using SecOpsSteward.Shared.DiscoveryWorkflow
 @using SecOpsSteward.Shared.Packaging
+@using Microsoft.Azure.Management.Fluent
 <MudContainer Class="p-3 mb-5">
     <MudItem xs="12">
         <MudSelect T="ISubscription" Label="Subscription" Strict="true" Variant="Variant.Outlined" Class="py-2"
@@ -19,28 +18,27 @@
     {
         <MudItem xs="12">
             <MudSelect T="string" Label="Resource Group" Strict="true" Variant="Variant.Outlined" Class="py-2"
-                    ToStringFunc="@((s) => s == null ? "No resource groups selected" : ResourceGroups.First(rg => rg.Id == s).Name)"
-                    MultiSelectionTextFunc="@((t) => string.Join(", ", t))" MultiSelection="true"
-                    @bind-Value="@SelectedRG"
-                    SelectedValues="@SelectedRGs" SelectedValuesChanged="@((v) => SelectedRGs = v)" 
-                    OnBlur="@((b) => SetResourceGroups())">
+                       ToStringFunc="@(s => s == null ? "No resource groups selected" : ResourceGroups.First(rg => rg.Id == s).Name)"
+                       MultiSelectionTextFunc="@(t => string.Join(", ", t))" MultiSelection="true"
+                       @bind-Value="@SelectedRG"
+                       SelectedValues="@SelectedRGs" SelectedValuesChanged="@(v => SelectedRGs = v)"
+                       OnBlur="@(b => SetResourceGroups())">
                 @foreach (var resourceGroup in ResourceGroups.OrderBy(rg => rg.Name))
                 {
                     <MudSelectItem T="string" Value="@resourceGroup.Id">@resourceGroup.Name</MudSelectItem>
                 }
             </MudSelect>
-        </MudItem> 
-        
-        }
+        </MudItem>
+    }
 
     @if (_resourcesLoaded)
     {
         <MudItem xs="12">
             <MudSelect T="DiscoveredServiceConfiguration" Label="Resource" Strict="true" Variant="Variant.Outlined" Class="py-2"
-                    ToStringFunc="@((s) => s == null ? "No resource groups selected" : s.DescriptiveName)"
-                    MultiSelectionTextFunc="@((t) => t.Count + " resources selected")" MultiSelection="true"
-                    SelectedValues="@SelectedResources" SelectedValuesChanged="@SetResources"
-                    OnBlur="@((b) => {})">
+                       ToStringFunc="@(s => s == null ? "No resource groups selected" : s.DescriptiveName)"
+                       MultiSelectionTextFunc="@(t => t.Count + " resources selected")" MultiSelection="true"
+                       SelectedValues="@SelectedResources" SelectedValuesChanged="@SetResources"
+                       OnBlur="@(b => { })">
                 @foreach (var resource in Resources.OrderBy(r => r.DescriptiveName))
                 {
                     <MudSelectItem T="DiscoveredServiceConfiguration" Value="@resource">@resource.DescriptiveName</MudSelectItem>
@@ -48,19 +46,22 @@
             </MudSelect>
         </MudItem>
     }
-    else if (_resourcesLoading) { <MudSkeleton /> }
+    else if (_resourcesLoading)
+    {
+        <MudSkeleton/>
+    }
 </MudContainer>
 
 @code
 {
-    public HashSet<string> SelectedRGs { get; set; } = new HashSet<string>();
+    public HashSet<string> SelectedRGs { get; set; } = new();
     private string SelectedRG;
 
     // Select N resources from all given ManagedServiceModels
 
     protected IEnumerable<ISubscription> Subscriptions { get; set; } = new List<ISubscription>();
     protected IEnumerable<IResourceGroup> ResourceGroups { get; set; } = new List<IResourceGroup>();
-    protected List<DiscoveredServiceConfiguration> Resources { get; set; } = new List<DiscoveredServiceConfiguration>();
+    protected List<DiscoveredServiceConfiguration> Resources { get; set; } = new();
 
     [Inject]
     public AzureCurrentCredentialFactory InjectedAzure { get; set; }
@@ -85,7 +86,7 @@
 
     [Parameter]
     public EventCallback<HashSet<IResourceGroup>> SelectedResourceGroupsChanged { get; set; }
-    
+
     [Parameter]
     public HashSet<DiscoveredServiceConfiguration> SelectedResources { get; set; }
 
@@ -95,6 +96,7 @@
     private bool _resourcesLoaded;
     private bool _resourcesLoading;
     private IAzure _azure;
+
     protected override void OnInitialized()
     {
         Subscriptions = InjectedAzure.GetCredential().GetAzure().Subscriptions.List();
@@ -122,7 +124,7 @@
             foreach (var rg in SelectedRGs)
             {
                 var thisRg = ResourceGroups.First(r => r.Id == rg);
-                var thisCfg = new AzureSharedConfiguration()
+                var thisCfg = new AzureSharedConfiguration
                 {
                     TenantId = InjectedAzure.GetCredential().TenantId,
                     SubscriptionId = SelectedSubscription.SubscriptionId,

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
+using Microsoft.Azure.Management.AppService.Fluent.Models;
 
 namespace SecOpsSteward.Plugins.Azure.AppServices.Functions
 {
@@ -28,44 +29,17 @@ namespace SecOpsSteward.Plugins.Azure.AppServices.Functions
     [PossibleResultCodes(CommonResultCodes.Success, CommonResultCodes.Failure)]
     public class AzureFunctionSlotSwap : SOSPlugin<AzureFunctionSlotSwapConfiguration>
     {
-        protected AzureCurrentCredentialFactory PlatformFactory { get; set; }
         public AzureFunctionSlotSwap(AzureCurrentCredentialFactory platformFactory)
         {
             PlatformFactory = platformFactory;
             if (platformFactory == null) throw new Exception("Platform handle not found");
         }
-        public AzureFunctionSlotSwap() { }
 
-        public override async Task<PluginOutputStructure> Execute(PluginOutputStructure previousOutput)
+        public AzureFunctionSlotSwap()
         {
-            var azure = PlatformFactory.GetCredential(Configuration.SubscriptionId).GetAzure();
-
-            if (Configuration.SourceSlot.ToLower() == "production" ||
-                Configuration.DestinationSlot.ToLower() == "production")
-            {
-                var otherSlot = Configuration.SourceSlot == "production" ?
-                    Configuration.DestinationSlot : Configuration.SourceSlot;
-
-                await azure.AppServices.FunctionApps.Inner.SwapSlotWithProductionWithHttpMessagesAsync(
-                    Configuration.ResourceGroup,
-                    Configuration.FunctionAppName,
-                    new Microsoft.Azure.Management.AppService.Fluent.Models.CsmSlotEntity(
-                        otherSlot, true));
-            }
-            else
-            {
-                await azure.AppServices.FunctionApps.Inner.SwapSlotSlotWithHttpMessagesAsync(
-                    Configuration.ResourceGroup,
-                    Configuration.FunctionAppName,
-                    new Microsoft.Azure.Management.AppService.Fluent.Models.CsmSlotEntity(
-                        Configuration.SourceSlot, true),
-                    Configuration.DestinationSlot);
-            }
-
-            // responds with NotFound if the slot doesn't exist
-
-            return new PluginOutputStructure(CommonResultCodes.Success);
         }
+
+        protected AzureCurrentCredentialFactory PlatformFactory { get; set; }
 
         public override IEnumerable<PluginRbacRequirements> RbacRequirements => new[]
         {
@@ -88,5 +62,37 @@ namespace SecOpsSteward.Plugins.Azure.AppServices.Functions
                 "Microsoft.Web/sites/slotsdiffs/Action",
                 "Microsoft.Web/sites/slots/slotsdiffs/Action")
         };
+
+        public override async Task<PluginOutputStructure> Execute(PluginOutputStructure previousOutput)
+        {
+            var azure = PlatformFactory.GetCredential(Configuration.SubscriptionId).GetAzure();
+
+            if (Configuration.SourceSlot.ToLower() == "production" ||
+                Configuration.DestinationSlot.ToLower() == "production")
+            {
+                var otherSlot = Configuration.SourceSlot == "production"
+                    ? Configuration.DestinationSlot
+                    : Configuration.SourceSlot;
+
+                await azure.AppServices.FunctionApps.Inner.SwapSlotWithProductionWithHttpMessagesAsync(
+                    Configuration.ResourceGroup,
+                    Configuration.FunctionAppName,
+                    new CsmSlotEntity(
+                        otherSlot, true));
+            }
+            else
+            {
+                await azure.AppServices.FunctionApps.Inner.SwapSlotSlotWithHttpMessagesAsync(
+                    Configuration.ResourceGroup,
+                    Configuration.FunctionAppName,
+                    new CsmSlotEntity(
+                        Configuration.SourceSlot, true),
+                    Configuration.DestinationSlot);
+            }
+
+            // responds with NotFound if the slot doesn't exist
+
+            return new PluginOutputStructure(CommonResultCodes.Success);
+        }
     }
 }

@@ -27,29 +27,17 @@ namespace SecOpsSteward.Plugins.Azure.AppServices.Functions
     [RequiredSharedInputs("&&/Name/Value")]
     public class SetFunctionConfiguration : SOSPlugin<SetFunctionConfigurationConfiguration>
     {
-        protected AzureCurrentCredentialFactory PlatformFactory { get; set; }
         public SetFunctionConfiguration(AzureCurrentCredentialFactory platformFactory)
         {
             PlatformFactory = platformFactory;
             if (platformFactory == null) throw new Exception("Platform handle not found");
         }
-        public SetFunctionConfiguration() { }
 
-        public override async Task<PluginOutputStructure> Execute(PluginOutputStructure previousOutput)
+        public SetFunctionConfiguration()
         {
-            var azure = PlatformFactory.GetCredential(Configuration.SubscriptionId).GetAzure();
-            var app = await Configuration.GetAppAsync(azure);
-
-            // apply inputs to configured
-
-            var value = TemplatedStrings.PopulateInputsInTemplateString(Configuration.Value, previousOutput);
-
-            await app.Update()
-                     .WithAppSetting(Configuration.Name, value)
-                     .ApplyAsync();
-
-            return new PluginOutputStructure(CommonResultCodes.Success);
         }
+
+        protected AzureCurrentCredentialFactory PlatformFactory { get; set; }
 
         public override IEnumerable<PluginRbacRequirements> RbacRequirements => new[]
         {
@@ -62,5 +50,21 @@ namespace SecOpsSteward.Plugins.Azure.AppServices.Functions
                 "Microsoft.Web/sites/Read",
                 "Microsoft.Web/sites/Write")
         };
+
+        public override async Task<PluginOutputStructure> Execute(PluginOutputStructure previousOutput)
+        {
+            var azure = PlatformFactory.GetCredential(Configuration.SubscriptionId).GetAzure();
+            var app = await Configuration.GetAppAsync(azure);
+
+            // apply inputs to configured
+
+            var value = TemplatedStrings.PopulateInputsInTemplateString(Configuration.Value, previousOutput);
+
+            await app.Update()
+                .WithAppSetting(Configuration.Name, value)
+                .ApplyAsync();
+
+            return new PluginOutputStructure(CommonResultCodes.Success);
+        }
     }
 }

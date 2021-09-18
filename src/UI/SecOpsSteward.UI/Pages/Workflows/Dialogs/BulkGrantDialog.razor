@@ -1,10 +1,6 @@
-﻿@using Microsoft.Azure.Management.AppService.Fluent
-@using System.Text.Json
-@using SecOpsSteward.Data.Workflow
+﻿@using SecOpsSteward.Data.Workflow
 @using SecOpsSteward.Plugins
-@using SecOpsSteward.Plugins.Configurable
 @using SecOpsSteward.Shared.Packaging
-@using SecOpsSteward.UI.Widgets
 <MudDialog>
     <DialogContent>
         <MudText Typo="Typo.subtitle1" Align="Align.Center">
@@ -16,18 +12,18 @@
             {
                 <h5>@item.Key.NodeName (@item.Key.Package.Name)</h5>
                 <MudExpansionPanels MultiExpansion="true">
-                @foreach (var req in item.Value)
-                {
-                    <MudExpansionPanel Text="@req.Description" Style="text-align:left">
-                        <pre style="line-break: anywhere;white-space: pre-wrap;">@req.TechnicalDescription</pre>
-                    </MudExpansionPanel>
-                }
+                    @foreach (var req in item.Value)
+                    {
+                        <MudExpansionPanel Text="@req.Description" Style="text-align: left">
+                            <pre style="line-break: anywhere; white-space: pre-wrap;">@req.TechnicalDescription</pre>
+                        </MudExpansionPanel>
+                    }
                 </MudExpansionPanels>
             }
         }
         else
         {
-            <MudSkeleton SkeletonType="SkeletonType.Rectangle" />
+            <MudSkeleton SkeletonType="SkeletonType.Rectangle"/>
         }
         <MudText Typo="Typo.subtitle1" Align="Align.Center">
             Do you want to continue?
@@ -38,29 +34,35 @@
         <MudButton Color="Color.Success" OnClick="@Process">Yes</MudButton>
     </DialogActions>
 </MudDialog>
+
 @code {
-    [Parameter] public SavedWorkflow Workflow { get; set; }
 
-    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+    [Parameter]
+    public SavedWorkflow Workflow { get; set; }
 
-    [Inject] public PackageActionsService PackageActions { get; set; }
+    [CascadingParameter]
+    MudDialogInstance MudDialog { get; set; }
 
-    private Dictionary<SavedNode, List<PluginRbacRequirements>> RbacRequirements { get; set; } = new Dictionary<SavedNode, List<PluginRbacRequirements>>();
-    private Dictionary<PluginRbacRequirements, bool> _visibilities = new Dictionary<PluginRbacRequirements, bool>();
+    [Inject]
+    public PackageActionsService PackageActions { get; set; }
 
-    private bool _initialized = false;
+    private Dictionary<SavedNode, List<PluginRbacRequirements>> RbacRequirements { get; } = new();
+    private Dictionary<PluginRbacRequirements, bool> _visibilities = new();
+
+    private bool _initialized;
+
     protected override async Task OnInitializedAsync()
     {
         await Task.WhenAll(Workflow.Nodes.Select(async n =>
-            {
-                lock (RbacRequirements)
-                    if (!RbacRequirements.ContainsKey(n))
-                        RbacRequirements.Add(n, new List<PluginRbacRequirements>());
+        {
+            lock (RbacRequirements)
+                if (!RbacRequirements.ContainsKey(n))
+                    RbacRequirements.Add(n, new List<PluginRbacRequirements>());
 
-                var rbac = await PackageActions.GetRbacRequirements(n.PackageId, n.Parameters);
-                lock (RbacRequirements)
-                    RbacRequirements[n].AddRange(rbac);
-            }));
+            var rbac = await PackageActions.GetRbacRequirements(n.PackageId, n.Parameters);
+            lock (RbacRequirements)
+                RbacRequirements[n].AddRange(rbac);
+        }));
 
         _initialized = true;
     }
@@ -73,6 +75,7 @@
 
     private void Process()
     {
-        MudDialog.Close(DialogResult.Ok<bool>(true));
+        MudDialog.Close(DialogResult.Ok(true));
     }
+
 }

@@ -1,8 +1,8 @@
-﻿using FluentAssertions;
-using System;
-using Xunit;
-using SecOpsSteward.Shared.NonceTracking;
+﻿using System;
 using System.Threading.Tasks;
+using FluentAssertions;
+using SecOpsSteward.Shared.NonceTracking;
+using Xunit;
 
 namespace SecOpsSteward.Tests.Core.Services
 {
@@ -10,8 +10,10 @@ namespace SecOpsSteward.Tests.Core.Services
     {
         private readonly INonceTrackingService _nonceTracker;
 
-        public NonceTrackingServiceTests(INonceTrackingService nonceTracker) =>
+        public NonceTrackingServiceTests(INonceTrackingService nonceTracker)
+        {
             _nonceTracker = nonceTracker;
+        }
 
         [Fact]
         public async Task FirstRequestWithEmptyNonceShouldPass()

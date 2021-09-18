@@ -1,16 +1,16 @@
-﻿using Microsoft.Azure.Functions.Worker;
+﻿using System.Threading.Tasks;
+using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 using SecOpsSteward.Shared;
 using SecOpsSteward.Shared.DiscoveryWorkflow;
 using SecOpsSteward.Shared.Messages;
-using System.Threading.Tasks;
 
 namespace SecOpsSteward.Coordinator.AzureFunctions
 {
     public class ProcessWorkflowStep
     {
-        private readonly WorkflowProcessorFactory _workflowProcessorFactory;
         private readonly ILogger<ProcessWorkflowStep> _logger;
+        private readonly WorkflowProcessorFactory _workflowProcessorFactory;
 
         public ProcessWorkflowStep(
             WorkflowProcessorFactory workflowProcessorFactory,
@@ -24,7 +24,8 @@ namespace SecOpsSteward.Coordinator.AzureFunctions
         public async Task Run([ServiceBusTrigger("agent-%AgentId%", Connection = "SOSBus")] byte[] message)
         {
             var envelope = ChimeraSharedHelpers.GetFromSerializedBytes<EncryptedMessageEnvelope>(message);
-            _logger.LogInformation("Received new envelope for processing addressed to {0}, ThreadID is {1}", envelope.Recipient, envelope.ThreadId);
+            _logger.LogInformation("Received new envelope for processing addressed to {0}, ThreadID is {1}",
+                envelope.Recipient, envelope.ThreadId);
 
             var wfProcessor = _workflowProcessorFactory.GetWorkflowProcessor(
                 Program.AgentId,

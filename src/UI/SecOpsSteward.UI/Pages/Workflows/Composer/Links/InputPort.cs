@@ -4,7 +4,7 @@ namespace SecOpsSteward.UI.Pages.Workflows.Composer.Links
 {
     public class InputPort : CommonPortModel
     {
-        public InputPort(NodeModel parent, PortAlignment alignment) : base(parent, alignment, null, null)
+        public InputPort(NodeModel parent, PortAlignment alignment) : base(parent, alignment)
         {
         }
 

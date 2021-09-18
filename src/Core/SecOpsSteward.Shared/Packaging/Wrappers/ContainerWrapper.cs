@@ -1,28 +1,28 @@
-﻿using McMaster.NETCore.Plugins;
-using SecOpsSteward.Plugins;
-using SecOpsSteward.Plugins.Configurable;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using McMaster.NETCore.Plugins;
+using SecOpsSteward.Plugins;
+using SecOpsSteward.Plugins.Configurable;
 
 namespace SecOpsSteward.Shared.Packaging.Wrappers
 {
     /// <summary>
-    /// Wraps Plugin interfaces to handle constructing pointers to methods in the Plugin
+    ///     Wraps Plugin interfaces to handle constructing pointers to methods in the Plugin
     /// </summary>
     public class ContainerWrapper : IDisposable
     {
         /// <summary>
-        /// Assembly which is common among Plugins
+        ///     Assembly which is common among Plugins
         /// </summary>
         protected static string SHARED_ASSEMBLY_NAME = "Chimera.Plugins.dll";
 
         /// <summary>
-        /// Types which are shared among all Plugins
+        ///     Types which are shared among all Plugins
         /// </summary>
-        protected static Type[] SHARED_TYPES = new[]
+        protected static Type[] SHARED_TYPES =
         {
             typeof(IManagedServicePackage),
             typeof(IManagedServicePackage<>),
@@ -33,25 +33,44 @@ namespace SecOpsSteward.Shared.Packaging.Wrappers
             typeof(PluginOutputStructure)
         };
 
-        /// <summary>
-        /// Wrapped CLR Assembly
-        /// </summary>
-        public Assembly Assembly { get; private set; }
-
-        public Dictionary<Guid, ContainerPluginWrapper> Plugins = new Dictionary<Guid, ContainerPluginWrapper>();
-        public Dictionary<Guid, ContainerServiceWrapper> Services = new Dictionary<Guid, ContainerServiceWrapper>();
+        private readonly string _fileName;
         private PluginLoader _loader;
-        private string _fileName;
+
+        public Dictionary<Guid, ContainerPluginWrapper> Plugins = new();
+        public Dictionary<Guid, ContainerServiceWrapper> Services = new();
 
         public ContainerWrapper(string fileName)
         {
             _fileName = fileName;
         }
 
+        /// <summary>
+        ///     Wrapped CLR Assembly
+        /// </summary>
+        public Assembly Assembly { get; private set; }
+
+        /// <summary>
+        ///     Disposes a Plugin wrapper, including the loaded assembly
+        /// </summary>
+        public void Dispose()
+        {
+            Plugins.Clear();
+            Services.Clear();
+
+            _loader.Dispose();
+        }
+
         public bool IsValid()
         {
-            try { Load(); }
-            catch { return false; }
+            try
+            {
+                Load();
+            }
+            catch
+            {
+                return false;
+            }
+
             return Plugins.Any() || Services.Any();
         }
 
@@ -68,7 +87,7 @@ namespace SecOpsSteward.Shared.Packaging.Wrappers
         }
 
         /// <summary>
-        /// If the given file is a valid CLR assembly
+        ///     If the given file is a valid CLR assembly
         /// </summary>
         /// <param name="fileName">File name to test</param>
         /// <returns></returns>
@@ -81,12 +100,15 @@ namespace SecOpsSteward.Shared.Packaging.Wrappers
                 var asmName = AssemblyName.GetAssemblyName(fileName);
                 return asmName != null;
             }
-            catch { }
+            catch
+            {
+            }
+
             return false;
         }
 
         /// <summary>
-        /// Loads an Assembly and detects the appropriate Types for the Plugin
+        ///     Loads an Assembly and detects the appropriate Types for the Plugin
         /// </summary>
         public void Load()
         {
@@ -98,33 +120,22 @@ namespace SecOpsSteward.Shared.Packaging.Wrappers
             var asm = _loader.LoadDefaultAssembly();
 
             foreach (var pluginType in asm.GetTypes()
-                                          .Where(t => t.GetInterface(nameof(IPlugin)) != null)
-                                          .Where(t => !t.IsGenericType))
+                .Where(t => t.GetInterface(nameof(IPlugin)) != null)
+                .Where(t => !t.IsGenericType))
             {
                 var plugin = Activator.CreateInstance(pluginType) as IPlugin;
                 Plugins[plugin.GenerateId()] = new ContainerPluginWrapper(pluginType);
             }
 
             foreach (var serviceType in asm.GetTypes()
-                                           .Where(t => t.GetInterface(nameof(IManagedServicePackage)) != null)
-                                           .Where(t => !t.IsGenericType))
+                .Where(t => t.GetInterface(nameof(IManagedServicePackage)) != null)
+                .Where(t => !t.IsGenericType))
             {
                 var msp = Activator.CreateInstance(serviceType) as IManagedServicePackage;
                 Services[msp.GenerateId()] = new ContainerServiceWrapper(serviceType);
             }
 
             Assembly = asm;
-        }
-
-        /// <summary>
-        /// Disposes a Plugin wrapper, including the loaded assembly
-        /// </summary>
-        public void Dispose()
-        {
-            Plugins.Clear();
-            Services.Clear();
-
-            _loader.Dispose();
         }
     }
 }

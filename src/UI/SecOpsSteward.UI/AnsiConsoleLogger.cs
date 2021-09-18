@@ -1,13 +1,13 @@
-﻿using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
-using Microsoft.Extensions.Logging.Console;
-using Microsoft.Extensions.Options;
-using Spectre.Console;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Logging.Console;
+using Microsoft.Extensions.Options;
+using Spectre.Console;
 
 namespace SecOpsSteward.UI
 {
@@ -20,22 +20,40 @@ namespace SecOpsSteward.UI
     {
         public static ILoggingBuilder AddAnsiConsoleFormatter(
             this ILoggingBuilder builder,
-            Action<AnsiConsoleOptions> configure) =>
-            builder.AddConsole(options => options.FormatterName = "ansiConsole")
+            Action<AnsiConsoleOptions> configure)
+        {
+            return builder.AddConsole(options => options.FormatterName = "ansiConsole")
                 .AddConsoleFormatter<AnsiConsoleFormatter, AnsiConsoleOptions>(configure);
+        }
 
         public static ILoggingBuilder AddAnsiConsoleFormatter(
-            this ILoggingBuilder builder) =>
-            builder.AddConsole(options => options.FormatterName = "ansiConsole")
+            this ILoggingBuilder builder)
+        {
+            return builder.AddConsole(options => options.FormatterName = "ansiConsole")
                 .AddConsoleFormatter<AnsiConsoleFormatter, AnsiConsoleOptions>();
+        }
     }
 
     public sealed class AnsiConsoleFormatter : ConsoleFormatter, IDisposable
     {
+        private static readonly Color[] COLORS =
+        {
+            Color.Aqua,
+            Color.Blue,
+            Color.Red,
+            Color.PaleVioletRed1,
+            Color.Purple,
+            Color.LightSteelBlue,
+            Color.Yellow,
+            Color.Green,
+            Color.GreenYellow,
+            Color.Orange1,
+            Color.Violet
+        };
+
         private readonly IDisposable _optionsReloadToken;
         private AnsiConsoleOptions _formatterOptions;
 
-        private static List<Type> Types { get; }
         static AnsiConsoleFormatter()
         {
             Types = AppDomain.CurrentDomain.GetAssemblies()
@@ -48,12 +66,23 @@ namespace SecOpsSteward.UI
 
         public AnsiConsoleFormatter(IOptionsMonitor<AnsiConsoleOptions> options)
             // Case insensitive
-            : base("ansiConsole") =>
+            : base("ansiConsole")
+        {
             (_optionsReloadToken, _formatterOptions) =
                 (options.OnChange(ReloadLoggerOptions), options.CurrentValue);
+        }
 
-        private void ReloadLoggerOptions(AnsiConsoleOptions options) =>
+        private static List<Type> Types { get; }
+
+        public void Dispose()
+        {
+            _optionsReloadToken?.Dispose();
+        }
+
+        private void ReloadLoggerOptions(AnsiConsoleOptions options)
+        {
             _formatterOptions = options;
+        }
 
         public override void Write<TState>(
             in LogEntry<TState> logEntry,
@@ -66,7 +95,7 @@ namespace SecOpsSteward.UI
                 return;
             }
 
-            string message = string.Empty;
+            var message = string.Empty;
             switch (logEntry.LogLevel)
             {
                 case LogLevel.Trace:
@@ -95,7 +124,9 @@ namespace SecOpsSteward.UI
             var categoryName = logEntry.Category;
             var cat = Types.FirstOrDefault(t => t.FullName == categoryName);
             if (cat == null)
+            {
                 message += $"([underline]{logEntry.Category}[/])  ";
+            }
             else
             {
                 var idx = Math.Abs(cat.Name.GetHashCode()) % COLORS.Length;
@@ -106,22 +137,5 @@ namespace SecOpsSteward.UI
 
             AnsiConsole.MarkupLine(message);
         }
-
-        private static readonly Spectre.Console.Color[] COLORS = new Spectre.Console.Color[]
-        {
-            Spectre.Console.Color.Aqua,
-            Spectre.Console.Color.Blue,
-            Spectre.Console.Color.Red,
-            Spectre.Console.Color.PaleVioletRed1,
-            Spectre.Console.Color.Purple,
-            Spectre.Console.Color.LightSteelBlue,
-            Spectre.Console.Color.Yellow,
-            Spectre.Console.Color.Green,
-            Spectre.Console.Color.GreenYellow,
-            Spectre.Console.Color.Orange1,
-            Spectre.Console.Color.Violet
-        };
-
-        public void Dispose() => _optionsReloadToken?.Dispose();
     }
 }

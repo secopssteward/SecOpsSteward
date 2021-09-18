@@ -4,22 +4,31 @@ using System.Collections.Generic;
 namespace SecOpsSteward.Shared
 {
     /// <summary>
-    /// An object which holds the configuration options for the Chimera service
+    ///     An object which holds the configuration options for the Chimera service
     /// </summary>
     public class ChimeraServiceConfigurator
     {
-        /// <summary>
-        /// Options which apply to parts of the service
-        /// </summary>
-        public Dictionary<string, string> Options { get; set; } = new Dictionary<string, string>();
+        public ChimeraServiceConfigurator()
+        {
+        }
+
+        public ChimeraServiceConfigurator(Dictionary<string, string> values)
+        {
+            Options = values;
+        }
 
         /// <summary>
-        /// Functions which output dynamic results for configuration values
+        ///     Options which apply to parts of the service
         /// </summary>
-        public Dictionary<string, Func<string>> Derivations { get; set; } = new Dictionary<string, Func<string>>();
+        public Dictionary<string, string> Options { get; set; } = new();
 
         /// <summary>
-        /// Access a configuration item by its key
+        ///     Functions which output dynamic results for configuration values
+        /// </summary>
+        public Dictionary<string, Func<string>> Derivations { get; set; } = new();
+
+        /// <summary>
+        ///     Access a configuration item by its key
         /// </summary>
         /// <param name="configItem">Item key to access</param>
         /// <returns></returns>
@@ -36,8 +45,5 @@ namespace SecOpsSteward.Shared
                 Options[configItem] = value;
             }
         }
-
-        public ChimeraServiceConfigurator() { }
-        public ChimeraServiceConfigurator(Dictionary<string, string> values) => Options = values;
     }
 }

@@ -1,26 +1,27 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using SecOpsSteward.Data.Models;
 using SecOpsSteward.Data.Workflow;
 using SecOpsSteward.Plugins.Azure;
 using SecOpsSteward.Shared;
 using SecOpsSteward.Shared.Packaging;
 using SecOpsSteward.Shared.Roles;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace SecOpsSteward.Data
 {
     public class DataBoundApi
     {
-        private readonly AzureCurrentCredentialFactory _credentialFactory;
         private readonly ChimeraSystemOperationsService _chimeraSystem;
-        private readonly IRoleAssignmentService _roleAssignment;
+        private readonly AzureCurrentCredentialFactory _credentialFactory;
         private readonly PackageActionsService _packageActionsService;
         private readonly IPackageRepository _packageRepository;
-        private IDbContextFactory<SecOpsStewardDbContext> _dbFactory;
+        private readonly IRoleAssignmentService _roleAssignment;
+        private readonly IDbContextFactory<SecOpsStewardDbContext> _dbFactory;
+
         public DataBoundApi(
             AzureCurrentCredentialFactory credentialFactory,
             ChimeraSystemOperationsService chimeraSystem,
@@ -41,7 +42,7 @@ namespace SecOpsSteward.Data
         {
             await _chimeraSystem.CreateUser(tokenOwner.UserId);
 
-            var userModel = new UserModel()
+            var userModel = new UserModel
             {
                 UserId = tokenOwner.UserId.Id,
                 DisplayName = tokenOwner.Name,
@@ -56,12 +57,13 @@ namespace SecOpsSteward.Data
 
             return userModel;
         }
+
         public async Task<UserModel> AddUser(string username)
         {
             var user = await _roleAssignment.ResolveUsername(username);
             await _chimeraSystem.CreateUser(user.UserId);
 
-            var userModel = new UserModel()
+            var userModel = new UserModel
             {
                 UserId = user.UserId.Id,
                 DisplayName = user.Name,
@@ -113,27 +115,24 @@ namespace SecOpsSteward.Data
 
                 var agent = cxt.Agents.First(a => a.AgentId == node.AgentId);
 
-                var result = await _packageActionsService.HasAccess(new ChimeraPackageIdentifier(node.PackageId), node.Parameters, agent.Identity);
+                var result = await _packageActionsService.HasAccess(new ChimeraPackageIdentifier(node.PackageId),
+                    node.Parameters, agent.Identity);
 
-                var agentGrantRecord = cxt.AgentGrants.FirstOrDefault(ag => ag.AgentId == node.AgentId && ag.AuthorizationScopeHashcode == hashCode);
+                var agentGrantRecord = cxt.AgentGrants.FirstOrDefault(ag =>
+                    ag.AgentId == node.AgentId && ag.AuthorizationScopeHashcode == hashCode);
 
                 // if grant is present in DB but is invalid, drop it
-                if (agentGrantRecord != null && !result)
-                {
-                    cxt.AgentGrants.Remove(agentGrantRecord);
-                }
+                if (agentGrantRecord != null && !result) cxt.AgentGrants.Remove(agentGrantRecord);
 
                 // if grant is missing from DB but exists, add it
                 if (agentGrantRecord == null && result)
-                {
-                    cxt.AgentGrants.Add(new AgentGrantModel()
+                    cxt.AgentGrants.Add(new AgentGrantModel
                     {
                         AgentId = node.AgentId,
                         AuthorizationScopeHashcode = hashCode,
                         PluginId = node.PackageId,
                         UserPerformingGrantId = grantingUserId
                     });
-                }
 
                 await cxt.SaveChangesAsync();
             }
@@ -163,13 +162,17 @@ namespace SecOpsSteward.Data
 
                 var agent = cxt.Agents.First(a => a.AgentId == node.AgentId);
 
-                if (cxt.AgentGrants.Any(ag => ag.AgentId == node.AgentId && ag.PluginId == node.PackageId && ag.AuthorizationScopeHashcode == hashCode))
+                if (cxt.AgentGrants.Any(ag =>
+                    ag.AgentId == node.AgentId && ag.PluginId == node.PackageId &&
+                    ag.AuthorizationScopeHashcode == hashCode))
                     return; // exists
 
-                if (!await _packageActionsService.HasAccess(new ChimeraPackageIdentifier(node.PackageId), node.Parameters, agent.Identity))
-                    await _packageActionsService.Grant(new ChimeraPackageIdentifier(node.PackageId), node.Parameters, agent.Identity);
+                if (!await _packageActionsService.HasAccess(new ChimeraPackageIdentifier(node.PackageId),
+                    node.Parameters, agent.Identity))
+                    await _packageActionsService.Grant(new ChimeraPackageIdentifier(node.PackageId), node.Parameters,
+                        agent.Identity);
 
-                cxt.AgentGrants.Add(new AgentGrantModel()
+                cxt.AgentGrants.Add(new AgentGrantModel
                 {
                     AgentId = node.AgentId,
                     AuthorizationScopeHashcode = hashCode,
@@ -203,14 +206,16 @@ namespace SecOpsSteward.Data
 
                 var hashCode = node.Parameters.GetConfigurationGrantScopeHashCode();
 
-                var correspondingRecord = cxt.AgentGrants.First(ag => ag.AgentId == node.AgentId && ag.AuthorizationScopeHashcode == hashCode);
+                var correspondingRecord = cxt.AgentGrants.First(ag =>
+                    ag.AgentId == node.AgentId && ag.AuthorizationScopeHashcode == hashCode);
 
                 var agent = cxt.Agents.First(a => a.AgentId == node.AgentId);
 
                 if (!cxt.AgentGrants.Any(ag => ag.AgentId == node.AgentId && ag.AuthorizationScopeHashcode == hashCode))
                     return; // does not exist
 
-                await _packageActionsService.Revoke(new ChimeraPackageIdentifier(node.PackageId), node.Parameters, agent.Identity);
+                await _packageActionsService.Revoke(new ChimeraPackageIdentifier(node.PackageId), node.Parameters,
+                    agent.Identity);
 
                 cxt.AgentGrants.Remove(correspondingRecord);
                 await cxt.SaveChangesAsync();
@@ -219,14 +224,11 @@ namespace SecOpsSteward.Data
 
         public async Task Grant(Guid agentId, Guid userId, Guid packageId)
         {
-            await _chimeraSystem.WithConfiguration(agentId, c =>
-            {
-                c.AccessRules.Add(userId, packageId);
-            });
+            await _chimeraSystem.WithConfiguration(agentId, c => { c.AccessRules.Add(userId, packageId); });
 
             using (var cxt = _dbFactory.CreateDbContext())
             {
-                cxt.AgentPermissions.Add(new AgentPermissionModel()
+                cxt.AgentPermissions.Add(new AgentPermissionModel
                 {
                     AgentId = agentId,
                     UserId = userId,
@@ -238,10 +240,7 @@ namespace SecOpsSteward.Data
 
         public async Task Revoke(Guid agentId, Guid userId, Guid packageId)
         {
-            await _chimeraSystem.WithConfiguration(agentId, c =>
-            {
-                c.AccessRules.Remove(userId, packageId);
-            });
+            await _chimeraSystem.WithConfiguration(agentId, c => { c.AccessRules.Remove(userId, packageId); });
 
             using (var cxt = _dbFactory.CreateDbContext())
             {
@@ -258,7 +257,7 @@ namespace SecOpsSteward.Data
         {
             await _chimeraSystem.CreateAgent(newId);
 
-            var agentModel = new AgentModel()
+            var agentModel = new AgentModel
             {
                 AgentId = newId,
                 Identity = newId.ToString(),
@@ -288,10 +287,7 @@ namespace SecOpsSteward.Data
 
         public async Task ChangeTag(Guid agentId, string newTag)
         {
-            await _chimeraSystem.WithConfiguration(agentId, a =>
-            {
-                a.DisplayAlias = newTag;
-            });
+            await _chimeraSystem.WithConfiguration(agentId, a => { a.DisplayAlias = newTag; });
 
             using (var dbContext = _dbFactory.CreateDbContext())
             {
@@ -330,8 +326,10 @@ namespace SecOpsSteward.Data
             }
         }
 
-        public Task<List<PluginMetadataModel>> AddContainer(Stream packageZip, bool disposeStreamOnClose = true) =>
-            AddPackage(new ChimeraContainer(packageZip, disposeStreamOnClose));
+        public Task<List<PluginMetadataModel>> AddContainer(Stream packageZip, bool disposeStreamOnClose = true)
+        {
+            return AddPackage(new ChimeraContainer(packageZip, disposeStreamOnClose));
+        }
 
         public async Task RemovePackage(Guid containerId)
         {
@@ -361,4 +359,3 @@ namespace SecOpsSteward.Data
         }
     }
 }
-

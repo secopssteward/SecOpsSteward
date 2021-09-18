@@ -12,53 +12,61 @@ namespace SecOpsSteward.Shared
     }
 
     /// <summary>
-    /// Identifies a Package
-    /// 
-    /// XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
-    /// First and second segments are the Container (12)
-    /// Third and fourth segments are the Service (8)
-    /// Fifth segment is the Plugin (12)
+    ///     Identifies a Package
+    ///     XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
+    ///     First and second segments are the Container (12)
+    ///     Third and fourth segments are the Service (8)
+    ///     Fifth segment is the Plugin (12)
     /// </summary>
     public class ChimeraPackageIdentifier : ChimeraEntityIdentifier
     {
-        /// <summary>
-        /// Identifies a Package
-        /// </summary>
-        public ChimeraPackageIdentifier() : base(EntityType.Package, Guid.Empty) { }
+        private const int CONTAINER_LENGTH = 12;
+        private const int SERVICE_LENGTH = 8;
+        private const int PLUGIN_LENGTH = 12;
 
         /// <summary>
-        /// Identifies a Package
+        ///     Identifies a Package
+        /// </summary>
+        public ChimeraPackageIdentifier() : base(EntityType.Package, Guid.Empty)
+        {
+        }
+
+        /// <summary>
+        ///     Identifies a Package
         /// </summary>
         /// <param name="id">Package ID</param>
-        public ChimeraPackageIdentifier(Guid id) : base(EntityType.Package, id) { }
+        public ChimeraPackageIdentifier(Guid id) : base(EntityType.Package, id)
+        {
+        }
 
         /// <summary>
-        /// Implicitly converts a Guid to a Package Identifier
-        /// </summary>
-        /// <param name="g">Guid to convert</param>
-        public static implicit operator ChimeraPackageIdentifier(Guid g) => new ChimeraPackageIdentifier(g);
-
-        /// <summary>
-        /// Get Container ID segment from package ID (12)
+        ///     Get Container ID segment from package ID (12)
         /// </summary>
         [JsonIgnore]
         public string ContainerId => Id.ToString().Replace("-", "").Substring(0, CONTAINER_LENGTH);
 
         /// <summary>
-        /// Get service ID segment from package ID (12)
+        ///     Get service ID segment from package ID (12)
         /// </summary>
         [JsonIgnore]
         public string ServiceId => Id.ToString().Replace("-", "").Substring(CONTAINER_LENGTH, SERVICE_LENGTH);
 
         /// <summary>
-        /// Get Plugin ID segment from package ID (8)
+        ///     Get Plugin ID segment from package ID (8)
         /// </summary>
         [JsonIgnore]
-        public string PluginId => Id.ToString().Replace("-", "").Substring(CONTAINER_LENGTH + SERVICE_LENGTH, PLUGIN_LENGTH);
+        public string PluginId =>
+            Id.ToString().Replace("-", "").Substring(CONTAINER_LENGTH + SERVICE_LENGTH, PLUGIN_LENGTH);
 
-        private const int CONTAINER_LENGTH = 12;
-        private const int SERVICE_LENGTH = 8;
-        private const int PLUGIN_LENGTH = 12;
+        /// <summary>
+        ///     Implicitly converts a Guid to a Package Identifier
+        /// </summary>
+        /// <param name="g">Guid to convert</param>
+        public static implicit operator ChimeraPackageIdentifier(Guid g)
+        {
+            return new(g);
+        }
+
         public Guid GetComponents(PackageIdentifierComponents component)
         {
             var id = string.Empty;
@@ -76,95 +84,101 @@ namespace SecOpsSteward.Shared
     }
 
     /// <summary>
-    /// Identifies an Agent
+    ///     Identifies an Agent
     /// </summary>
     public class ChimeraAgentIdentifier : ChimeraEntityIdentifier
     {
         /// <summary>
-        /// Identifies an Agent
+        ///     Identifies an Agent
         /// </summary>
-        public ChimeraAgentIdentifier() : base(EntityType.Agent, Guid.Empty) { }
+        public ChimeraAgentIdentifier() : base(EntityType.Agent, Guid.Empty)
+        {
+        }
 
         /// <summary>
-        /// Identifies an Agent
+        ///     Identifies an Agent
         /// </summary>
         /// <param name="id">Agent ID</param>
-        public ChimeraAgentIdentifier(Guid id) : base(EntityType.Agent, id) { }
+        public ChimeraAgentIdentifier(Guid id) : base(EntityType.Agent, id)
+        {
+        }
 
         /// <summary>
-        /// Implicitly converts a Guid to an Agent Identifier
+        ///     Implicitly converts a Guid to an Agent Identifier
         /// </summary>
         /// <param name="g">Guid to convert</param>
-        public static implicit operator ChimeraAgentIdentifier(Guid g) => new ChimeraAgentIdentifier(g);
+        public static implicit operator ChimeraAgentIdentifier(Guid g)
+        {
+            return new(g);
+        }
     }
 
     /// <summary>
-    /// Identifies a User
+    ///     Identifies a User
     /// </summary>
     public class ChimeraUserIdentifier : ChimeraEntityIdentifier
     {
         /// <summary>
-        /// Identifies a User
+        ///     Identifies a User
         /// </summary>
-        public ChimeraUserIdentifier() : base(EntityType.User, Guid.Empty) { }
+        public ChimeraUserIdentifier() : base(EntityType.User, Guid.Empty)
+        {
+        }
 
         /// <summary>
-        /// Identifies a User
+        ///     Identifies a User
         /// </summary>
         /// <param name="id">User ID</param>
-        public ChimeraUserIdentifier(Guid id) : base(EntityType.User, id) { }
+        public ChimeraUserIdentifier(Guid id) : base(EntityType.User, id)
+        {
+        }
 
         /// <summary>
-        /// Implicitly converts a Guid to a User Identifier
+        ///     Implicitly converts a Guid to a User Identifier
         /// </summary>
         /// <param name="g">Guid to convert</param>
-        public static implicit operator ChimeraUserIdentifier(Guid g) => new ChimeraUserIdentifier(g);
+        public static implicit operator ChimeraUserIdentifier(Guid g)
+        {
+            return new(g);
+        }
     }
 
     /// <summary>
-    /// Identifies an entity in the Chimera system
+    ///     Identifies an entity in the Chimera system
     /// </summary>
     public class ChimeraEntityIdentifier
     {
         /// <summary>
-        /// Possible types of entity to be identified
+        ///     Possible types of entity to be identified
         /// </summary>
         [Flags]
         public enum EntityType
         {
             /// <summary>
-            /// Agent identifier
+            ///     Agent identifier
             /// </summary>
             Agent = 1,
 
             /// <summary>
-            /// User identifier
+            ///     User identifier
             /// </summary>
             User = 2,
 
             /// <summary>
-            /// Package identifier
+            ///     Package identifier
             /// </summary>
             Package = 4
         }
 
         /// <summary>
-        /// Type of entity being identified
+        ///     Identifies an entity in the Chimera system
         /// </summary>
-        public EntityType Type { get; set; }
+        public ChimeraEntityIdentifier()
+        {
+        }
 
         /// <summary>
-        /// ID of entity
-        /// </summary>
-        public Guid Id { get; set; }
-
-        /// <summary>
-        /// Identifies an entity in the Chimera system
-        /// </summary>
-        public ChimeraEntityIdentifier() { }
-
-        /// <summary>
-        /// Identifies an entity in the Chimera system
+        ///     Identifies an entity in the Chimera system
         /// </summary>
         /// <param name="type">Entity type</param>
         /// <param name="id">Entity ID</param>
@@ -175,24 +189,42 @@ namespace SecOpsSteward.Shared
         }
 
         /// <summary>
-        /// Get HashCode for identifier
+        ///     Type of entity being identified
+        /// </summary>
+        public EntityType Type { get; set; }
+
+        /// <summary>
+        ///     ID of entity
+        /// </summary>
+        public Guid Id { get; set; }
+
+        /// <summary>
+        ///     Get short representation of Entity ID
+        /// </summary>
+        public string ShortId => Id.ToString().Substring(0, 8);
+
+        /// <summary>
+        ///     Get HashCode for identifier
         /// </summary>
         /// <returns></returns>
-        public override int GetHashCode() => HashCode.Combine(Type, Id);
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(Type, Id);
+        }
 
         /// <summary>
-        /// Serialize identifier to string
+        ///     Serialize identifier to string
         /// </summary>
-        /// <returns><c>(Type)-(Id)</c></returns>
-        public override string ToString() => $"{Type.ToString()}-{Id}";
+        /// <returns>
+        ///     <c>(Type)-(Id)</c>
+        /// </returns>
+        public override string ToString()
+        {
+            return $"{Type.ToString()}-{Id}";
+        }
 
         /// <summary>
-        /// Get short representation of Entity ID
-        /// </summary>
-        public string ShortId { get => Id.ToString().Substring(0, 8); }
-
-        /// <summary>
-        /// Check if two identifiers are equivalent
+        ///     Check if two identifiers are equivalent
         /// </summary>
         /// <param name="obj">Identifier to check equality of</param>
         /// <returns><c>TRUE</c> if the identifiers are equivalent</returns>
@@ -200,11 +232,11 @@ namespace SecOpsSteward.Shared
         {
             if (!(obj is ChimeraEntityIdentifier)) return false;
             return (obj as ChimeraEntityIdentifier).Type == Type &&
-                (obj as ChimeraEntityIdentifier).Id == Id;
+                   (obj as ChimeraEntityIdentifier).Id == Id;
         }
 
         /// <summary>
-        /// Check if two identifiers are equivalent
+        ///     Check if two identifiers are equivalent
         /// </summary>
         /// <param name="id1">First identifier</param>
         /// <param name="id2">Second identifier</param>
@@ -218,7 +250,7 @@ namespace SecOpsSteward.Shared
         }
 
         /// <summary>
-        /// Check if two identifiers are NOT equivalent
+        ///     Check if two identifiers are NOT equivalent
         /// </summary>
         /// <param name="id1">First identifier</param>
         /// <param name="id2">Second identifier</param>
@@ -235,8 +267,11 @@ namespace SecOpsSteward.Shared
     public static class GuidExtensions
     {
         /// <summary>
-        /// Get short representation of Guid
+        ///     Get short representation of Guid
         /// </summary>
-        public static string ShortId(this Guid guid) => guid.ToString().Substring(0, 8);
+        public static string ShortId(this Guid guid)
+        {
+            return guid.ToString().Substring(0, 8);
+        }
     }
 }

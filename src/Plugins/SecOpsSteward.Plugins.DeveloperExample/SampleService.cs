@@ -1,11 +1,10 @@
-﻿using SecOpsSteward.Plugins.Configurable;
-using SecOpsSteward.Plugins.Discovery;
-using SecOpsSteward.Plugins.WorkflowTemplates;
-using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
+using SecOpsSteward.Plugins.Configurable;
+using SecOpsSteward.Plugins.Discovery;
+using SecOpsSteward.Plugins.WorkflowTemplates;
 
 namespace SecOpsSteward.Plugins.DeveloperExample
 {
@@ -30,19 +29,36 @@ namespace SecOpsSteward.Plugins.DeveloperExample
     {
         public override ManagedServiceRole Role => ManagedServiceRole.Hybrid;
 
-        public override List<WorkflowTemplateDefinition> Templates => new List<WorkflowTemplateDefinition>()
+        public override List<WorkflowTemplateDefinition> Templates => new()
         {
             // Templates are groups of plugins with a known complex action which can be specified here
             SAMPLE_TEMPLATE
         };
 
+        // ---
+
+        private static WorkflowTemplateDefinition SAMPLE_TEMPLATE =>
+            new WorkflowTemplateDefinition<SampleService, SampleTemplateConfiguration>(
+                "Run a Couple Plugins",
+                new WorkflowTemplateParticipantDefinition<SamplePlugin>(new Dictionary<string, string>
+                {
+                    // Map from the template configuration's values to the various plugin values. This can be useful
+                    // for templates which have multiple plugins which share template config values.
+                    {nameof(SampleTemplateConfiguration.MappedValue), nameof(SamplePluginConfiguration.Color)}
+                }),
+
+                // If there is something that can happen after this, specify it here.
+                // This is generally only needed if the plugin(s) output a value which can be consumed elsewhere.
+                // This is only used by the Discovery Wizard sequencer.
+                WorkflowTemplateParticipantDefinition.DependentFlowParticipant
+            );
+
         // This is "Phase 1" Discovery. It is run first, and will frequently be the only one required.
         public override Task<List<DiscoveredServiceConfiguration>> Discover()
         {
             var discovered = new List<DiscoveredServiceConfiguration>();
-            for (int i = 0; i < 2; i++)
-            {
-                discovered.Add(new DiscoveredServiceConfiguration()
+            for (var i = 0; i < 2; i++)
+                discovered.Add(new DiscoveredServiceConfiguration
                 {
                     // Describes this discovery for the user
                     DescriptiveName = $"Sample Service {i}",
@@ -51,20 +67,20 @@ namespace SecOpsSteward.Plugins.DeveloperExample
                     Identifier = $"/sample/svc/{i}",
 
                     // Provides the configuration necessary to use this discovered service instance
-                    Configuration = new SampleServiceConfiguration()
+                    Configuration = new SampleServiceConfiguration
                     {
                         Location = $"At Service {i}"
                     },
 
                     // A list of ways this service can be reached from elsewhere
-                    LinksInAs = new List<string>()
+                    LinksInAs = new List<string>
                     {
-                        $"sampleSvc/{i}",
+                        $"sampleSvc/{i}"
                     },
 
                     // A list of services this service has as dependencies
                     // e.g. A web service depends on a storage account
-                    LinksOutTo = new List<string>()
+                    LinksOutTo = new List<string>
                     {
                         $"storage/sampleSvc/{i}"
                     },
@@ -72,13 +88,12 @@ namespace SecOpsSteward.Plugins.DeveloperExample
                     // A dictionary listing all of the configuration values present
                     // on this service. This is for the purpose of identifying additional
                     // links out and allowing the adjustment of configuration values.
-                    ConfigurationValues = new Dictionary<string, string>()
+                    ConfigurationValues = new Dictionary<string, string>
                     {
-                        { "CfgA", "A" },
-                        { "CfgB", "B" },
+                        {"CfgA", "A"},
+                        {"CfgB", "B"}
                     }
                 });
-            }
             return Task.FromResult(discovered);
         }
 
@@ -89,27 +104,11 @@ namespace SecOpsSteward.Plugins.DeveloperExample
         // you can use that Phase 1 result to identify the related service, and return _its_ configuration here.
         //
         // This is not required, so you can return an empty set here if this doesn't apply.
-        public override Task<List<DiscoveredServiceConfiguration>> Discover(List<DiscoveredServiceConfiguration> existingDiscoveries, bool includeSecureElements = false) =>
-            Task.FromResult(new List<DiscoveredServiceConfiguration>());
-
-        // ---
-
-        private static WorkflowTemplateDefinition SAMPLE_TEMPLATE =>
-            new WorkflowTemplateDefinition<SampleService, SampleTemplateConfiguration>(
-                "Run a Couple Plugins",
-
-                new WorkflowTemplateParticipantDefinition<SamplePlugin>(new Dictionary<string, string>()
-                {
-                    // Map from the template configuration's values to the various plugin values. This can be useful
-                    // for templates which have multiple plugins which share template config values.
-                    { nameof(SampleTemplateConfiguration.MappedValue), nameof(SamplePluginConfiguration.Color) }
-                }),
-
-                // If there is something that can happen after this, specify it here.
-                // This is generally only needed if the plugin(s) output a value which can be consumed elsewhere.
-                // This is only used by the Discovery Wizard sequencer.
-                WorkflowTemplateParticipantDefinition.DependentFlowParticipant
-            );
+        public override Task<List<DiscoveredServiceConfiguration>> Discover(
+            List<DiscoveredServiceConfiguration> existingDiscoveries, bool includeSecureElements = false)
+        {
+            return Task.FromResult(new List<DiscoveredServiceConfiguration>());
+        }
     }
 
     public class SampleTemplateConfiguration : SampleServiceConfiguration

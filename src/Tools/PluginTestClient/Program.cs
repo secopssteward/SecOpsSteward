@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace PluginTest.Client
+namespace PluginTestClient
 {
-    class Program
+    internal class Program
     {
         private static void DrawLogo()
         {
@@ -24,25 +24,26 @@ namespace PluginTest.Client
                  @@
 ");
         }
-        static async Task Main(string[] args)
+
+        private static async Task Main(string[] args)
         {
             // List of ops:
             // https://docs.microsoft.com/en-us/azure/role-based-access-control/resource-provider-operations
 
             // TODO: Console args
 
-            string folder = @"C:\dev\SecOpsSteward\src\SecOpsSteward.Plugins.Azure.AppServices\bin\Debug\net5.0";
-            string tenantId = "185bb12a-cb44-4d85-81fe-297ba9e6b4d1";
-            string subscriptionId = "67c708de-facd-4332-a6da-c35b24f8db3a";
+            var folder = @"C:\dev\SecOpsSteward\src\SecOpsSteward.Plugins.Azure.AppServices\bin\Debug\net5.0";
+            var tenantId = "185bb12a-cb44-4d85-81fe-297ba9e6b4d1";
+            var subscriptionId = "67c708de-facd-4332-a6da-c35b24f8db3a";
 
             var pluginIdStr = "76b7d0ce-1174-49ee-8b18-6ba0399d8ef6";
-            var configuration = new Dictionary<string, string>()
+            var configuration = new Dictionary<string, string>
             {
-                { "Name", "testName" },
-                { "Value", "testValue" },
-                { "ResourceGroup", "chi-test" },
-                { "FunctionAppName", "chitest" },
-                { "SubscriptionId", subscriptionId },
+                {"Name", "testName"},
+                {"Value", "testValue"},
+                {"ResourceGroup", "chi-test"},
+                {"FunctionAppName", "chitest"},
+                {"SubscriptionId", subscriptionId}
             };
 
             // ---
@@ -67,10 +68,7 @@ namespace PluginTest.Client
             Console.WriteLine("Subscription:\t" + subscriptionId);
             Console.WriteLine("Plugin ID:\t" + pluginIdStr);
             Console.WriteLine("Configuration:");
-            foreach (var item in configuration)
-            {
-                Console.WriteLine("   " + item.Key + "  =>  " + item.Value);
-            }
+            foreach (var item in configuration) Console.WriteLine("   " + item.Key + "  =>  " + item.Value);
 
             // this does the auth for us
             var testHarness = new PluginTestHarness(tenantId, subscriptionId);

@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using Blazored.SessionStorage;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Builder;
@@ -16,10 +18,7 @@ using SecOpsSteward.Integrations.Azure;
 using SecOpsSteward.Plugins.Azure;
 using SecOpsSteward.Shared;
 using SecOpsSteward.Shared.NonceTracking;
-using SecOpsSteward.Shared.Packaging;
 using SecOpsSteward.Shared.Roles;
-using System;
-using System.Collections.Generic;
 
 namespace SecOpsSteward.UI
 {
@@ -37,29 +36,31 @@ namespace SecOpsSteward.UI
         // ---
 
         /// <summary>
-        /// If this is the first time the app is being run
+        ///     If this is the first time the app is being run
         /// </summary>
         public static bool FirstRun { get; set; } = false;
-        
+
         /// <summary>
-        /// If the App is running in Demo mode. This is shorthand for disabling all of the below.
+        ///     If the App is running in Demo mode. This is shorthand for disabling all of the below.
         /// </summary>
         public static bool RunDemoMode => Instance.Configuration.GetValue("RunDemoMode", false);
 
         /// <summary>
-        /// If authentication is configured; if not, no AuthX will be integrated. The app will not have user awareness for any features.
+        ///     If authentication is configured; if not, no AuthX will be integrated. The app will not have user awareness for any
+        ///     features.
         /// </summary>
-        public static bool HasAuthConfiguration => !RunDemoMode && Instance.Configuration.GetSection("AzureAd").Exists();
+        public static bool HasAuthConfiguration =>
+            !RunDemoMode && Instance.Configuration.GetSection("AzureAd").Exists();
 
         /// <summary>
-        /// If Service Integrations are to be used, or if dummy/test Integrations are used instead
+        ///     If Service Integrations are to be used, or if dummy/test Integrations are used instead
         /// </summary>
         public static bool UseDummyServices => RunDemoMode || Instance.Configuration.GetValue<bool>("UseDummyServices");
 
         /// <summary>
-        /// If Auto-Discovery/Resource Explorers are enabled
+        ///     If Auto-Discovery/Resource Explorers are enabled
         /// </summary>
-        public static bool LockDiscovery => RunDemoMode || Instance.Configuration.GetValue<bool>("DisableDiscovery", false);
+        public static bool LockDiscovery => RunDemoMode || Instance.Configuration.GetValue("DisableDiscovery", false);
 
         // ---
 
@@ -71,10 +72,26 @@ namespace SecOpsSteward.UI
                 services.AddAuthentication(OpenIdConnectDefaults.AuthenticationScheme)
                     .AddMicrosoftIdentityWebApp(Configuration.GetSection("AzureAd"))
                     .EnableTokenAcquisitionToCallDownstreamApi()
-                    .AddDownstreamWebApi("AzureRM", co => { co.BaseUrl = "https://management.azure.com/"; co.Scopes = "https://management.azure.com//user_impersonation"; })
-                    .AddDownstreamWebApi("Graph", co => { co.BaseUrl = "https://graph.windows.net/"; co.Scopes = "https://graph.windows.net//user.read"; })
-                    .AddDownstreamWebApi("KeyVault", co => { co.BaseUrl = "https://vault.azure.net/"; co.Scopes = "https://vault.azure.net//user_impersonation"; })
-                    .AddDownstreamWebApi("ServiceBus", co => { co.BaseUrl = "https://servicebus.azure.net/"; co.Scopes = "https://servicebus.azure.net//user_impersonation"; })
+                    .AddDownstreamWebApi("AzureRM", co =>
+                    {
+                        co.BaseUrl = "https://management.azure.com/";
+                        co.Scopes = "https://management.azure.com//user_impersonation";
+                    })
+                    .AddDownstreamWebApi("Graph", co =>
+                    {
+                        co.BaseUrl = "https://graph.windows.net/";
+                        co.Scopes = "https://graph.windows.net//user.read";
+                    })
+                    .AddDownstreamWebApi("KeyVault", co =>
+                    {
+                        co.BaseUrl = "https://vault.azure.net/";
+                        co.Scopes = "https://vault.azure.net//user_impersonation";
+                    })
+                    .AddDownstreamWebApi("ServiceBus", co =>
+                    {
+                        co.BaseUrl = "https://servicebus.azure.net/";
+                        co.Scopes = "https://servicebus.azure.net//user_impersonation";
+                    })
                     .AddInMemoryTokenCaches();
                 services.AddControllersWithViews()
                     .AddMicrosoftIdentityUI();
@@ -86,7 +103,7 @@ namespace SecOpsSteward.UI
                 });
 
                 services.AddServerSideBlazor()
-                        .AddMicrosoftIdentityConsentHandler();
+                    .AddMicrosoftIdentityConsentHandler();
             }
             else
             {
@@ -95,7 +112,7 @@ namespace SecOpsSteward.UI
             }
 
             // Register TokenOwner for user information, avatar, etc
-            services.AddScoped<TokenOwner>(s => TokenOwner.Create(
+            services.AddScoped(s => TokenOwner.Create(
                 s.GetRequiredService<AuthenticationStateProvider>().GetAuthenticationStateAsync().Result,
                 HasAuthConfiguration));
         }
@@ -110,11 +127,12 @@ namespace SecOpsSteward.UI
             if (!UseDummyServices)
                 services.AddAzurePlatformIntegrations();
             else
-                services.AddChimeraDummyIntegrations(true);
+                services.AddChimeraDummyIntegrations();
 
 
             // If running locally, this factory is registered to use managed identity (provided by the environment)
-            services.RegisterCurrentCredentialFactory(Configuration.GetSection("AzureAd")["TenantId"], config["SubscriptionId"], false, UseDummyServices);
+            services.RegisterCurrentCredentialFactory(Configuration.GetSection("AzureAd")["TenantId"],
+                config["SubscriptionId"], false, UseDummyServices);
 
             // Chimera core ( + public packages)
             services.AddChimeraWithPublicPackageRepository(config, Configuration.GetConnectionString("PublicPackages"));
@@ -130,19 +148,20 @@ namespace SecOpsSteward.UI
 
             return config;
         }
+
         private void RegisterDatabaseServices(IServiceCollection services)
         {
             // Adds the DbContext
             services.AddDbContextFactory<SecOpsStewardDbContext>(options =>
             {
                 // TODO: Disable in production
-                options.EnableDetailedErrors(true);
+                options.EnableDetailedErrors();
 
                 // If using dummy integrations, fall back to SQLite
                 if (UseDummyServices)
                     options.UseSqlite("Data Source=sos.db")
-                           .EnableSensitiveDataLogging(true); // TODO: Disable
-                
+                        .EnableSensitiveDataLogging(); // TODO: Disable
+
                 // Try SQL Server
                 else if (Configuration.GetConnectionString("Database") != null)
                     options.UseSqlServer(Configuration.GetConnectionString("Database"));
@@ -153,7 +172,8 @@ namespace SecOpsSteward.UI
             });
 
             // Add convenience method for creating transient DB connections
-            services.AddTransient<SecOpsStewardDbContext>(p => p.GetRequiredService<IDbContextFactory<SecOpsStewardDbContext>>().CreateDbContext());
+            services.AddTransient(p =>
+                p.GetRequiredService<IDbContextFactory<SecOpsStewardDbContext>>().CreateDbContext());
         }
 
         public void ConfigureServices(IServiceCollection services)
@@ -177,7 +197,8 @@ namespace SecOpsSteward.UI
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILoggerFactory loggerFactory, IServiceProvider serviceProvider)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILoggerFactory loggerFactory,
+            IServiceProvider serviceProvider)
         {
             if (env.IsDevelopment())
             {

@@ -1,6 +1,6 @@
-﻿using SecOpsSteward.Plugins.Configurable;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using SecOpsSteward.Plugins.Configurable;
 
 namespace SecOpsSteward.Plugins.Azure
 {

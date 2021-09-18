@@ -1,19 +1,24 @@
-﻿using Microsoft.Extensions.Logging;
-using System.IO;
+﻿using System.IO;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using SecOpsSteward.Shared.Cryptography.Extensions;
 
 namespace SecOpsSteward.Shared.Cryptography
 {
     public class DummyCryptographicService : ICryptographicService
     {
-        public static byte[] IV = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15 };
+        public static byte[] IV =
+            {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15};
 
         // TODO: Add a way to bind signing/verification to correct entities
 
         private readonly ILogger<DummyCryptographicService> _logger;
 
-        public DummyCryptographicService(ILogger<DummyCryptographicService> logger) => _logger = logger;
+        public DummyCryptographicService(ILogger<DummyCryptographicService> logger)
+        {
+            _logger = logger;
+        }
 
 
         public async Task<byte[]> Decrypt(ChimeraEntityIdentifier key, byte[] ciphertext)

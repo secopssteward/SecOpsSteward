@@ -1,17 +1,18 @@
-﻿using Microsoft.Extensions.Logging;
-using SecOpsSteward.Shared.Packaging.Metadata;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using SecOpsSteward.Shared.Packaging.Metadata;
 
 namespace SecOpsSteward.Shared.Packaging
 {
     public class DummyStorageRepository : IPackageRepository
     {
-        public static Dictionary<ChimeraPackageIdentifier, byte[]> _data = new Dictionary<ChimeraPackageIdentifier, byte[]>();
+        public static Dictionary<ChimeraPackageIdentifier, byte[]> _data = new();
 
         private readonly ILogger<DummyStorageRepository> _logger;
+
         public DummyStorageRepository(ILogger<DummyStorageRepository> logger)
         {
             _logger = logger;

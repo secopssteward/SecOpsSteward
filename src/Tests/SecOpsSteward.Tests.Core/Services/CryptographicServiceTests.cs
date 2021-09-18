@@ -1,6 +1,6 @@
 ﻿using FluentAssertions;
+using SecOpsSteward.Shared.Cryptography.Extensions;
 using Xunit;
-using SecOpsSteward.Shared.Cryptography;
 
 namespace SecOpsSteward.Tests.Core.Services
 {
@@ -8,8 +8,10 @@ namespace SecOpsSteward.Tests.Core.Services
     {
         private readonly ICryptographicService _cryptoService;
 
-        public CryptographicServiceTests(ICryptographicService cryptoService) =>
+        public CryptographicServiceTests(ICryptographicService cryptoService)
+        {
             _cryptoService = cryptoService;
+        }
 
         [Fact]
         public void KeyWrapShouldSucceed()

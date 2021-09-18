@@ -1,34 +1,37 @@
-﻿using Azure.Core;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Azure.Core;
 using Azure.Identity;
 using Microsoft.Azure.Management.Fluent;
 using Microsoft.Azure.Management.ResourceManager.Fluent;
 using Microsoft.Azure.Management.ResourceManager.Fluent.Authentication;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Identity.Web;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using Microsoft.Rest;
 
 namespace SecOpsSteward.Plugins.Azure
 {
     public static class AzureCurrentCredentialFactoryExtensions
     {
-        public static void RegisterCurrentCredentialFactory(this IServiceCollection services, string tenantId, string subscriptionId, bool useManagedId = false, bool useDummy = false)
+        public static void RegisterCurrentCredentialFactory(this IServiceCollection services, string tenantId,
+            string subscriptionId, bool useManagedId = false, bool useDummy = false)
         {
-            services.AddScoped<AzureCurrentCredentialFactory>(s => new AzureCurrentCredentialFactory(s, tenantId, subscriptionId, useManagedId, useDummy));
+            services.AddScoped(s =>
+                new AzureCurrentCredentialFactory(s, tenantId, subscriptionId, useManagedId, useDummy));
         }
     }
 
     public class AzureCurrentCredentialFactory
     {
-        private Dictionary<string, AzureCurrentCredential> _handles = new Dictionary<string, AzureCurrentCredential>();
-
         private readonly IServiceProvider _sp;
-        private readonly string _tenantId;
         private readonly string _subscriptionId;
-        private readonly bool _useManagedIdentity;
+        private readonly string _tenantId;
         private readonly bool _useEmulatedCredential;
+        private readonly bool _useManagedIdentity;
+        private readonly Dictionary<string, AzureCurrentCredential> _handles = new();
+
         public AzureCurrentCredentialFactory(
             IServiceProvider sp,
             string tenantId,
@@ -49,14 +52,22 @@ namespace SecOpsSteward.Plugins.Azure
             _handles.Add(subscriptionId, new CurrentUserCredential(credential, _tenantId, subscriptionId));
         }
 
-        public AzureCurrentCredential GetCredentialPreferringAppIdentity() => GetCredentialPreferringAppIdentity(_subscriptionId);
+        public AzureCurrentCredential GetCredentialPreferringAppIdentity()
+        {
+            return GetCredentialPreferringAppIdentity(_subscriptionId);
+        }
+
         public AzureCurrentCredential GetCredentialPreferringAppIdentity(string subscriptionId)
         {
             // todo: rework this
             return new CurrentAgentCredential(_tenantId, _subscriptionId);
         }
 
-        public AzureCurrentCredential GetCredential() => GetCredential(_subscriptionId);
+        public AzureCurrentCredential GetCredential()
+        {
+            return GetCredential(_subscriptionId);
+        }
+
         public AzureCurrentCredential GetCredential(string subscriptionId)
         {
             if (_useEmulatedCredential) return new EmulatedCurrentCredential();
@@ -68,7 +79,8 @@ namespace SecOpsSteward.Plugins.Azure
                     if (_useManagedIdentity)
                         handle = new CurrentAgentCredential(_tenantId, _subscriptionId);
                     else
-                        handle = CurrentUserCredential.CreateCredentialWithConsentHandler(_sp, _tenantId, subscriptionId);
+                        handle = CurrentUserCredential.CreateCredentialWithConsentHandler(_sp, _tenantId,
+                            subscriptionId);
 
                     if (handle != null) _handles[_subscriptionId] = handle;
                     else return null;
@@ -92,31 +104,39 @@ namespace SecOpsSteward.Plugins.Azure
 
     public abstract class AzureCurrentCredential
     {
-        public static string[] RequiredScopes = new[]
+        public static string[] RequiredScopes =
         {
             "https://management.azure.com/user_impersonation", // For general Azure management
-            "https://graph.microsoft.com/user.read",           // For user indexing
-            "https://vault.azure.net/user_impersonation",      // For access to keys and secrets for crypto
-            "https://servicebus.azure.net/user_impersonation"  // For messaging
+            "https://graph.microsoft.com/user.read", // For user indexing
+            "https://vault.azure.net/user_impersonation", // For access to keys and secrets for crypto
+            "https://servicebus.azure.net/user_impersonation" // For messaging
         };
 
-        public TokenCredential Credential { get; protected set; }
-
         protected IAzure _azure;
-        private string _tenantId;
-        private string _subscriptionId;
         protected bool _emulated;
+        private string _subscriptionId;
+        private string _tenantId;
+
+        public TokenCredential Credential { get; protected set; }
 
         public string TenantId
         {
             get => _tenantId;
-            set { _tenantId = value; _azure = null; }
+            set
+            {
+                _tenantId = value;
+                _azure = null;
+            }
         }
 
         public string SubscriptionId
         {
             get => _subscriptionId;
-            set { _subscriptionId = value; _azure = null; }
+            set
+            {
+                _subscriptionId = value;
+                _azure = null;
+            }
         }
 
         public IAzure GetAzure()
@@ -124,11 +144,15 @@ namespace SecOpsSteward.Plugins.Azure
             if (_emulated) return null; // todo: mock?
             if (_azure == null)
             {
-                var armToken = Credential.GetToken(new TokenRequestContext(scopes: new[] { "https://management.azure.com/.default" }, parentRequestId: null), default).Token;
-                var armCreds = new Microsoft.Rest.TokenCredentials(armToken);
+                var armToken = Credential
+                    .GetToken(new TokenRequestContext(new[] {"https://management.azure.com/.default"}, null), default)
+                    .Token;
+                var armCreds = new TokenCredentials(armToken);
 
-                var graphToken = Credential.GetToken(new TokenRequestContext(scopes: new[] { "https://graph.windows.net/.default" }, parentRequestId: null), default).Token;
-                var graphCreds = new Microsoft.Rest.TokenCredentials(graphToken);
+                var graphToken = Credential
+                    .GetToken(new TokenRequestContext(new[] {"https://graph.windows.net/.default"}, null), default)
+                    .Token;
+                var graphCreds = new TokenCredentials(graphToken);
 
                 // Note that the deficiency in IAzure is that it lacks key vault client support.
                 // We have to provide separate client instances authed against the TokenCredential.
@@ -139,6 +163,7 @@ namespace SecOpsSteward.Plugins.Azure
                 _azure = Microsoft.Azure.Management.Fluent.Azure.Authenticate(creds)
                     .WithSubscription(_subscriptionId);
             }
+
             return _azure;
         }
     }
@@ -162,14 +187,16 @@ namespace SecOpsSteward.Plugins.Azure
             SubscriptionId = subscriptionId;
         }
 
-        public static AzureCurrentCredential CreateCredentialWithConsentHandler(IServiceProvider services, string tenantId, string servicesSubscriptionId = null)
+        public static AzureCurrentCredential CreateCredentialWithConsentHandler(IServiceProvider services,
+            string tenantId, string servicesSubscriptionId = null)
         {
             var tokenAcquisition = services.GetRequiredService<ITokenAcquisition>();
             var consentHandler = services.GetRequiredService<MicrosoftIdentityConsentAndConditionalAccessHandler>();
 
             try
             {
-                Task.WhenAll(AzureCurrentCredential.RequiredScopes.Select(item => tokenAcquisition.GetAccessTokenForUserAsync(new[] { item }))).Wait();
+                Task.WhenAll(RequiredScopes.Select(item => tokenAcquisition.GetAccessTokenForUserAsync(new[] {item})))
+                    .Wait();
             }
             catch (Exception e)
             {

@@ -5,32 +5,32 @@ using System.Linq;
 namespace SecOpsSteward.Shared.Messages
 {
     /// <summary>
-    /// Conditions required for a Package to be executed
+    ///     Conditions required for a Package to be executed
     /// </summary>
     public class ExecutionStepConditions
     {
         /// <summary>
-        /// Earliest date/time the Package can be executed
+        ///     Earliest date/time the Package can be executed
         /// </summary>
         public DateTimeOffset ValidFrom { get; set; } = DateTimeOffset.MinValue;
 
         /// <summary>
-        /// Latest date/time the Package can be executed
+        ///     Latest date/time the Package can be executed
         /// </summary>
         public DateTimeOffset ValidTo { get; set; } = DateTimeOffset.MaxValue;
 
         /// <summary>
-        /// Amount of time, in seconds, which can elapse between the receipt signing and this execution
+        ///     Amount of time, in seconds, which can elapse between the receipt signing and this execution
         /// </summary>
-        public int RequiredReceiptWindowSeconds { get; set; } = (int)TimeSpan.FromHours(2).TotalSeconds;
+        public int RequiredReceiptWindowSeconds { get; set; } = (int) TimeSpan.FromHours(2).TotalSeconds;
 
         /// <summary>
-        /// Receipts required to be present for this execution to progress
+        ///     Receipts required to be present for this execution to progress
         /// </summary>
-        public List<ExecutionStepReceipt> RequiredReceipts { get; set; } = new List<ExecutionStepReceipt>();
+        public List<ExecutionStepReceipt> RequiredReceipts { get; set; } = new();
 
         /// <summary>
-        /// If the conditions are valid
+        ///     If the conditions are valid
         /// </summary>
         /// <param name="givenReceipts"></param>
         /// <returns></returns>
@@ -69,10 +69,10 @@ namespace SecOpsSteward.Shared.Messages
         public override string ToString()
         {
             if (RequiredReceipts.Any())
-                return $"Valid from {ValidFrom} to {ValidTo}. Requires {RequiredReceipts.Count} receipts within {TimeSpan.FromSeconds(RequiredReceiptWindowSeconds)}: " +
+                return
+                    $"Valid from {ValidFrom} to {ValidTo}. Requires {RequiredReceipts.Count} receipts within {TimeSpan.FromSeconds(RequiredReceiptWindowSeconds)}: " +
                     string.Join(", ", RequiredReceipts.Select(rr => $"[{rr.StepId}:{rr.PluginResult?.ResultCode}]"));
-            else
-                return $"Valid from {ValidFrom} to {ValidTo}.";
+            return $"Valid from {ValidFrom} to {ValidTo}.";
         }
     }
 }

@@ -1,10 +1,9 @@
-﻿@using Blazor.Diagrams.Components.Renderers
-@using Blazor.Diagrams.Core.Models
-
+﻿@using Blazor.Diagrams.Core.Models
+@using Blazor.Diagrams.Components.Renderers
 <PortRenderer Port="@Port"
-               Class="@("workflowPort pluginPort " + (IsActivated ? "activePort" : "") + (IsSkipped ? "skippedPort" : ""))">
+              Class="@("workflowPort pluginPort " + (IsActivated ? "activePort" : "") + (IsSkipped ? "skippedPort" : ""))">
     <MudTooltip Placement="@Placement" Text="@Heading">
-        <MudIcon Icon="@Icon" Color="@IconColor" Class="m-0" />
+        <MudIcon Icon="@Icon" Color="@IconColor" Class="m-0"/>
     </MudTooltip>
 </PortRenderer>
 
@@ -25,8 +24,8 @@
     [Parameter]
     public string Heading { get; set; }
 
-    public bool IsActivated => ((CommonPortModel)Port).IsActivated;
-    public bool IsSkipped => ((CommonPortModel)Port).IsSkipped;
+    public bool IsActivated => ((CommonPortModel) Port).IsActivated;
+    public bool IsSkipped => ((CommonPortModel) Port).IsSkipped;
 
     private Placement Placement
     {

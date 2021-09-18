@@ -8,8 +8,7 @@ namespace SecOpsSteward.Data.Models
 {
     public class WorkflowRecurrenceModel
     {
-        [Key]
-        public Guid WorkflowRecurrenceId { get; set; }
+        [Key] public Guid WorkflowRecurrenceId { get; set; }
 
         public Guid WorkflowId { get; set; }
 
@@ -18,16 +17,17 @@ namespace SecOpsSteward.Data.Models
         public TimeSpan TimeBetweenRuns { get; set; }
 
         public int NumberOfApproversRequired { get; set; }
+
         [NotMapped]
         public List<Guid> Approvers
         {
             get => ApproversString.Split(';').Select(s => Guid.Parse(s)).ToList();
             set => ApproversString = string.Join(';', value);
         }
+
         public string ApproversString { get; set; }
 
-        [NotMapped]
-        public bool ShouldBeRun => DateTimeOffset.UtcNow < MostRecentRun.Add(TimeBetweenRuns);
+        [NotMapped] public bool ShouldBeRun => DateTimeOffset.UtcNow < MostRecentRun.Add(TimeBetweenRuns);
 
         public WorkflowModel Workflow { get; set; }
 

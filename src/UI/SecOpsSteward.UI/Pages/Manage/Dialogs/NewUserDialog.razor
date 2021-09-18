@@ -1,14 +1,17 @@
 ﻿<MudDialog>
     <DialogContent>
-        <MudTextField Value="@Username" Label="Username" />
+        <MudTextField Value="@Username" Label="Username"/>
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="Cancel">Cancel</MudButton>
         <MudButton Color="Color.Success" OnClick="@AddUser">Add User</MudButton>
     </DialogActions>
 </MudDialog>
+
 @code {
-    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+
+    [CascadingParameter]
+    MudDialogInstance MudDialog { get; set; }
 
     protected string Username { get; set; } = string.Empty;
 
@@ -30,4 +33,5 @@
         }
         MudDialog.Close(DialogResult.Ok(Username));
     }
+
 }

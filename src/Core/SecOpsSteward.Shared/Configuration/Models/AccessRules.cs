@@ -4,20 +4,20 @@ using System.Linq;
 namespace SecOpsSteward.Shared.Configuration.Models
 {
     /// <summary>
-    /// Rules for which users can run which packages on an Agent 
+    ///     Rules for which users can run which packages on an Agent
     /// </summary>
     public partial class AccessRules
     {
-        private List<AccessRule> Items { get; set; } = new List<AccessRule>();
+        private List<AccessRule> Items { get; set; } = new();
 
         /// <summary>
-        /// Add access for a User to run a Package
+        ///     Add access for a User to run a Package
         /// </summary>
         /// <param name="userId">User ID</param>
         /// <param name="packageId">Package ID</param>
         public void Add(ChimeraUserIdentifier userId, ChimeraPackageIdentifier packageId)
         {
-            Items.Add(new AccessRule()
+            Items.Add(new AccessRule
             {
                 UserId = userId,
                 PackageId = packageId
@@ -26,7 +26,7 @@ namespace SecOpsSteward.Shared.Configuration.Models
         }
 
         /// <summary>
-        /// Remove access from a User and Package
+        ///     Remove access from a User and Package
         /// </summary>
         /// <param name="userId">User ID</param>
         /// <param name="packageId">Package ID</param>
@@ -38,7 +38,7 @@ namespace SecOpsSteward.Shared.Configuration.Models
         }
 
         /// <summary>
-        /// Check if a given User and Package combination have access
+        ///     Check if a given User and Package combination have access
         /// </summary>
         /// <param name="userId">User ID</param>
         /// <param name="packageId">Package ID</param>

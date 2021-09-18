@@ -1,7 +1,7 @@
-﻿using SecOpsSteward.Data.Models;
-using SecOpsSteward.Plugins.Configurable;
-using System;
+﻿using System;
 using System.Linq;
+using SecOpsSteward.Data.Models;
+using SecOpsSteward.Plugins.Configurable;
 
 namespace SecOpsSteward.Data.Workflow
 {
@@ -34,8 +34,9 @@ namespace SecOpsSteward.Data.Workflow
             Package.ManagedService = svc;
             Agent = dbContext.Agents.FirstOrDefault(a => a.AgentId == AgentId);
             Grant = dbContext.AgentGrants.FirstOrDefault(g => g.AgentId == AgentId &&
-                                                         g.PluginId == PackageId &&
-                                                         g.AuthorizationScopeHashcode == Parameters.GetConfigurationGrantScopeHashCode());
+                                                              g.PluginId == PackageId &&
+                                                              g.AuthorizationScopeHashcode ==
+                                                              Parameters.GetConfigurationGrantScopeHashCode());
         }
     }
 }

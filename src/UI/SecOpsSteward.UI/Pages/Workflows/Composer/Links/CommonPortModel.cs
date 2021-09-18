@@ -5,7 +5,8 @@ namespace SecOpsSteward.UI.Pages.Workflows.Composer.Links
 {
     public abstract class CommonPortModel : PortModel
     {
-        protected CommonPortModel(NodeModel parent, PortAlignment alignment = PortAlignment.Bottom, Point position = null, Size size = null) : base(parent, alignment, position, size)
+        protected CommonPortModel(NodeModel parent, PortAlignment alignment = PortAlignment.Bottom,
+            Point position = null, Size size = null) : base(parent, alignment, position, size)
         {
         }
 

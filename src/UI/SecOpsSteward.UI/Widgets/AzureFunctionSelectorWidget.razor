@@ -1,6 +1,6 @@
-﻿@using Microsoft.Azure.Management.AppService.Fluent
+﻿@using Microsoft.Azure.Management.ResourceManager.Fluent
+@using Microsoft.Azure.Management.AppService.Fluent
 @using Microsoft.Azure.Management.Fluent
-@using Microsoft.Azure.Management.ResourceManager.Fluent
 <MudContainer Class="p-3">
     <MudItem xs="12">
         <MudSelect T="ISubscription" Label="Subscription" Strict="true" Variant="Variant.Outlined" Class="py-2"
@@ -14,7 +14,7 @@
 
     <MudItem xs="12">
         <MudSelect T="IResourceGroup" Label="Resource Group" Strict="true" Variant="Variant.Outlined" Class="py-2"
-                    Value="@SelectedResourceGroup" ValueChanged="@SetResourceGroup">
+                   Value="@SelectedResourceGroup" ValueChanged="@SetResourceGroup">
             @foreach (var resourceGroup in ResourceGroups)
             {
                 <MudSelectItem T="IResourceGroup" Value="@resourceGroup">@resourceGroup.Name</MudSelectItem>
@@ -24,12 +24,14 @@
 
     <MudItem xs="12">
         <MudSelect T="IFunctionApp" Label="Function App" Strict="true" Variant="Variant.Outlined" Class="py-2"
-                    Value="@SelectedFunction" ValueChanged="@SetFunction">
+                   Value="@SelectedFunction" ValueChanged="@SetFunction">
             @foreach (var resource in Resources.OrderBy(r => r.Name))
             {
                 if (string.IsNullOrEmpty(resource.SystemAssignedManagedServiceIdentityPrincipalId))
                 {
-                    <MudSelectItem T="IFunctionApp" Disabled="true" Value="@resource">@resource.Name <em>(No Managed Identity)</em></MudSelectItem>
+                    <MudSelectItem T="IFunctionApp" Disabled="true" Value="@resource">
+                        @resource.Name <em>(No Managed Identity)</em>
+                    </MudSelectItem>
                 }
                 else
                 {
@@ -47,7 +49,7 @@
     protected IEnumerable<ISubscription> Subscriptions { get; set; } = new List<ISubscription>();
     protected IEnumerable<IResourceGroup> ResourceGroups { get; set; } = new List<IResourceGroup>();
     protected IEnumerable<IFunctionApp> Resources { get; set; } = new List<IFunctionApp>();
-    
+
     [Parameter]
     public ISubscription SelectedSubscription { get; set; }
 
@@ -59,7 +61,7 @@
 
     [Parameter]
     public EventCallback<IResourceGroup> SelectedResourceGroupChanged { get; set; }
-    
+
     [Parameter]
     public IFunctionApp SelectedFunction { get; set; }
 
@@ -67,6 +69,7 @@
     public EventCallback<IFunctionApp> SelectedFunctionChanged { get; set; }
 
     private IAzure _azure;
+
     protected override void OnInitialized()
     {
         Subscriptions = Platform.GetCredential().GetAzure().Subscriptions.List();

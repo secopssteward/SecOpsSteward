@@ -1,29 +1,32 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using Microsoft.Azure.Management.AppService.Fluent.Models;
+using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using SecOpsSteward.Plugins;
 using SecOpsSteward.Plugins.Azure;
 using SecOpsSteward.Shared;
 using SecOpsSteward.Shared.Packaging;
 using SecOpsSteward.Shared.Roles;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
-namespace PluginTest.Client
+namespace PluginTestClient
 {
     public class PluginTestHarness
     {
-        public string ManagerUser => _managerServiceProvider.Item2;
-        public string User => _userServiceProvider.Item2;
-
         private readonly Tuple<ServiceProvider, string> _managerServiceProvider;
         private readonly Tuple<ServiceProvider, string> _userServiceProvider;
 
         public PluginTestHarness(string tenantId, string subscriptionId)
         {
-            _managerServiceProvider = TestAuthenticationHelper.GetTestHarnessServiceProvider(tenantId, subscriptionId, true).Result;
-            _userServiceProvider = TestAuthenticationHelper.GetTestHarnessServiceProvider(tenantId, subscriptionId, false).Result;
+            _managerServiceProvider = TestAuthenticationHelper
+                .GetTestHarnessServiceProvider(tenantId, subscriptionId, true).Result;
+            _userServiceProvider =
+                TestAuthenticationHelper.GetTestHarnessServiceProvider(tenantId, subscriptionId).Result;
         }
+
+        public string ManagerUser => _managerServiceProvider.Item2;
+        public string User => _userServiceProvider.Item2;
 
         public async Task RunTest(
             string folder,
@@ -32,7 +35,7 @@ namespace PluginTest.Client
         {
             var pluginId = new ChimeraPackageIdentifier(pluginIdGuid);
 
-            string path = "";
+            var path = "";
             // get test package
             Console.ForegroundColor = ConsoleColor.Cyan;
             Console.WriteLine("Press ENTER to start test from new plugin build\n");
@@ -42,8 +45,8 @@ namespace PluginTest.Client
             {
                 Console.ForegroundColor = ConsoleColor.Yellow;
                 Console.WriteLine("This container's source code hash is " +
-                    BitConverter.ToString(pkg.GetPackageContentHash())
-                                .Replace("-", "").Substring(0, 8));
+                                  BitConverter.ToString(pkg.GetPackageContentHash())
+                                      .Replace("-", "").Substring(0, 8));
                 path = pkg.ExtractedPath;
                 var plugin = pkg.Wrapper.GetPlugin(pluginId.Id);
 
@@ -56,17 +59,22 @@ namespace PluginTest.Client
                 var userOid = _userServiceProvider.Item2;
 
                 // run GRANT as manager
-                await RunAzureOperation("GRANT", async () => await mgrRoleAssignment.AssignPluginRole(userInstance, userInstance.RbacRequirements, userOid));
+                await RunAzureOperation("GRANT",
+                    async () => await mgrRoleAssignment.AssignPluginRole(userInstance, userInstance.RbacRequirements,
+                        userOid));
 
                 Console.ForegroundColor = ConsoleColor.Cyan;
                 Console.WriteLine("... sleeping for 10 seconds to allow RBAC to propagate ...");
                 await Task.Delay(10000);
 
                 // run EXECUTE as user
-                await RunAzureOperation("EXECUTE", async () => await userInstance.Execute(new PluginOutputStructure(CommonResultCodes.Success)));
+                await RunAzureOperation("EXECUTE",
+                    async () => await userInstance.Execute(new PluginOutputStructure(CommonResultCodes.Success)));
 
                 // run REVOKE as manager
-                await RunAzureOperation("REVOKE", async () => await mgrRoleAssignment.UnassignPluginRole(userInstance, userInstance.RbacRequirements, userOid));
+                await RunAzureOperation("REVOKE",
+                    async () => await mgrRoleAssignment.UnassignPluginRole(userInstance, userInstance.RbacRequirements,
+                        userOid));
 
                 var roleName = "SoSRole - " + userInstance.GetDescriptiveName();
                 Console.ForegroundColor = ConsoleColor.Cyan;
@@ -75,10 +83,14 @@ namespace PluginTest.Client
 
                 await RunAzureOperation("DROP ROLE [" + roleName + "]", async () =>
                 {
-                    var az = _managerServiceProvider.Item1.GetRequiredService<AzureCurrentCredentialFactory>().GetCredential().GetAzure();
+                    var az = _managerServiceProvider.Item1.GetRequiredService<AzureCurrentCredentialFactory>()
+                        .GetCredential().GetAzure();
 
-                    var roleId = await az.AccessManagement.RoleDefinitions.GetByScopeAndRoleNameAsync("/subscriptions/" + az.SubscriptionId, roleName);
-                    await az.AccessManagement.RoleDefinitions.Inner.DeleteWithHttpMessagesAsync("/subscriptions/" + az.SubscriptionId, roleId.Name);
+                    var roleId =
+                        await az.AccessManagement.RoleDefinitions.GetByScopeAndRoleNameAsync(
+                            "/subscriptions/" + az.SubscriptionId, roleName);
+                    await az.AccessManagement.RoleDefinitions.Inner.DeleteWithHttpMessagesAsync(
+                        "/subscriptions/" + az.SubscriptionId, roleId.Name);
                 });
             }
         }
@@ -96,7 +108,7 @@ namespace PluginTest.Client
                 Console.WriteLine("!!! Success !!!");
             }
 
-            catch (Microsoft.Azure.Management.AppService.Fluent.Models.DefaultErrorResponseException ex)
+            catch (DefaultErrorResponseException ex)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine("!!! Azure Failure !!! -> " + ex.Message);
@@ -105,7 +117,7 @@ namespace PluginTest.Client
             catch (Exception ex)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine("!!! General Failure: " + ex.ToString());
+                Console.WriteLine("!!! General Failure: " + ex);
             }
         }
     }

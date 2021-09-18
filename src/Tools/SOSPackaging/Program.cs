@@ -1,15 +1,15 @@
-using Spectre.Console.Cli;
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
+using Spectre.Console.Cli;
 
 namespace SOSPackaging
 {
-    class Program
+    internal class Program
     {
-        static int Main(string[] args)
+        private static int Main(string[] args)
         {
             //args = new string[]
             //{
@@ -37,59 +37,44 @@ namespace SOSPackaging
     // --- OPTIONS ---
     public class NewPackageOptions : CommandSettings
     {
-        [CommandArgument(0, "<Path>")]
-        public string Path { get; set; }
+        [CommandArgument(0, "<Path>")] public string Path { get; set; }
 
-        [CommandArgument(1, "[PrivateKey]")]
-        public string PrivateKey { get; set; }
+        [CommandArgument(1, "[PrivateKey]")] public string PrivateKey { get; set; }
 
-        [CommandArgument(2, "[Signer]")]
-        public string Signer { get; set; }
+        [CommandArgument(2, "[Signer]")] public string Signer { get; set; }
 
-        [CommandArgument(3, "[SASKey]")]
-        public string SasKey { get; set; }
+        [CommandArgument(3, "[SASKey]")] public string SasKey { get; set; }
 
-        [CommandOption("--config")]
-        public string Configuration { get; set; }
+        [CommandOption("--config")] public string Configuration { get; set; }
     }
 
     public class PackageSignOptions : CommandSettings
     {
-        [CommandArgument(0, "<Path>")]
-        public string Path { get; set; }
+        [CommandArgument(0, "<Path>")] public string Path { get; set; }
 
-        [CommandArgument(1, "[PrivateKey]")]
-        public string PrivateKey { get; set; }
+        [CommandArgument(1, "[PrivateKey]")] public string PrivateKey { get; set; }
 
-        [CommandArgument(2, "[Signer]")]
-        public string Signer { get; set; }
+        [CommandArgument(2, "[Signer]")] public string Signer { get; set; }
 
-        [CommandOption("--config")]
-        public string Configuration { get; set; }
+        [CommandOption("--config")] public string Configuration { get; set; }
     }
 
     public class PackageVerifyOptions : CommandSettings
     {
-        [CommandArgument(0, "<Path>")]
-        public string Path { get; set; }
+        [CommandArgument(0, "<Path>")] public string Path { get; set; }
 
-        [CommandArgument(1, "[PublicKey]")]
-        public string PublicKey { get; set; }
+        [CommandArgument(1, "[PublicKey]")] public string PublicKey { get; set; }
 
-        [CommandOption("--config")]
-        public string Configuration { get; set; }
+        [CommandOption("--config")] public string Configuration { get; set; }
     }
 
     public class PackagePostOptions : CommandSettings
     {
-        [CommandArgument(0, "<Path>")]
-        public string Path { get; set; }
+        [CommandArgument(0, "<Path>")] public string Path { get; set; }
 
-        [CommandArgument(1, "[SasKey]")]
-        public string SasKey { get; set; }
+        [CommandArgument(1, "[SasKey]")] public string SasKey { get; set; }
 
-        [CommandOption("--config")]
-        public string Configuration { get; set; }
+        [CommandOption("--config")] public string Configuration { get; set; }
     }
 
     // --- COMMANDS ---
@@ -110,6 +95,7 @@ namespace SOSPackaging
                 Console.WriteLine("Uploading package to storage");
                 SharedActions.Post(pkg, settings.SasKey);
             }
+
             File.Delete(pkg);
             return 0;
         }
@@ -166,6 +152,7 @@ namespace SOSPackaging
                 Console.WriteLine(Convert.ToBase64String(Encoding.ASCII.GetBytes(rsa.ToXmlString(true))));
                 Console.WriteLine();
             }
+
             return 0;
         }
     }

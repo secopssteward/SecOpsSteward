@@ -1,6 +1,6 @@
-﻿using FluentAssertions;
+﻿using System.Threading.Tasks;
+using FluentAssertions;
 using SecOpsSteward.Shared.Configuration;
-using System.Threading.Tasks;
 using Xunit;
 
 namespace SecOpsSteward.Tests.Core.Services
@@ -9,14 +9,16 @@ namespace SecOpsSteward.Tests.Core.Services
     {
         private readonly IConfigurationProvider _configProvider;
 
-        public ConfigurationProviderTests(IConfigurationProvider configProvider) =>
+        public ConfigurationProviderTests(IConfigurationProvider configProvider)
+        {
             _configProvider = configProvider;
+        }
 
         [Fact]
         public async Task ConfigurationProviderShouldAddCorrectly()
         {
             await _configProvider.UpdateConfiguration(TestValues.SampleAgent,
-                new AgentConfiguration()
+                new AgentConfiguration
                 {
                     AgentId = TestValues.SampleAgent,
                     DisplayAlias = "Test Agent A"
@@ -30,7 +32,7 @@ namespace SecOpsSteward.Tests.Core.Services
         public async Task ConfigurationProviderShouldUpdateCorrectly()
         {
             await _configProvider.UpdateConfiguration(TestValues.SampleAgent,
-                new AgentConfiguration()
+                new AgentConfiguration
                 {
                     AgentId = TestValues.SampleAgent,
                     DisplayAlias = "Test Agent A"
@@ -39,7 +41,7 @@ namespace SecOpsSteward.Tests.Core.Services
                 .Result.DisplayAlias.Should().Be("Test Agent A");
 
             await _configProvider.UpdateConfiguration(TestValues.SampleAgent,
-                new AgentConfiguration()
+                new AgentConfiguration
                 {
                     AgentId = TestValues.SampleAgent,
                     DisplayAlias = "Test Agent A-1"
@@ -52,7 +54,7 @@ namespace SecOpsSteward.Tests.Core.Services
         public async Task ConfigurationProviderShouldAllowList()
         {
             await _configProvider.UpdateConfiguration(TestValues.SampleAgent,
-                new AgentConfiguration()
+                new AgentConfiguration
                 {
                     AgentId = TestValues.SampleAgent,
                     DisplayAlias = "Test Agent A"

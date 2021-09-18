@@ -1,13 +1,14 @@
-﻿using SecOpsSteward.Plugins.Configurable;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
+using SecOpsSteward.Plugins.Configurable;
 
 namespace SecOpsSteward.Plugins.Azure.AppServices.Functions
 {
-    public class AzureFunctionKeyResetConfiguration : AzureFunctionServiceConfiguration, IConfigurableObjectConfiguration
+    public class AzureFunctionKeyResetConfiguration : AzureFunctionServiceConfiguration,
+        IConfigurableObjectConfiguration
     {
         [Required]
         [DisplayName("Function Name")]
@@ -27,16 +28,32 @@ namespace SecOpsSteward.Plugins.Azure.AppServices.Functions
         "1.0.0")]
     [PossibleResultCodes(CommonResultCodes.Success, CommonResultCodes.Failure)]
     [ManagedService(typeof(AzureFunctionService))]
-    [GeneratedSharedOutputs("Function/{{$Configuration.FunctionAppName}}/{{$Configuration.FunctionName}}/{{$Configuration.FunctionKeyName}}")]
+    [GeneratedSharedOutputs(
+        "Function/{{$Configuration.FunctionAppName}}/{{$Configuration.FunctionName}}/{{$Configuration.FunctionKeyName}}")]
     public class AzureFunctionKeyReset : SOSPlugin<AzureFunctionKeyResetConfiguration>
     {
-        protected AzureCurrentCredentialFactory PlatformFactory { get; set; }
         public AzureFunctionKeyReset(AzureCurrentCredentialFactory platformFactory)
         {
             PlatformFactory = platformFactory;
             if (platformFactory == null) throw new Exception("Platform handle not found");
         }
-        public AzureFunctionKeyReset() { }
+
+        public AzureFunctionKeyReset()
+        {
+        }
+
+        protected AzureCurrentCredentialFactory PlatformFactory { get; set; }
+
+        public override IEnumerable<PluginRbacRequirements> RbacRequirements => new[]
+        {
+            AzurePluginRbacRequirements.WithActions(
+                "Write & Delete Function Keys for Site and Slots",
+                Configuration.GetScope(),
+                "Microsoft.Web/sites/slots/host/functionkeys/write",
+                "Microsoft.Web/sites/slots/host/functionkeys/delete",
+                "Microsoft.Web/sites/host/functionkeys/write",
+                "Microsoft.Web/sites/host/functionkeys/delete")
+        };
 
         public override async Task<PluginOutputStructure> Execute(PluginOutputStructure previousOutput)
         {
@@ -53,16 +70,5 @@ namespace SecOpsSteward.Plugins.Azure.AppServices.Functions
                     $"Function/{Configuration.FunctionAppName}/{Configuration.FunctionName}/{Configuration.FunctionKeyName}",
                     newKey);
         }
-
-        public override IEnumerable<PluginRbacRequirements> RbacRequirements => new[]
-        {
-            AzurePluginRbacRequirements.WithActions(
-                "Write & Delete Function Keys for Site and Slots",
-                Configuration.GetScope(),
-                "Microsoft.Web/sites/slots/host/functionkeys/write",
-                "Microsoft.Web/sites/slots/host/functionkeys/delete",
-                "Microsoft.Web/sites/host/functionkeys/write",
-                "Microsoft.Web/sites/host/functionkeys/delete")
-        };
     }
 }

@@ -25,18 +25,23 @@ namespace SecOpsSteward.Shared.NonceTracking
                 var expiry = DateTime.UtcNow.AddMinutes(1);
                 while (File.Exists(Path.Combine(NoncePath, NONCE_LOCKFILE)))
                 {
-                    if (DateTime.UtcNow > expiry) throw new Exception("Unable to lock nonce file! There may be too much traffic for local nonces.");
+                    if (DateTime.UtcNow > expiry)
+                        throw new Exception(
+                            "Unable to lock nonce file! There may be too much traffic for local nonces.");
                     Thread.Sleep(100);
                 }
 
                 // lock file
-                File.WriteAllBytes(Path.Combine(NoncePath, NONCE_LOCKFILE), new byte[] { 0xff });
+                File.WriteAllBytes(Path.Combine(NoncePath, NONCE_LOCKFILE), new byte[] {0xff});
 
                 // get nonce file
                 var requestNonceFile = Path.Combine(NoncePath, NONCE_FILE);
                 if (!File.Exists(requestNonceFile))
-                    File.WriteAllText(requestNonceFile, ChimeraSharedHelpers.SerializeToString(new TrackedNonceCollection()));
-                var trackedNonces = ChimeraSharedHelpers.GetFromSerializedString<TrackedNonceCollection>(File.ReadAllText(requestNonceFile));
+                    File.WriteAllText(requestNonceFile,
+                        ChimeraSharedHelpers.SerializeToString(new TrackedNonceCollection()));
+                var trackedNonces =
+                    ChimeraSharedHelpers.GetFromSerializedString<TrackedNonceCollection>(
+                        File.ReadAllText(requestNonceFile));
 
                 // run cleanup of nonces, then regenerate
                 trackedNonces.CleanupExpired();

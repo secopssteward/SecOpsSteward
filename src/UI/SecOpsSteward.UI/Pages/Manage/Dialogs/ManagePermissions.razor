@@ -1,21 +1,27 @@
-﻿<MudTable @ref="_table" Items="@PermissionModels" @bind-SelectedItem="@SelectedModel" RowEditCommit="@(async (a) => await AddPermission(SelectedModel))">
+﻿<MudTable @ref="_table" Items="@PermissionModels" @bind-SelectedItem="@SelectedModel" RowEditCommit="@(async a => await AddPermission(SelectedModel))">
     <ToolBarContent>
         <MudText Typo="Typo.h6">Permissions</MudText>
     </ToolBarContent>
     <HeaderContent>
         @if (!StartedWithAgent)
         {
-            <MudTh><MudTableSortLabel SortBy="new Func<AgentPermissionModel, object>(x=>x.AgentId)">Agent ID</MudTableSortLabel></MudTh>
+            <MudTh>
+                <MudTableSortLabel SortBy="new Func<AgentPermissionModel, object>(x => x.AgentId)">Agent ID</MudTableSortLabel>
+            </MudTh>
         }
         else if (!StartedWithUser)
         {
-            <MudTh><MudTableSortLabel SortBy="new Func<AgentPermissionModel, object>(x=>x.UserId)">User ID</MudTableSortLabel></MudTh>
+            <MudTh>
+                <MudTableSortLabel SortBy="new Func<AgentPermissionModel, object>(x => x.UserId)">User ID</MudTableSortLabel>
+            </MudTh>
         }
         else if (!StartedWithPackage)
         {
-            <MudTh><MudTableSortLabel SortBy="new Func<AgentPermissionModel, object>(x=>x.PackageId)">Package ID</MudTableSortLabel></MudTh>
+            <MudTh>
+                <MudTableSortLabel SortBy="new Func<AgentPermissionModel, object>(x => x.PackageId)">Package ID</MudTableSortLabel>
+            </MudTh>
         }
-        
+
         <MudTh>
             <div class="ml-auto mr-auto">
                 <MudTooltip Text="Create" Placement="Placement.End">
@@ -39,10 +45,10 @@
             <MudTd DataLabel="Package ID">@context.Package.Name</MudTd>
         }
         <MudTd>
-            <div class="ml-auto mr-auto" style="width: fit-content">          
+            <div class="ml-auto mr-auto" style="width: fit-content">
                 <MudTooltip Text="Delete" Placement="Placement.End">
                     <MudIconButton Color="Color.Error" @onclick="@(() => RemovePermission(context))" Icon="@Icons.Material.Filled.Delete" Size="Size.Small"></MudIconButton>
-                </MudTooltip>              
+                </MudTooltip>
             </div>
         </MudTd>
     </RowTemplate>
@@ -50,32 +56,33 @@
         @if (!StartedWithAgent)
         {
             <MudTd>
-                <SecOpsSteward.UI.Widgets.AgentSelectorWidget @bind-AgentModel="@Agent" />
+                <SecOpsSteward.UI.Widgets.AgentSelectorWidget @bind-AgentModel="@Agent"/>
             </MudTd>
         }
         @if (!StartedWithUser)
         {
             <MudTd>
-                <SecOpsSteward.UI.Widgets.UserSelectorWidget @bind-UserModel="@User" />
+                <SecOpsSteward.UI.Widgets.UserSelectorWidget @bind-UserModel="@User"/>
             </MudTd>
         }
         @if (!StartedWithPackage)
         {
             <MudTd>
-                <SecOpsSteward.UI.Widgets.PackageSelectorWidget @bind-PackageModel="@Package" />
+                <SecOpsSteward.UI.Widgets.PackageSelectorWidget @bind-PackageModel="@Package"/>
             </MudTd>
         }
         <MudTd></MudTd>
     </RowEditingTemplate>
     <PagerContent>
-        <MudTablePager PageSizeOptions="new int[]{10, 25, 50, 100}" />
+        <MudTablePager PageSizeOptions="new[] {10, 25, 50, 100}"/>
     </PagerContent>
 </MudTable>
 
 @code {
+
     [Parameter]
-	public AgentModel Agent 
-    { 
+    public AgentModel Agent
+    {
         get => SelectedModel.Agent;
         set
         {
@@ -85,9 +92,9 @@
         }
     }
 
-	[Parameter]
-	public UserModel User
-    { 
+    [Parameter]
+    public UserModel User
+    {
         get => SelectedModel.User;
         set
         {
@@ -97,9 +104,9 @@
         }
     }
 
-	[Parameter]
-	public PluginMetadataModel Package
-    { 
+    [Parameter]
+    public PluginMetadataModel Package
+    {
         get => SelectedModel.Package;
         set
         {
@@ -109,10 +116,10 @@
         }
     }
 
-    protected AgentPermissionModel SelectedModel { get; set; } = new AgentPermissionModel();
+    protected AgentPermissionModel SelectedModel { get; set; } = new();
 
     private MudTable<AgentPermissionModel> _table;
-    private List<AgentPermissionModel> PermissionModels = new List<AgentPermissionModel>();
+    private List<AgentPermissionModel> PermissionModels = new();
 
     private bool StartedWithAgent;
     private bool StartedWithPackage;
@@ -128,23 +135,23 @@
 
     protected async Task Refresh()
     {
-		if (StartedWithAgent)
-		{
-			PermissionModels = await DbContext.AgentPermissions.Include(apm => apm.User).Include(apm => apm.Package).Where(apm => apm.AgentId == Agent.AgentId).ToListAsync();
-		}
-		else if (StartedWithPackage)
-		{
-			PermissionModels = await DbContext.AgentPermissions.Include(apm => apm.User).Include(apm => apm.Agent).Where(apm => apm.PackageId == Package.PluginId).ToListAsync();
-		}
-		else if (StartedWithUser)
-		{
-			PermissionModels = await DbContext.AgentPermissions.Include(apm => apm.Agent).Include(apm => apm.Package).Where(apm => apm.UserId == User.UserId).ToListAsync();
-		}
-		else
-		{
-			PermissionModels = await DbContext.AgentPermissions.Include(apm => apm.User).Include(apm => apm.Package).Include(apm => apm.Agent).ToListAsync();
-		}
-	}
+        if (StartedWithAgent)
+        {
+            PermissionModels = await DbContext.AgentPermissions.Include(apm => apm.User).Include(apm => apm.Package).Where(apm => apm.AgentId == Agent.AgentId).ToListAsync();
+        }
+        else if (StartedWithPackage)
+        {
+            PermissionModels = await DbContext.AgentPermissions.Include(apm => apm.User).Include(apm => apm.Agent).Where(apm => apm.PackageId == Package.PluginId).ToListAsync();
+        }
+        else if (StartedWithUser)
+        {
+            PermissionModels = await DbContext.AgentPermissions.Include(apm => apm.Agent).Include(apm => apm.Package).Where(apm => apm.UserId == User.UserId).ToListAsync();
+        }
+        else
+        {
+            PermissionModels = await DbContext.AgentPermissions.Include(apm => apm.User).Include(apm => apm.Package).Include(apm => apm.Agent).ToListAsync();
+        }
+    }
 
     private void CreatePermissionRow()
     {
@@ -152,14 +159,14 @@
         if (!StartedWithUser) User = null;
         if (!StartedWithPackage) Package = null;
 
-        var permission = new AgentPermissionModel()
+        var permission = new AgentPermissionModel
         {
             Agent = Agent,
-            AgentId = (Agent == null ? Guid.Empty : Agent.AgentId),
+            AgentId = Agent == null ? Guid.Empty : Agent.AgentId,
             Package = Package,
-            PackageId = (Package == null ? Guid.Empty : Package.PluginId),
+            PackageId = Package == null ? Guid.Empty : Package.PluginId,
             User = User,
-            UserId = (User == null ? Guid.Empty : User.UserId)
+            UserId = User == null ? Guid.Empty : User.UserId
         };
         PermissionModels.Add(permission);
         _table.SetSelectedItem(permission);
@@ -180,6 +187,14 @@
         await Refresh();
     }
 
-    protected async Task AddPermission(AgentPermissionModel p) => await TryExecute(()=> DataBoundApi.Grant(p.AgentId, p.UserId, p.PackageId), "Grant completed", "Grant failed");
-    protected async Task RemovePermission(AgentPermissionModel p) => await TryExecute(()=> DataBoundApi.Revoke(p.AgentId, p.UserId, p.PackageId), "Revocation completed", "Revocation failed");
+    protected async Task AddPermission(AgentPermissionModel p)
+    {
+        await TryExecute(() => DataBoundApi.Grant(p.AgentId, p.UserId, p.PackageId), "Grant completed", "Grant failed");
+    }
+
+    protected async Task RemovePermission(AgentPermissionModel p)
+    {
+        await TryExecute(() => DataBoundApi.Revoke(p.AgentId, p.UserId, p.PackageId), "Revocation completed", "Revocation failed");
+    }
+
 }

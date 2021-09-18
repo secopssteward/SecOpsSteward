@@ -1,20 +1,21 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using SecOpsSteward.Plugins;
 using SecOpsSteward.Shared.Configuration;
 using SecOpsSteward.Shared.Cryptography;
+using SecOpsSteward.Shared.Cryptography.Extensions;
 using SecOpsSteward.Shared.Messages;
 using SecOpsSteward.Shared.NonceTracking;
 using SecOpsSteward.Shared.Packaging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using static SecOpsSteward.Shared.ChimeraEntityIdentifier;
 
 namespace SecOpsSteward.Shared.DiscoveryWorkflow
 {
-    public enum WorkflowPhases : int
+    public enum WorkflowPhases
     {
         DecryptEnvelope = 0,
         ValidateHeaders = 1,
@@ -29,7 +30,7 @@ namespace SecOpsSteward.Shared.DiscoveryWorkflow
         CreateNextSteps = 10,
         FinalizeWorkflowReceipt = 11,
         SendingReceipts = 12,
-        Complete = 13,
+        Complete = 13
     }
 
     public class WorkflowProcessorFactory
@@ -41,7 +42,8 @@ namespace SecOpsSteward.Shared.DiscoveryWorkflow
             _services = services;
         }
 
-        public ActiveWorkflow GetWorkflowProcessor(ChimeraEntityIdentifier agentId, string agentDescription, EncryptedMessageEnvelope envelope, bool ignoreUserPermissionRestrictions = false)
+        public ActiveWorkflow GetWorkflowProcessor(ChimeraEntityIdentifier agentId, string agentDescription,
+            EncryptedMessageEnvelope envelope, bool ignoreUserPermissionRestrictions = false)
         {
             try
             {
@@ -49,55 +51,27 @@ namespace SecOpsSteward.Shared.DiscoveryWorkflow
                 instance.Configure(envelope, agentId, agentDescription, ignoreUserPermissionRestrictions);
                 return instance;
             }
-            catch { }
+            catch
+            {
+            }
+
             return null;
         }
     }
 
     public class ActiveWorkflow
     {
-        public ChimeraEntityIdentifier AgentId { get; set; }
-        public string AgentDescription { get; set; }
-
-        public EncryptedMessageEnvelope Envelope { get; set; }
-        public WorkflowExecutionMessage WorkflowMessage { get; set; }
-        public WorkflowReceipt WorkflowReceipt { get; set; }
-
-        public string WorkflowNextNonce { get; set; }
-
-        ExecutionStep CurrentStep => WorkflowMessage.Next == Guid.Empty ?
-            WorkflowMessage.Steps[0] : WorkflowMessage.Steps.First(s => s.StepId == WorkflowMessage.Next);
-
-        public ChimeraContainer StepContainer { get; set; }
-
-        public ChimeraUserIdentifier GrantingUser
-        {
-            get
-            {
-                if (CurrentStep != null && CurrentStep.Signature != null)
-                    return CurrentStep.Signature.Signer.Id;
-                else if (WorkflowMessage != null && WorkflowMessage.Signature != null)
-                    return WorkflowMessage.Signature.Signer.Id;
-                else return null;
-            }
-        }
-
-        public ExecutionStepReceipt CurrentStepReceipt { get; set; }
-
-        public List<EncryptedObject> OutgoingReceipts { get; set; } = new List<EncryptedObject>();
-
-        public bool IgnoreUserPermissionRestrictions { get; private set; }
-
-        private ILogger<ActiveWorkflow> _logger;
-        private WorkflowPhases _phase = 0;
+        private readonly IConfigurationProvider _configProvider;
+        private readonly ICryptographicService _cryptographicService;
+        private readonly IMessageTransitService _messageTransit;
+        private readonly INonceTrackingService _nonceTracker;
+        private readonly PackageActionsService _packageActions;
 
         private readonly IServiceProvider _services;
-        private readonly ICryptographicService _cryptographicService;
-        private readonly IConfigurationProvider _configProvider;
-        private readonly INonceTrackingService _nonceTracker;
-        private readonly IMessageTransitService _messageTransit;
-        private readonly PackageActionsService _packageActions;
         private readonly SecurityTripwire _tripwire;
+
+        private readonly ILogger<ActiveWorkflow> _logger;
+        private WorkflowPhases _phase = 0;
 
         public ActiveWorkflow(
             ILogger<ActiveWorkflow> logger,
@@ -119,6 +93,39 @@ namespace SecOpsSteward.Shared.DiscoveryWorkflow
             _tripwire = tripwire;
         }
 
+        public ChimeraEntityIdentifier AgentId { get; set; }
+        public string AgentDescription { get; set; }
+
+        public EncryptedMessageEnvelope Envelope { get; set; }
+        public WorkflowExecutionMessage WorkflowMessage { get; set; }
+        public WorkflowReceipt WorkflowReceipt { get; set; }
+
+        public string WorkflowNextNonce { get; set; }
+
+        private ExecutionStep CurrentStep => WorkflowMessage.Next == Guid.Empty
+            ? WorkflowMessage.Steps[0]
+            : WorkflowMessage.Steps.First(s => s.StepId == WorkflowMessage.Next);
+
+        public ChimeraContainer StepContainer { get; set; }
+
+        public ChimeraUserIdentifier GrantingUser
+        {
+            get
+            {
+                if (CurrentStep != null && CurrentStep.Signature != null)
+                    return CurrentStep.Signature.Signer.Id;
+                if (WorkflowMessage != null && WorkflowMessage.Signature != null)
+                    return WorkflowMessage.Signature.Signer.Id;
+                return null;
+            }
+        }
+
+        public ExecutionStepReceipt CurrentStepReceipt { get; set; }
+
+        public List<EncryptedObject> OutgoingReceipts { get; set; } = new();
+
+        public bool IgnoreUserPermissionRestrictions { get; private set; }
+
         internal void Configure(
             EncryptedMessageEnvelope envelope,
             ChimeraEntityIdentifier agentId,
@@ -136,7 +143,7 @@ namespace SecOpsSteward.Shared.DiscoveryWorkflow
             _phase = WorkflowPhases.DecryptEnvelope;
             await BeginProcessingEnvelope();
 
-            WorkflowReceipt = new WorkflowReceipt()
+            WorkflowReceipt = new WorkflowReceipt
             {
                 WorkflowRunCount = 1,
                 Receipts = WorkflowMessage.Receipts,
@@ -170,7 +177,8 @@ namespace SecOpsSteward.Shared.DiscoveryWorkflow
             if (AgentId.Type == EntityType.User)
                 LogInfo("Bypassing security access check because we are running locally!");
             else if (IgnoreUserPermissionRestrictions)
-                LogWarning("Bypassing security access check because IgnoreUserPermissionRestrictions is ON! Do NOT do this in production environments!");
+                LogWarning(
+                    "Bypassing security access check because IgnoreUserPermissionRestrictions is ON! Do NOT do this in production environments!");
             else if (!await CheckUserAccess())
                 return;
 
@@ -197,7 +205,8 @@ namespace SecOpsSteward.Shared.DiscoveryWorkflow
             _phase = WorkflowPhases.SendingReceipts;
 
             LogInfo("Enqueueing {count} receipts and next-steps", OutgoingReceipts.Count);
-            await Task.WhenAll(OutgoingReceipts.Select(r => _messageTransit.Enqueue(new EncryptedMessageEnvelope(Envelope.ThreadId, r))));
+            await Task.WhenAll(OutgoingReceipts.Select(r =>
+                _messageTransit.Enqueue(new EncryptedMessageEnvelope(Envelope.ThreadId, r))));
 
             _phase = WorkflowPhases.Complete;
             LogInfo("Processing complete");
@@ -258,7 +267,8 @@ namespace SecOpsSteward.Shared.DiscoveryWorkflow
                 TriggerTripwire(SecurityTripwireConditions.WorkflowLastRunReceiptSignatureInvalid);
                 return false;
             }
-            else if (WorkflowMessage.LastRunReceipt != null)
+
+            if (WorkflowMessage.LastRunReceipt != null)
                 WorkflowReceipt.WorkflowRunCount = WorkflowMessage.LastRunReceipt.WorkflowRunCount + 1;
 
             return true;
@@ -267,11 +277,13 @@ namespace SecOpsSteward.Shared.DiscoveryWorkflow
         private async Task<bool> ValidatePreviousReceiptSignatures()
         {
             LogTrace("Validating signatures on all previous receipts");
-            var results = await Task.WhenAll(WorkflowMessage.Receipts.Select(async r => await r.Verify(_cryptographicService)));
+            var results =
+                await Task.WhenAll(WorkflowMessage.Receipts.Select(async r => await r.Verify(_cryptographicService)));
             if (results.Any(r => !r))
             {
                 TriggerTripwire(SecurityTripwireConditions.ProvidedReceiptsSignaturesInvalid);
-                LogError("{count} receipts from previous runs are _NOT VALID_ for workflow {id}!", results.Count(r => !r), WorkflowMessage.WorkflowId);
+                LogError("{count} receipts from previous runs are _NOT VALID_ for workflow {id}!",
+                    results.Count(r => !r), WorkflowMessage.WorkflowId);
                 return false;
             }
 
@@ -285,7 +297,8 @@ namespace SecOpsSteward.Shared.DiscoveryWorkflow
             {
                 LogTrace("Checking workflow nonce");
 
-                WorkflowNextNonce = await _nonceTracker.ValidateNonce(AgentId, WorkflowMessage.WorkflowId, WorkflowMessage.Nonce);
+                WorkflowNextNonce =
+                    await _nonceTracker.ValidateNonce(AgentId, WorkflowMessage.WorkflowId, WorkflowMessage.Nonce);
 
                 if (string.IsNullOrEmpty(WorkflowNextNonce))
                 {
@@ -359,6 +372,7 @@ namespace SecOpsSteward.Shared.DiscoveryWorkflow
                 CompleteCurrentStepReceipt(ResultCodes.Unauthorized, "Unauthorized");
                 return false;
             }
+
             return true;
         }
 
@@ -374,6 +388,7 @@ namespace SecOpsSteward.Shared.DiscoveryWorkflow
                 CompleteCurrentStepReceipt(ResultCodes.ConditionsNotMet, "Required conditions not met");
                 return false;
             }
+
             return true;
         }
 
@@ -400,7 +415,7 @@ namespace SecOpsSteward.Shared.DiscoveryWorkflow
             }
 
             // check expected hash against loaded version
-            if ((CurrentStep.PackageSignature != null && CurrentStep.PackageSignature.Length > 0) &&
+            if (CurrentStep.PackageSignature != null && CurrentStep.PackageSignature.Length > 0 &&
                 !_packageActions.CheckContainerHash(CurrentStep.PackageId, CurrentStep.PackageSignature))
             {
                 LogError("Package hash did not match the expected hash from the step");
@@ -422,11 +437,13 @@ namespace SecOpsSteward.Shared.DiscoveryWorkflow
                 previousStep = WorkflowMessage.Receipts[WorkflowMessage.Receipts.Count - 1];
                 passthroughOutputs.SharedOutputs = previousStep.PluginResult.SharedOutputs.AsClone();
 
-                if (!ChimeraSharedHelpers.GetHash(previousStep.PluginResult).SequenceEqual(previousStep.PluginResultHash))
+                if (!ChimeraSharedHelpers.GetHash(previousStep.PluginResult)
+                    .SequenceEqual(previousStep.PluginResultHash))
                 {
                     LogError("Content hash for previous step result did not match");
                     TriggerTripwire(SecurityTripwireConditions.PreviousResultHashMismatch);
-                    CompleteCurrentStepReceipt(ResultCodes.InvalidMessageSignature, "Step result content hash not valid");
+                    CompleteCurrentStepReceipt(ResultCodes.InvalidMessageSignature,
+                        "Step result content hash not valid");
                     return false;
                 }
             }
@@ -437,7 +454,8 @@ namespace SecOpsSteward.Shared.DiscoveryWorkflow
 
             try
             {
-                var plugin = StepContainer.Wrapper.GetPlugin(CurrentStep.PackageId.Id).Emit(_services, CurrentStep.Arguments);
+                var plugin = StepContainer.Wrapper.GetPlugin(CurrentStep.PackageId.Id)
+                    .Emit(_services, CurrentStep.Arguments);
                 CurrentStepReceipt.PluginResult = await plugin.Execute(passthroughOutputs);
                 LogTrace("Execution of package {package} complete", CurrentStep.PackageId);
             }
@@ -462,7 +480,8 @@ namespace SecOpsSteward.Shared.DiscoveryWorkflow
             await CurrentStepReceipt.Sign(_cryptographicService, AgentId, AgentDescription);
             WorkflowMessage.Receipts.Add(CurrentStepReceipt);
 
-            if (!WorkflowMessage.Steps.GetNextSteps(CurrentStepReceipt.StepId, CurrentStepReceipt.PluginResult.ResultCode).Any())
+            if (!WorkflowMessage.Steps
+                .GetNextSteps(CurrentStepReceipt.StepId, CurrentStepReceipt.PluginResult.ResultCode).Any())
                 WorkflowReceipt.WorkflowComplete = true;
         }
 
@@ -473,7 +492,8 @@ namespace SecOpsSteward.Shared.DiscoveryWorkflow
             var receipts = new List<EncryptedObject>();
             if (!WorkflowReceipt.WorkflowComplete)
             {
-                var nextSteps = WorkflowMessage.Steps.GetNextSteps(CurrentStepReceipt.StepId, CurrentStepReceipt.PluginResult.ResultCode);
+                var nextSteps = WorkflowMessage.Steps.GetNextSteps(CurrentStepReceipt.StepId,
+                    CurrentStepReceipt.PluginResult.ResultCode);
                 WorkflowMessage.Nonce = WorkflowNextNonce; // send new nonce along
 
                 LogTrace("Writing orders for {count} next steps", nextSteps.Count());
@@ -486,7 +506,9 @@ namespace SecOpsSteward.Shared.DiscoveryWorkflow
                 }
             }
             else // If complete, embed the passed nonce
+            {
                 WorkflowReceipt.NewNonce = WorkflowNextNonce;
+            }
 
             return receipts;
         }
@@ -494,7 +516,8 @@ namespace SecOpsSteward.Shared.DiscoveryWorkflow
         private async Task<EncryptedObject> GetFinalizedWorkflowReceipt()
         {
             // strip transitioning outputs from the intermediate workflow-level receipt
-            WorkflowReceipt.Receipts.ForEach(r => r.PluginResult.SharedOutputs = r.PluginResult.SharedOutputs.AsScrubbedCollection());
+            WorkflowReceipt.Receipts.ForEach(r =>
+                r.PluginResult.SharedOutputs = r.PluginResult.SharedOutputs.AsScrubbedCollection());
 
             // sign and encrypt the receipt
             LogTrace("Signing workflow receipt as {id}", AgentId);
@@ -505,6 +528,7 @@ namespace SecOpsSteward.Shared.DiscoveryWorkflow
         }
 
         #region Logging
+
         private void TriggerTripwire(SecurityTripwireConditions condition)
         {
             _tripwire.HandleTripwire(condition, this);
@@ -548,6 +572,7 @@ namespace SecOpsSteward.Shared.DiscoveryWorkflow
             parametersList.Insert(2, _phase);
             return parametersList.ToArray();
         }
+
         #endregion
     }
 }

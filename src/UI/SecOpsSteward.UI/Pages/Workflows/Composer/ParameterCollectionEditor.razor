@@ -1,21 +1,22 @@
-﻿<MudList Clickable="false" Dense="true">
+﻿@using SecOpsSteward.Plugins.Configurable
+<MudList Clickable="false" Dense="true">
     @foreach (var param in ParameterCollection.Parameters)
     {
         <MudListItem Dense="true">
-            <ParameterEditor ReadOnly="@ReadOnly" Parameter="@param" />
-	    </MudListItem>
+            <ParameterEditor ReadOnly="@ReadOnly" Parameter="@param"/>
+        </MudListItem>
     }
 </MudList>
 
-@using SecOpsSteward.Plugins.Configurable
 @code {
 
     [Parameter]
     public bool ReadOnly { get; set; }
 
     [Parameter]
-    public ConfigurableObjectParameterCollection ParameterCollection { get; set; } = new ConfigurableObjectParameterCollection();
+    public ConfigurableObjectParameterCollection ParameterCollection { get; set; } = new();
 
     [Parameter]
     public EventCallback<ConfigurableObjectParameterCollection> ParameterCollectionChanged { get; set; }
+
 }

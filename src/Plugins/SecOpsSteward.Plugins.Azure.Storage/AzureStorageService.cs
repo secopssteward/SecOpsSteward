@@ -1,14 +1,14 @@
-﻿using Microsoft.Azure.Management.Fluent;
-using Microsoft.Azure.Management.Storage.Fluent;
-using SecOpsSteward.Plugins.Configurable;
-using SecOpsSteward.Plugins.Discovery;
-using SecOpsSteward.Plugins.WorkflowTemplates;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Azure.Management.Fluent;
+using Microsoft.Azure.Management.Storage.Fluent;
+using SecOpsSteward.Plugins.Configurable;
+using SecOpsSteward.Plugins.Discovery;
+using SecOpsSteward.Plugins.WorkflowTemplates;
 
 namespace SecOpsSteward.Plugins.Azure.Storage
 {
@@ -19,11 +19,17 @@ namespace SecOpsSteward.Plugins.Azure.Storage
         [DisplayName("Storage Account Name")]
         public string StorageAccount { get; set; }
 
-        internal string GetScope() =>
-            "/subscriptions/" + SubscriptionId +
-            "/resourceGroups/" + ResourceGroup +
-            "/providers/Microsoft.Storage/storageAccounts/" + StorageAccount;
-        internal Task<IStorageAccount> GetStorageAsync(IAzure azure) => azure.StorageAccounts.GetByResourceGroupAsync(ResourceGroup, StorageAccount);
+        internal string GetScope()
+        {
+            return "/subscriptions/" + SubscriptionId +
+                   "/resourceGroups/" + ResourceGroup +
+                   "/providers/Microsoft.Storage/storageAccounts/" + StorageAccount;
+        }
+
+        internal Task<IStorageAccount> GetStorageAsync(IAzure azure)
+        {
+            return azure.StorageAccounts.GetByResourceGroupAsync(ResourceGroup, StorageAccount);
+        }
     }
 
     [ElementDescription(
@@ -31,26 +37,32 @@ namespace SecOpsSteward.Plugins.Azure.Storage
         "Manages Azure Blob, Queue, and Table Storage")]
     public class AzureStorageService : SOSManagedService<AzureStorageServiceConfiguration>
     {
-        public override ManagedServiceRole Role => ManagedServiceRole.Producer;
-
-        public override List<WorkflowTemplateDefinition> Templates => new List<WorkflowTemplateDefinition>()
-        {
-            TEMPLATE_RESET_KEY
-        };
-
-        private static WorkflowTemplateDefinition TEMPLATE_RESET_KEY =>
-             new WorkflowTemplateDefinition<AzureStorageService, StorageRegenerateKeyConfiguration>("Reset Storage Account Key")
-                .RunWorkflowStep<StorageRegenerateKey>(
-                    nameof(StorageRegenerateKeyConfiguration.StorageAccount).MapsTo(nameof(StorageRegenerateKeyConfiguration.StorageAccount)));
-
-
-        protected AzureCurrentCredentialFactory PlatformFactory { get; set; }
         public AzureStorageService(AzureCurrentCredentialFactory platformFactory)
         {
             PlatformFactory = platformFactory;
             if (platformFactory == null) throw new Exception("Platform handle not found");
         }
-        public AzureStorageService() { }
+
+        public AzureStorageService()
+        {
+        }
+
+        public override ManagedServiceRole Role => ManagedServiceRole.Producer;
+
+        public override List<WorkflowTemplateDefinition> Templates => new()
+        {
+            TEMPLATE_RESET_KEY
+        };
+
+        private static WorkflowTemplateDefinition TEMPLATE_RESET_KEY =>
+            new WorkflowTemplateDefinition<AzureStorageService, StorageRegenerateKeyConfiguration>(
+                    "Reset Storage Account Key")
+                .RunWorkflowStep<StorageRegenerateKey>(
+                    nameof(StorageRegenerateKeyConfiguration.StorageAccount)
+                        .MapsTo(nameof(StorageRegenerateKeyConfiguration.StorageAccount)));
+
+
+        protected AzureCurrentCredentialFactory PlatformFactory { get; set; }
 
         public override async Task<List<DiscoveredServiceConfiguration>> Discover()
         {
@@ -65,11 +77,11 @@ namespace SecOpsSteward.Plugins.Azure.Storage
             return (await Task.WhenAll(allStorage.Select(async storage =>
             {
                 await Task.Yield();
-                return new DiscoveredServiceConfiguration()
+                return new DiscoveredServiceConfiguration
                 {
                     ManagedServiceId = this.GenerateId(),
                     DescriptiveName = $"({this.GetDescriptiveName()}) {storage.ResourceGroupName} / {storage.Name}",
-                    Configuration = new AzureStorageServiceConfiguration()
+                    Configuration = new AzureStorageServiceConfiguration
                     {
                         TenantId = Configuration.TenantId,
                         SubscriptionId = Configuration.SubscriptionId,
@@ -77,7 +89,7 @@ namespace SecOpsSteward.Plugins.Azure.Storage
                         StorageAccount = storage.Name
                     },
                     Identifier = $"{storage.ResourceGroupName}/{storage.Name}",
-                    LinksInAs = new List<string>()
+                    LinksInAs = new List<string>
                     {
                         $"{storage.ResourceGroupName}/{storage.Name}",
 

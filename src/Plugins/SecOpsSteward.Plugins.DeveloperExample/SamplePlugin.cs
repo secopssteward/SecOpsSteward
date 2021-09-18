@@ -1,9 +1,8 @@
-﻿using SecOpsSteward.Plugins.Azure;
-using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
+using SecOpsSteward.Plugins.Azure;
 
 namespace SecOpsSteward.Plugins.DeveloperExample
 {
@@ -31,7 +30,7 @@ namespace SecOpsSteward.Plugins.DeveloperExample
     [GeneratedSharedOutputs("Sample/{{$Configuration.Location}}/{{$Configuration.Color}}")]
     public class SamplePlugin : SOSPlugin<SamplePluginConfiguration>
     {
-        public override IEnumerable<PluginRbacRequirements> RbacRequirements => new List<PluginRbacRequirements>()
+        public override IEnumerable<PluginRbacRequirements> RbacRequirements => new List<PluginRbacRequirements>
         {
             // You can identify the RBAC requirements to run this plugin from the Azure Docs.
             // It is strongly encouraged that you make these permissions as narrow as possible.
@@ -53,7 +52,7 @@ namespace SecOpsSteward.Plugins.DeveloperExample
             {
                 var lastOutput = previousOutput["/previous/plugin/output"];
             }
-            
+
             await Task.Yield();
 
             // If this generates an output, such as a generated password, add it to the PluginOutputStructure.

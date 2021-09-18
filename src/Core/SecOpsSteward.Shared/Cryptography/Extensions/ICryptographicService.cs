@@ -1,14 +1,14 @@
 ﻿using System.Threading.Tasks;
 
-namespace SecOpsSteward.Shared.Cryptography
+namespace SecOpsSteward.Shared.Cryptography.Extensions
 {
     /// <summary>
-    /// Service providing cryptographic operations
+    ///     Service providing cryptographic operations
     /// </summary>
     public interface ICryptographicService
     {
         /// <summary>
-        /// Sign a digest of data as a given entity
+        ///     Sign a digest of data as a given entity
         /// </summary>
         /// <param name="signer">Entity signing the digest</param>
         /// <param name="digest">Digest of data to sign</param>
@@ -16,7 +16,7 @@ namespace SecOpsSteward.Shared.Cryptography
         Task<byte[]> Sign(ChimeraEntityIdentifier signer, byte[] digest);
 
         /// <summary>
-        /// Verify a given signature against the digest it signs
+        ///     Verify a given signature against the digest it signs
         /// </summary>
         /// <param name="signer">Entity signing the digest</param>
         /// <param name="signature">Given signature to test</param>
@@ -25,7 +25,7 @@ namespace SecOpsSteward.Shared.Cryptography
         Task<bool> Verify(ChimeraEntityIdentifier signer, byte[] signature, byte[] digest);
 
         /// <summary>
-        /// Wrap a symmetric encryption key with an Entity's asymmetric key
+        ///     Wrap a symmetric encryption key with an Entity's asymmetric key
         /// </summary>
         /// <param name="wrappingKey">Entity wrapping the key</param>
         /// <param name="keyToWrap">Key being wrapped</param>
@@ -33,7 +33,7 @@ namespace SecOpsSteward.Shared.Cryptography
         Task<byte[]> WrapKey(ChimeraEntityIdentifier wrappingKey, byte[] keyToWrap);
 
         /// <summary>
-        /// Unwrap a symmetric encryption key with an Entity's asymmetric key
+        ///     Unwrap a symmetric encryption key with an Entity's asymmetric key
         /// </summary>
         /// <param name="wrappingKey">Entity who wrapped the key</param>
         /// <param name="keyToUnwrap">Key being unwrapped</param>
@@ -41,7 +41,7 @@ namespace SecOpsSteward.Shared.Cryptography
         Task<byte[]> UnwrapKey(ChimeraEntityIdentifier wrappingKey, byte[] keyToUnwrap);
 
         /// <summary>
-        /// Encrypt data with an asymmetric key
+        ///     Encrypt data with an asymmetric key
         /// </summary>
         /// <param name="key">Entity which can decrypt the data</param>
         /// <param name="data">Data to encrypt</param>
@@ -49,7 +49,7 @@ namespace SecOpsSteward.Shared.Cryptography
         Task<byte[]> Encrypt(ChimeraEntityIdentifier key, byte[] data);
 
         /// <summary>
-        /// Decrypt data with an asymmetric key
+        ///     Decrypt data with an asymmetric key
         /// </summary>
         /// <param name="key">Entity which can decrypt the data</param>
         /// <param name="ciphertext">Ciphertext to decrypt</param>

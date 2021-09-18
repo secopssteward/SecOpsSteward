@@ -1,11 +1,23 @@
 using Microsoft.EntityFrameworkCore;
 using SecOpsSteward.Data.Models;
-using System;
 
 namespace SecOpsSteward.Data
 {
     public class SecOpsStewardDbContext : DbContext
     {
+        public SecOpsStewardDbContext(DbContextOptions<SecOpsStewardDbContext> options) : base(options)
+        {
+            try
+            {
+                // TODO: Migrations
+                Database.EnsureCreated();
+                IsReady = true;
+            }
+            catch
+            {
+            }
+        }
+
         public DbSet<AgentModel> Agents { get; set; }
         public DbSet<AgentGrantModel> AgentGrants { get; set; }
         public DbSet<AgentPermissionModel> AgentPermissions { get; set; }
@@ -21,24 +33,13 @@ namespace SecOpsSteward.Data
         public DbSet<WorkflowTemplateModel> WorkflowTemplates { get; set; }
         public DbSet<WorkflowTemplateParticipantModel> WorkflowTemplateParticipants { get; set; }
 
-        public bool IsReady { get; private set; }
-
-        public SecOpsStewardDbContext(DbContextOptions<SecOpsStewardDbContext> options) : base(options)
-        {
-            try
-            {
-                // TODO: Migrations
-                Database.EnsureCreated();
-                IsReady = true;
-            }
-            catch { }
-        }
+        public bool IsReady { get; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             // add complex keys here
             modelBuilder.Entity<AgentPermissionModel>()
-                .HasKey(apm => new { apm.AgentId, apm.UserId, apm.PackageId });
+                .HasKey(apm => new {apm.AgentId, apm.UserId, apm.PackageId});
 
             // ---
 
@@ -55,19 +56,19 @@ namespace SecOpsSteward.Data
                 .HasOne(agm => agm.UserPerformingGrant)
                 .WithMany(um => um.AgentPackageGrants)
                 .HasForeignKey(agm => agm.UserPerformingGrantId)
-                .IsRequired(true);
+                .IsRequired();
 
             modelBuilder.Entity<AgentGrantModel>()
                 .HasOne(agm => agm.Plugin)
                 .WithMany(pm => pm.AgentPackageGrants)
                 .HasForeignKey(agm => agm.PluginId)
-                .IsRequired(true);
+                .IsRequired();
 
             modelBuilder.Entity<AgentGrantModel>()
                 .HasOne(agm => agm.Agent)
                 .WithMany(am => am.AgentPackageGrants)
                 .HasForeignKey(agm => agm.AgentId)
-                .IsRequired(true);
+                .IsRequired();
 
             // ---
 

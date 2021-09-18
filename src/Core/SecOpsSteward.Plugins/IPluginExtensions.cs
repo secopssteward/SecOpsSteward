@@ -1,7 +1,7 @@
-﻿using SecOpsSteward.Plugins.Configurable;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using SecOpsSteward.Plugins.Configurable;
 using static SecOpsSteward.Plugins.PluginOutputStructure;
 
 namespace SecOpsSteward.Plugins
@@ -9,7 +9,7 @@ namespace SecOpsSteward.Plugins
     public static class IPluginExtensions
     {
         /// <summary>
-        /// Verify if the input options of a Plugin match a given set of output options
+        ///     Verify if the input options of a Plugin match a given set of output options
         /// </summary>
         /// <param name="plugin">Plugin to verify</param>
         /// <param name="outputs">Output options to compare</param>
@@ -27,7 +27,7 @@ namespace SecOpsSteward.Plugins
         }
 
         /// <summary>
-        /// Get a collection of possible result codes from a Plugin
+        ///     Get a collection of possible result codes from a Plugin
         /// </summary>
         /// <param name="plugin">Plugin to inspect</param>
         /// <returns>Possible result codes</returns>
@@ -39,7 +39,7 @@ namespace SecOpsSteward.Plugins
         }
 
         /// <summary>
-        /// Get a collection of required input keys for a Plugin
+        ///     Get a collection of required input keys for a Plugin
         /// </summary>
         /// <param name="plugin">Plugin to inspect</param>
         /// <returns>Required input keys</returns>
@@ -51,7 +51,7 @@ namespace SecOpsSteward.Plugins
         }
 
         /// <summary>
-        /// Get a collection of generated output keys for a Plugin
+        ///     Get a collection of generated output keys for a Plugin
         /// </summary>
         /// <param name="plugin">Plugin to inspect</param>
         /// <returns>Generated output keys</returns>

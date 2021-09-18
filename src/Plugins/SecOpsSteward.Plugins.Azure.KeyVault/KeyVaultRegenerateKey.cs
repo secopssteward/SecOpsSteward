@@ -1,18 +1,16 @@
-﻿using Microsoft.Azure.Management.KeyVault.Fluent.Models;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Azure.Management.KeyVault.Fluent.Models;
 
 namespace SecOpsSteward.Plugins.Azure.KeyVault
 {
     public class KeyVaultRegenerateKeyConfiguration : AzureKeyVaultServiceConfiguration
     {
-        [Required]
-        [DisplayName("Key Name")]
-        public string KeyName { get; set; }
+        [Required] [DisplayName("Key Name")] public string KeyName { get; set; }
     }
 
     [ElementDescription(
@@ -24,13 +22,26 @@ namespace SecOpsSteward.Plugins.Azure.KeyVault
     [PossibleResultCodes(CommonResultCodes.Success, CommonResultCodes.Failure)]
     public class KeyVaultRegenerateKey : SOSPlugin<KeyVaultRegenerateKeyConfiguration>
     {
-        protected AzureCurrentCredentialFactory PlatformFactory { get; set; }
         public KeyVaultRegenerateKey(AzureCurrentCredentialFactory platformFactory)
         {
             PlatformFactory = platformFactory;
             if (platformFactory == null) throw new Exception("Platform handle not found");
         }
-        public KeyVaultRegenerateKey() { }
+
+        public KeyVaultRegenerateKey()
+        {
+        }
+
+        protected AzureCurrentCredentialFactory PlatformFactory { get; set; }
+
+        public override IEnumerable<PluginRbacRequirements> RbacRequirements => new[]
+        {
+            AzurePluginRbacRequirements.WithActions(
+                "Read & Write Key Vault Keys",
+                Configuration.GetScope(),
+                "Microsoft.KeyVault/vaults/keys/read",
+                "Microsoft.KeyVault/vaults/keys/write")
+        };
 
         public override async Task<PluginOutputStructure> Execute(PluginOutputStructure previousOutput)
         {
@@ -48,14 +59,5 @@ namespace SecOpsSteward.Plugins.Azure.KeyVault
 
             return new PluginOutputStructure(CommonResultCodes.Success);
         }
-
-        public override IEnumerable<PluginRbacRequirements> RbacRequirements => new[]
-        {
-            AzurePluginRbacRequirements.WithActions(
-                "Read & Write Key Vault Keys",
-                Configuration.GetScope(),
-                "Microsoft.KeyVault/vaults/keys/read",
-                "Microsoft.KeyVault/vaults/keys/write")
-        };
     }
 }

@@ -1,27 +1,17 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using SecOpsSteward.Plugins;
-using SecOpsSteward.Plugins.Configurable;
-using System;
+﻿using System;
 using System.Linq;
 using System.Reflection;
+using Microsoft.Extensions.DependencyInjection;
+using SecOpsSteward.Plugins;
+using SecOpsSteward.Plugins.Configurable;
 
 namespace SecOpsSteward.Shared.Packaging.Wrappers
 {
     /// <summary>
-    /// Wraps Plugin interfaces to handle constructing pointers to methods in the Plugin
+    ///     Wraps Plugin interfaces to handle constructing pointers to methods in the Plugin
     /// </summary>
     public class ContainerPluginWrapper
     {
-        /// <summary>
-        /// CLR Type which represents the Plugin itself
-        /// </summary>
-        public Type PluginType { get; private set; }
-
-        /// <summary>
-        /// CLR Type which represents the configuration required for the Plugin
-        /// </summary>
-        public Type ConfigurationType { get; private set; }
-
         public ContainerPluginWrapper(Type pluginType)
         {
             Type genericPluginType;
@@ -35,7 +25,17 @@ namespace SecOpsSteward.Shared.Packaging.Wrappers
         }
 
         /// <summary>
-        /// Emit an empty configuration based on the Plugin's ConfigurationType
+        ///     CLR Type which represents the Plugin itself
+        /// </summary>
+        public Type PluginType { get; }
+
+        /// <summary>
+        ///     CLR Type which represents the configuration required for the Plugin
+        /// </summary>
+        public Type ConfigurationType { get; }
+
+        /// <summary>
+        ///     Emit an empty configuration based on the Plugin's ConfigurationType
         /// </summary>
         /// <returns>Blank configuration</returns>
         public IConfigurableObjectConfiguration EmitConfiguration()
@@ -44,15 +44,18 @@ namespace SecOpsSteward.Shared.Packaging.Wrappers
         }
 
         /// <summary>
-        /// Emit a populated configuration for a given Plugin based on its serialized JSON
+        ///     Emit a populated configuration for a given Plugin based on its serialized JSON
         /// </summary>
         /// <param name="serializedConfiguration">Serialized JSON configuration</param>
         /// <returns>Populated configuration</returns>
-        public IConfigurableObjectConfiguration EmitConfiguration(string serializedConfiguration) =>
-            ChimeraSharedHelpers.GetFromSerializedString(serializedConfiguration, ConfigurationType) as IConfigurableObjectConfiguration;
+        public IConfigurableObjectConfiguration EmitConfiguration(string serializedConfiguration)
+        {
+            return ChimeraSharedHelpers.GetFromSerializedString(serializedConfiguration, ConfigurationType) as
+                IConfigurableObjectConfiguration;
+        }
 
         /// <summary>
-        /// Emits an instance of the Plugin type
+        ///     Emits an instance of the Plugin type
         /// </summary>
         /// <returns>Plugin instance</returns>
         public IPlugin Emit(IServiceProvider services)
@@ -61,7 +64,7 @@ namespace SecOpsSteward.Shared.Packaging.Wrappers
         }
 
         /// <summary>
-        /// Emits an instance of the Plugin type without the service provider (cannot execute)
+        ///     Emits an instance of the Plugin type without the service provider (cannot execute)
         /// </summary>
         /// <returns>Plugin instance</returns>
         public IPlugin Emit()
@@ -70,7 +73,7 @@ namespace SecOpsSteward.Shared.Packaging.Wrappers
         }
 
         /// <summary>
-        /// Emits an instance of the Plugin type, with its configuration applied
+        ///     Emits an instance of the Plugin type, with its configuration applied
         /// </summary>
         /// <param name="serializedConfiguration">Serialized JSON configuration for Plugin</param>
         /// <returns>Configured Plugin instance</returns>
@@ -80,7 +83,8 @@ namespace SecOpsSteward.Shared.Packaging.Wrappers
             var configProp = PluginType.GetProperty("Configuration");
             if (!string.IsNullOrEmpty(serializedConfiguration))
             {
-                var configDeserialized = ChimeraSharedHelpers.GetFromSerializedString(serializedConfiguration, ConfigurationType);
+                var configDeserialized =
+                    ChimeraSharedHelpers.GetFromSerializedString(serializedConfiguration, ConfigurationType);
                 configProp.SetValue(instance, configDeserialized);
             }
             else
@@ -92,7 +96,7 @@ namespace SecOpsSteward.Shared.Packaging.Wrappers
         }
 
         /// <summary>
-        /// Get the contract associated with configuring a Plugin
+        ///     Get the contract associated with configuring a Plugin
         /// </summary>
         /// <returns>List of parameters which can serve as inputs to a Plugin</returns>
         public ConfigurableObjectParameterCollection GetContract()
@@ -102,7 +106,7 @@ namespace SecOpsSteward.Shared.Packaging.Wrappers
         }
 
         /// <summary>
-        /// Get the possible outputs which can happen from running a Plugin
+        ///     Get the possible outputs which can happen from running a Plugin
         /// </summary>
         /// <returns>Possible outputs</returns>
         public string[] GetOutputs()

@@ -1,31 +1,31 @@
-﻿using Microsoft.EntityFrameworkCore;
-using SecOpsSteward.Shared.Cryptography;
-using SecOpsSteward.Shared.DiscoveryWorkflow;
-using SecOpsSteward.Shared.Messages;
-using SecOpsSteward.Shared.Roles;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Timers;
+using Microsoft.EntityFrameworkCore;
+using SecOpsSteward.Shared.Cryptography.Extensions;
+using SecOpsSteward.Shared.DiscoveryWorkflow;
+using SecOpsSteward.Shared.Messages;
+using SecOpsSteward.Shared.Roles;
 
 namespace SecOpsSteward.Data
 {
     public class WorkflowMessageProcessorService : IDisposable
     {
-        private readonly IDbContextFactory<SecOpsStewardDbContext> _dbContextFactory;
         private readonly ICryptographicService _cryptoService;
-        private readonly IMessageTransitService _messageTransit;
         private readonly TokenOwner _currentUser;
+        private readonly IDbContextFactory<SecOpsStewardDbContext> _dbContextFactory;
+        private readonly IMessageTransitService _messageTransit;
         private readonly WorkflowProcessorFactory _wfFactory;
 
         private bool _started;
-        private Timer _timer = new Timer();
-
-        private Dictionary<Guid, Func<WorkflowReceipt, Task>> WorkflowReceiptCallbacks = new Dictionary<Guid, Func<WorkflowReceipt, Task>>();
-        private Dictionary<Guid, Func<ExecutionStepReceipt, Task>> StepReceiptCallbacks = new Dictionary<Guid, Func<ExecutionStepReceipt, Task>>();
-        private Func<EncryptedMessageEnvelope, Task<bool>> ExecutionApproval;
+        private Timer _timer = new();
         private bool disposedValue;
+        private Func<EncryptedMessageEnvelope, Task<bool>> ExecutionApproval;
+        private readonly Dictionary<Guid, Func<ExecutionStepReceipt, Task>> StepReceiptCallbacks = new();
+
+        private readonly Dictionary<Guid, Func<WorkflowReceipt, Task>> WorkflowReceiptCallbacks = new();
 
         public WorkflowMessageProcessorService(
             IDbContextFactory<SecOpsStewardDbContext> dbContextFactory,
@@ -41,6 +41,13 @@ namespace SecOpsSteward.Data
             _currentUser = currentUser;
         }
 
+        public void Dispose()
+        {
+            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
         public void SetExecutionApproval(Func<EncryptedMessageEnvelope, Task<bool>> cb)
         {
             ExecutionApproval = cb;
@@ -52,12 +59,14 @@ namespace SecOpsSteward.Data
             StepReceiptCallbacks.Add(newGuid, cb);
             return newGuid;
         }
+
         public Guid SubscribeWorkflowReceipt(Func<WorkflowReceipt, Task> cb)
         {
             var newGuid = Guid.NewGuid();
             WorkflowReceiptCallbacks.Add(newGuid, cb);
             return newGuid;
         }
+
         public void Unsubscribe(Guid id)
         {
             if (WorkflowReceiptCallbacks.ContainsKey(id))
@@ -74,14 +83,12 @@ namespace SecOpsSteward.Data
             _timer = new Timer();
             _timer.Interval = milliseconds;
             _timer.AutoReset = true;
-            _timer.Elapsed += async (o, t) =>
-            {
-                await ProcessUserQueue();
-            };
+            _timer.Elapsed += async (o, t) => { await ProcessUserQueue(); };
             _timer.Start();
 
             Task.Run(() => ProcessUserQueue());
         }
+
         public void StopBackgroundTask()
         {
             _timer.Stop();
@@ -104,7 +111,8 @@ namespace SecOpsSteward.Data
                             if (cxt.WorkflowExecutions.Any(e => e.WorkflowId == workflowReceipt.WorkflowId))
                             {
                                 // TODO: with SQLite, we can't directly order by time -- remove ToList later
-                                var execution = cxt.WorkflowExecutions.ToList().OrderByDescending(e => e.RunStarted).First();
+                                var execution = cxt.WorkflowExecutions.ToList().OrderByDescending(e => e.RunStarted)
+                                    .First();
                                 execution.WorkflowReceipt = workflowReceipt;
                                 await cxt.SaveChangesAsync();
                             }
@@ -124,10 +132,13 @@ namespace SecOpsSteward.Data
                         var processor = _wfFactory.GetWorkflowProcessor(_currentUser.UserId, _currentUser.Name, m);
                         _ = Task.Run(() => processor.Run());
                     }
+
                     return MessageActions.Complete;
                 }, TimeSpan.FromSeconds(10));
             }
-            catch { }
+            catch
+            {
+            }
         }
 
         public async Task<Guid> EnqueueImmediateRun(ExecutionStepCollection steps)
@@ -137,7 +148,8 @@ namespace SecOpsSteward.Data
             msg.Conditions.ValidTo = DateTimeOffset.UtcNow.AddMinutes(15);
             msg.Conditions.MaximumNumberOfRuns = 1;
 
-            await Task.WhenAll(msg.Steps.Select(s => s.Sign(_cryptoService, _currentUser.UserId, $"{_currentUser.UserId.ShortId}")));
+            await Task.WhenAll(msg.Steps.Select(s =>
+                s.Sign(_cryptoService, _currentUser.UserId, $"{_currentUser.UserId.ShortId}")));
             await msg.Sign(_cryptoService, _currentUser.UserId, $"{_currentUser.UserId.ShortId}");
 
             await Enqueue(msg);
@@ -154,18 +166,39 @@ namespace SecOpsSteward.Data
             }));
         }
 
-        private Task Fire(WorkflowReceipt receipt) => Task.WhenAll(WorkflowReceiptCallbacks.Select(cb =>
+        private Task Fire(WorkflowReceipt receipt)
         {
-            try { return WorkflowReceiptCallbacks[cb.Key](receipt); }
-            catch { Unsubscribe(cb.Key); }
-            return Task.CompletedTask;
-        }));
-        private Task Fire(ExecutionStepReceipt receipt) => Task.WhenAll(WorkflowReceiptCallbacks.Select(cb =>
+            return Task.WhenAll(WorkflowReceiptCallbacks.Select(cb =>
+            {
+                try
+                {
+                    return WorkflowReceiptCallbacks[cb.Key](receipt);
+                }
+                catch
+                {
+                    Unsubscribe(cb.Key);
+                }
+
+                return Task.CompletedTask;
+            }));
+        }
+
+        private Task Fire(ExecutionStepReceipt receipt)
         {
-            try { return StepReceiptCallbacks[cb.Key](receipt); }
-            catch { Unsubscribe(cb.Key); }
-            return Task.CompletedTask;
-        }));
+            return Task.WhenAll(WorkflowReceiptCallbacks.Select(cb =>
+            {
+                try
+                {
+                    return StepReceiptCallbacks[cb.Key](receipt);
+                }
+                catch
+                {
+                    Unsubscribe(cb.Key);
+                }
+
+                return Task.CompletedTask;
+            }));
+        }
 
         protected virtual void Dispose(bool disposing)
         {
@@ -178,15 +211,9 @@ namespace SecOpsSteward.Data
                     _timer.Stop();
                     _timer = null;
                 }
+
                 disposedValue = true;
             }
-        }
-
-        public void Dispose()
-        {
-            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-            Dispose(disposing: true);
-            GC.SuppressFinalize(this);
         }
     }
 }

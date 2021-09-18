@@ -4,7 +4,7 @@ namespace SecOpsSteward.UI.Pages.Workflows.Composer.Links
 {
     public class OutputPort : CommonPortModel
     {
-        public OutputPort(NodeModel parent, string outputCode, PortAlignment alignment) : base(parent, alignment, null, null)
+        public OutputPort(NodeModel parent, string outputCode, PortAlignment alignment) : base(parent, alignment)
         {
             OutputCode = outputCode;
         }

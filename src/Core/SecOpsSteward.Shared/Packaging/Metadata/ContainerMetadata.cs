@@ -1,49 +1,15 @@
-﻿using SecOpsSteward.Shared.Cryptography;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using SecOpsSteward.Shared.Cryptography;
+using SecOpsSteward.Shared.Cryptography.Extensions;
 
 namespace SecOpsSteward.Shared.Packaging.Metadata
 {
     public class ContainerMetadata : ISignable, ISignableByMany, IPubliclySignable
     {
         /// <summary>
-        /// Container ID (first 8 of guid)
-        /// </summary>
-        public ChimeraPackageIdentifier ContainerId { get; set; }
-
-        /// <summary>
-        /// Container version
-        /// </summary>
-        public string Version { get; set; }
-
-        /// <summary>
-        /// Data hash of the package content this metadata represents
-        /// </summary>
-        public byte[] PackageContentHash { get; set; }
-
-        /// <summary>
-        /// Signatures of Users who have attested to the intent, scope, and integrity of the Package
-        /// </summary>
-        public List<ChimeraEntitySignature> Signatures { get; set; } = new List<ChimeraEntitySignature>();
-
-        /// <summary>
-        /// A signature from a public entity outside the scope of the tenant
-        /// </summary>
-        public PublicSignature PublicSignature { get; set; }
-
-        /// <summary>
-        /// Plugins in the container
-        /// </summary>
-        public List<PluginMetadata> PluginsMetadata { get; set; } = new List<PluginMetadata>();
-
-        /// <summary>
-        /// Services in the container
-        /// </summary>
-        public List<ServiceMetadata> ServicesMetadata { get; set; } = new List<ServiceMetadata>();
-
-        /// <summary>
-        /// Information stored to describe a Container
+        ///     Information stored to describe a Container
         /// </summary>
         /// <param name="container">ChimeraContainer to extract information from</param>
         public ContainerMetadata(ChimeraContainer container)
@@ -51,9 +17,47 @@ namespace SecOpsSteward.Shared.Packaging.Metadata
             // get the version from the assembly
             container.Wrapper.Load();
             Version = container.Wrapper.Assembly.GetName().Version.ToString();
-            Signatures = new List<ChimeraEntitySignature>() { };
+            Signatures = new List<ChimeraEntitySignature>();
         }
-        public ContainerMetadata() { }
+
+        public ContainerMetadata()
+        {
+        }
+
+        /// <summary>
+        ///     Container ID (first 8 of guid)
+        /// </summary>
+        public ChimeraPackageIdentifier ContainerId { get; set; }
+
+        /// <summary>
+        ///     Container version
+        /// </summary>
+        public string Version { get; set; }
+
+        /// <summary>
+        ///     Data hash of the package content this metadata represents
+        /// </summary>
+        public byte[] PackageContentHash { get; set; }
+
+        /// <summary>
+        ///     Plugins in the container
+        /// </summary>
+        public List<PluginMetadata> PluginsMetadata { get; set; } = new();
+
+        /// <summary>
+        ///     Services in the container
+        /// </summary>
+        public List<ServiceMetadata> ServicesMetadata { get; set; } = new();
+
+        /// <summary>
+        ///     A signature from a public entity outside the scope of the tenant
+        /// </summary>
+        public PublicSignature PublicSignature { get; set; }
+
+        /// <summary>
+        ///     Signatures of Users who have attested to the intent, scope, and integrity of the Package
+        /// </summary>
+        public List<ChimeraEntitySignature> Signatures { get; set; } = new();
 
         public void CheckIntegrity()
         {

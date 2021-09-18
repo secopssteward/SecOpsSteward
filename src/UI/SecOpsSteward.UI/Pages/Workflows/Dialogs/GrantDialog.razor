@@ -1,9 +1,6 @@
-﻿@using Microsoft.Azure.Management.AppService.Fluent
-@using System.Text.Json
-@using SecOpsSteward.Plugins
-@using SecOpsSteward.Plugins.Configurable
+﻿@using SecOpsSteward.Plugins.Configurable
 @using SecOpsSteward.Shared.Packaging
-@using SecOpsSteward.UI.Widgets
+@using SecOpsSteward.Plugins
 <MudDialog>
     <DialogContent>
         <MudText Typo="Typo.subtitle1" Align="Align.Center">
@@ -12,17 +9,17 @@
         @if (_initialized)
         {
             <MudExpansionPanels MultiExpansion="true">
-            @foreach (var req in RbacRequirements)
-            {
-                <MudExpansionPanel Text="@req.Description" Style="text-align:left">
-                    <pre style="line-break: anywhere;white-space: pre-wrap;">@req.TechnicalDescription</pre>
-                </MudExpansionPanel>
-            }
-        </MudExpansionPanels>
+                @foreach (var req in RbacRequirements)
+                {
+                    <MudExpansionPanel Text="@req.Description" Style="text-align: left">
+                        <pre style="line-break: anywhere; white-space: pre-wrap;">@req.TechnicalDescription</pre>
+                    </MudExpansionPanel>
+                }
+            </MudExpansionPanels>
         }
         else
         {
-            <MudSkeleton SkeletonType="SkeletonType.Rectangle" />
+            <MudSkeleton SkeletonType="SkeletonType.Rectangle"/>
         }
         <MudText Typo="Typo.subtitle1" Align="Align.Center">
             Do you want to continue?
@@ -33,18 +30,26 @@
         <MudButton Color="Color.Success" OnClick="@Process">Yes</MudButton>
     </DialogActions>
 </MudDialog>
+
 @code {
-    [Parameter] public ChimeraPackageIdentifier PluginId { get; set; }
-    [Parameter] public ConfigurableObjectParameterCollection Configuration { get; set; }
 
-    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+    [Parameter]
+    public ChimeraPackageIdentifier PluginId { get; set; }
 
-    [Inject] public PackageActionsService PackageActions { get; set; }
+    [Parameter]
+    public ConfigurableObjectParameterCollection Configuration { get; set; }
+
+    [CascadingParameter]
+    MudDialogInstance MudDialog { get; set; }
+
+    [Inject]
+    public PackageActionsService PackageActions { get; set; }
 
     private IEnumerable<PluginRbacRequirements> RbacRequirements { get; set; } = new List<PluginRbacRequirements>();
-    private Dictionary<PluginRbacRequirements, bool> _visibilities = new Dictionary<PluginRbacRequirements, bool>();
+    private Dictionary<PluginRbacRequirements, bool> _visibilities = new();
 
-    private bool _initialized = false;
+    private bool _initialized;
+
     protected override async Task OnInitializedAsync()
     {
         RbacRequirements = await PackageActions.GetRbacRequirements(PluginId, Configuration);
@@ -59,6 +64,7 @@
 
     private void Process()
     {
-        MudDialog.Close(DialogResult.Ok<bool>(true));
+        MudDialog.Close(DialogResult.Ok(true));
     }
+
 }

@@ -1,19 +1,16 @@
 ﻿@using Microsoft.Azure.Management.AppService.Fluent
-@using System.Text.Json
-@using Microsoft.Azure.Management.AppService.Fluent.Models
-@using SecOpsSteward.UI.Widgets
 <MudDialog>
     <DialogContent>
         <MudText Typo="Typo.subtitle1" Align="Align.Center">
-            If you don't already have a Functions App deployed, click here to deploy a new app with the Agent template to Azure:<br />
+            If you don't already have a Functions App deployed, click here to deploy a new app with the Agent template to Azure:<br/>
             <a class="mx-auto my-1" href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fanthturner%2FSecOpsSteward%2Fmaster%2Fdeploy%2FSecOpsSteward.json">
-                <img src="https://aka.ms/deploytoazurebutton" alt="Deploy to Azure Button" />
+                <img src="https://aka.ms/deploytoazurebutton" alt="Deploy to Azure Button"/>
             </a>
         </MudText>
 
-        <AzureFunctionSelectorWidget @bind-SelectedFunction="@SelectedFunction" />
-        <MudTextField @bind-Value="@AgentTag" Placeholder="Display Name for Agent" Label="Agent Tag" />
-        
+        <AzureFunctionSelectorWidget @bind-SelectedFunction="@SelectedFunction"/>
+        <MudTextField @bind-Value="@AgentTag" Placeholder="Display Name for Agent" Label="Agent Tag"/>
+
         @if (SelectedFunction != null)
         {
             <MudGrid>
@@ -24,18 +21,24 @@
         <MudText Typo="Typo.subtitle2" Align="Align.Center" Class="mt-3 mb-2">
             When this Agent is created, the selected Azure Functions application will receive several App Settings, including the current system configuration and its new Agent Identity.
             The Function App must already either be running the SOS Agent or pointed to the SOS Agent's repository.
-		</MudText>
+        </MudText>
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="Cancel">Cancel</MudButton>
         <MudButton Color="Color.Success" OnClick="@AddAgent">Add Agent</MudButton>
     </DialogActions>
 </MudDialog>
+
 @code {
 
-    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
-    [Inject] ChimeraServiceConfigurator Configurator { get; set; }
-    [Inject] AzureCurrentCredentialFactory PlatformFactory {get;set;}
+    [CascadingParameter]
+    MudDialogInstance MudDialog { get; set; }
+
+    [Inject]
+    ChimeraServiceConfigurator Configurator { get; set; }
+
+    [Inject]
+    AzureCurrentCredentialFactory PlatformFactory { get; set; }
 
     protected IFunctionApp SelectedFunction { get; set; }
     protected string AgentTag { get; set; }
@@ -56,16 +59,16 @@
             var serviceBusConnectionString = "Endpoint=sb://" + Configurator["ServiceBusNamespace"] + ".servicebus.windows.net;Authentication=Managed Identity";
 
             await SelectedFunction.Update()
-                                  .WithAppSetting("AgentId", newAgentId.ToString())
-                                  .WithAppSetting("AgentName", AgentTag)
-                                  .WithAppSetting("TenantId", PlatformFactory.GetCredential().TenantId)
-                                  .WithAppSetting("Chimera__SubscriptionId", Configurator["SubscriptionId"])
-                                  .WithAppSetting("Chimera__VaultName", Configurator["VaultName"])
-                                  .WithAppSetting("Chimera__ServiceBusNamespace", Configurator["ServiceBusNamespace"])
-                                  .WithAppSetting("Chimera__PackageRepoAccount", Configurator["PackageRepoAccount"])
-                                  .WithAppSetting("Chimera__PackageRepoContainer", Configurator["PackageRepoContainer"])
-                                  .WithAppSetting("SOSBus", serviceBusConnectionString)
-                                  .ApplyAsync();
+                .WithAppSetting("AgentId", newAgentId)
+                .WithAppSetting("AgentName", AgentTag)
+                .WithAppSetting("TenantId", PlatformFactory.GetCredential().TenantId)
+                .WithAppSetting("Chimera__SubscriptionId", Configurator["SubscriptionId"])
+                .WithAppSetting("Chimera__VaultName", Configurator["VaultName"])
+                .WithAppSetting("Chimera__ServiceBusNamespace", Configurator["ServiceBusNamespace"])
+                .WithAppSetting("Chimera__PackageRepoAccount", Configurator["PackageRepoAccount"])
+                .WithAppSetting("Chimera__PackageRepoContainer", Configurator["PackageRepoContainer"])
+                .WithAppSetting("SOSBus", serviceBusConnectionString)
+                .ApplyAsync();
 
             var agentModel = await DataBoundApi.AddAgent(AgentTag, Guid.Parse(newAgentId));
 
@@ -79,4 +82,5 @@
         }
         MudDialog.Close(DialogResult.Ok(Guid.Parse(newAgentId)));
     }
+
 }

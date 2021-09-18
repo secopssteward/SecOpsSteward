@@ -1,9 +1,8 @@
-﻿@using SecOpsSteward.Plugins
+﻿@using Microsoft.Azure.Management.ResourceManager.Fluent
 @using SecOpsSteward.Plugins.Discovery
-@using Microsoft.Azure.Management.Fluent
-@using Microsoft.Azure.Management.ResourceManager.Fluent
 @using SecOpsSteward.Shared.DiscoveryWorkflow
 @using SecOpsSteward.Shared.Packaging
+@using Microsoft.Azure.Management.Fluent
 <MudContainer Class="p-3">
     <MudItem xs="12">
         <MudSelect T="ISubscription" Label="Subscription" Strict="true" Variant="Variant.Outlined" Class="py-2"
@@ -17,7 +16,7 @@
 
     <MudItem xs="12">
         <MudSelect T="IResourceGroup" Label="Resource Group" Strict="true" Variant="Variant.Outlined" Class="py-2"
-                    Value="@SelectedResourceGroup" ValueChanged="@SetResourceGroup">
+                   Value="@SelectedResourceGroup" ValueChanged="@SetResourceGroup">
             @foreach (var resourceGroup in ResourceGroups)
             {
                 <MudSelectItem T="IResourceGroup" Value="@resourceGroup">@resourceGroup.Name</MudSelectItem>
@@ -27,7 +26,7 @@
 
     <MudItem xs="12">
         <MudSelect T="DiscoveredServiceConfiguration" Label="Resource" Strict="true" Variant="Variant.Outlined" Class="py-2"
-                    Value="@SelectedResource" ValueChanged="@SetResource">
+                   Value="@SelectedResource" ValueChanged="@SetResource">
             @foreach (var resource in Resources.OrderBy(r => r.DescriptiveName))
             {
                 <MudSelectItem T="DiscoveredServiceConfiguration" Value="@resource">@resource.DescriptiveName</MudSelectItem>
@@ -43,7 +42,7 @@
     protected IEnumerable<ISubscription> Subscriptions { get; set; } = new List<ISubscription>();
     protected IEnumerable<IResourceGroup> ResourceGroups { get; set; } = new List<IResourceGroup>();
     protected IEnumerable<DiscoveredServiceConfiguration> Resources { get; set; } = new List<DiscoveredServiceConfiguration>();
-    
+
     [Inject]
     public AzureCurrentCredentialFactory InjectedAzure { get; set; }
 
@@ -67,7 +66,7 @@
 
     [Parameter]
     public EventCallback<IResourceGroup> SelectedResourceGroupChanged { get; set; }
-    
+
     [Parameter]
     public DiscoveredServiceConfiguration SelectedResource { get; set; }
 
@@ -75,6 +74,7 @@
     public EventCallback<DiscoveredServiceConfiguration> SelectedResourceChanged { get; set; }
 
     private IAzure _azure;
+
     protected override void OnInitialized()
     {
         Subscriptions = InjectedAzure.GetCredential().GetAzure().Subscriptions.List();
@@ -94,7 +94,7 @@
         SelectedResourceGroup = resourceGroup;
         await SelectedResourceGroupChanged.InvokeAsync(SelectedResourceGroup);
 
-        var thisCfg = new AzureSharedConfiguration()
+        var thisCfg = new AzureSharedConfiguration
         {
             TenantId = InjectedAzure.GetCredential().TenantId,
             SubscriptionId = SelectedSubscription.SubscriptionId,
@@ -104,7 +104,9 @@
         {
             Resources = await PackageActions.Discover(Service.ManagedServiceId, ChimeraSharedHelpers.SerializeToString(thisCfg));
         }
-        catch { } 
+        catch
+        {
+        }
     }
 
     protected async Task SetResource(DiscoveredServiceConfiguration resource)

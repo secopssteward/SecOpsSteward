@@ -6,8 +6,7 @@ namespace SecOpsSteward.Data.Models
 {
     public class UserModel
     {
-        [Key]
-        public Guid UserId { get; set; } = Guid.NewGuid();
+        [Key] public Guid UserId { get; set; } = Guid.NewGuid();
 
         public string Username { get; set; }
 

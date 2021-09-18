@@ -1,5 +1,5 @@
 ﻿<MudAutocomplete @ref="autocomplete" T="PluginMetadataModel" Placeholder="Search Packages" Value="@PackageModel" SearchFunc="Search" Variant="Variant.Outlined" ValueChanged="OnSearchResult" AdornmentIcon="@Icons.Material.Outlined.Backpack"
-                 ToStringFunc="@(e=> e==null?null : $"{e.Name}")">
+                 ToStringFunc="@(e => e == null ? null : $"{e.Name}")">
     <ItemSelectedTemplate Context="result">
         <MudText>@result.Name</MudText>
     </ItemSelectedTemplate>

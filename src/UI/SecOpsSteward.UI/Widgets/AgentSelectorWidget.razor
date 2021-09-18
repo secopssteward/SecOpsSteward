@@ -1,5 +1,5 @@
 ﻿<MudAutocomplete @ref="autocomplete" T="AgentModel" Placeholder="Search Agent" Value="@AgentModel" SearchFunc="Search" Variant="Variant.Outlined" ValueChanged="OnSearchResult" AdornmentIcon="@Icons.Material.Outlined.DirectionsRun"
-                 ToStringFunc="@(e=> e==null?null : $"{e.AgentId.ShortId()} ({e.Tag})")">
+                 ToStringFunc="@(e => e == null ? null : $"{e.AgentId.ShortId()} ({e.Tag})")">
     <ItemTemplate Context="result">
         <MudText>@result.AgentId.ShortId()</MudText>
         <MudText Typo="Typo.body2">@result.Tag</MudText>

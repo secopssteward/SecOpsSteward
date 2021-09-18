@@ -5,8 +5,7 @@ namespace SecOpsSteward.Data.Models
 {
     public class AgentGrantModel
     {
-        [Key]
-        public Guid GrantId { get; set; } = Guid.NewGuid();
+        [Key] public Guid GrantId { get; set; } = Guid.NewGuid();
 
         public Guid AgentId { get; set; }
         public AgentModel Agent { get; set; }

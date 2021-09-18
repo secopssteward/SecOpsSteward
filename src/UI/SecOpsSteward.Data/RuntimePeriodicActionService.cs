@@ -1,17 +1,19 @@
-﻿using SecOpsSteward.Data.Models;
-using SecOpsSteward.Shared.Cryptography;
-using SecOpsSteward.Shared.Messages;
-using System;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using SecOpsSteward.Data.Models;
+using SecOpsSteward.Shared.Cryptography.Extensions;
+using SecOpsSteward.Shared.Messages;
 
 namespace SecOpsSteward.Data
 {
     public class RuntimePeriodicActionService
     {
+        private readonly ICryptographicService _cryptoService;
         private readonly SecOpsStewardDbContext _dbContext;
         private readonly IMessageTransitService _messageTransit;
-        private readonly ICryptographicService _cryptoService;
+
         public RuntimePeriodicActionService(
             SecOpsStewardDbContext dbContext,
             IMessageTransitService messageTransit,
@@ -25,15 +27,15 @@ namespace SecOpsSteward.Data
         public async Task PerformPeriodicActions()
         {
             await Task.WhenAll(_dbContext.WorkflowRecurrences
-                      .ToList()
-                      .Where(wfr => wfr.Approvers.Count >= wfr.NumberOfApproversRequired)
-                      .Where(wfr => wfr.ShouldBeRun)
-                      .Select(wfr => ProcessRecurrence(wfr)));
+                .ToList()
+                .Where(wfr => wfr.Approvers.Count >= wfr.NumberOfApproversRequired)
+                .Where(wfr => wfr.ShouldBeRun)
+                .Select(wfr => ProcessRecurrence(wfr)));
         }
 
         public async Task ProcessRecurrence(WorkflowRecurrenceModel recurrence)
         {
-            _dbContext.WorkflowExecutions.Add(new WorkflowExecutionModel()
+            _dbContext.WorkflowExecutions.Add(new WorkflowExecutionModel
             {
                 Approvers = recurrence.Approvers,
                 Recurrence = recurrence,
@@ -41,7 +43,7 @@ namespace SecOpsSteward.Data
                 Workflow = recurrence.Workflow
             });
             recurrence.MostRecentRun = DateTimeOffset.UtcNow;
-            recurrence.Approvers = new System.Collections.Generic.List<Guid>();
+            recurrence.Approvers = new List<Guid>();
             await _dbContext.SaveChangesAsync();
 
             var msg = recurrence.Workflow.WorkflowAuthorization;

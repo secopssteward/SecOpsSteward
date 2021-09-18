@@ -1,18 +1,21 @@
-﻿using SecOpsSteward.Plugins;
-using SecOpsSteward.Shared.Cryptography;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using SecOpsSteward.Plugins;
+using SecOpsSteward.Shared.Cryptography.Extensions;
 
 namespace SecOpsSteward.Shared.Messages
 {
     /// <summary>
-    /// A collection of ExecutionSteps in order
+    ///     A collection of ExecutionSteps in order
     /// </summary>
     public class ExecutionStepCollection : List<ExecutionStep>
     {
-        public ExecutionStepCollection() { }
+        public ExecutionStepCollection()
+        {
+        }
+
         public ExecutionStepCollection(IEnumerable<ExecutionStep> steps)
         {
             AddRange(steps);
@@ -27,12 +30,16 @@ namespace SecOpsSteward.Shared.Messages
                 items.Add(current);
                 current = this.FirstOrDefault(i => i.StepId == current.ParentStepId);
             }
+
             return items;
         }
 
-        public IEnumerable<ExecutionStep> GetNextSteps(Guid parentStepId, string resultCode = null) =>
-            this.Where(s => s.ParentStepId == parentStepId &&
-                           (s.ParentStepResultCode == resultCode || string.IsNullOrEmpty(s.ParentStepResultCode)));
+        public IEnumerable<ExecutionStep> GetNextSteps(Guid parentStepId, string resultCode = null)
+        {
+            return this.Where(s => s.ParentStepId == parentStepId &&
+                                   (s.ParentStepResultCode == resultCode ||
+                                    string.IsNullOrEmpty(s.ParentStepResultCode)));
+        }
 
         public ExecutionStep AddStepWithoutSigning(
             ChimeraAgentIdentifier agentId,
@@ -40,7 +47,7 @@ namespace SecOpsSteward.Shared.Messages
             byte[] packageSignature,
             string args)
         {
-            var step = new ExecutionStep()
+            var step = new ExecutionStep
             {
                 StepId = Guid.NewGuid(),
                 PackageId = packageId,
@@ -61,7 +68,7 @@ namespace SecOpsSteward.Shared.Messages
         {
             var step = AddStepWithoutSigning(agentId, packageId, packageSignature, args);
             step.ParentStepId = parent.StepId;
-            step.Conditions = new ExecutionStepConditions()
+            step.Conditions = new ExecutionStepConditions
             {
                 // require all previous items from this path to match codes
                 RequiredReceipts = GetConditionalReceiptsFromProgression(step)
@@ -80,7 +87,7 @@ namespace SecOpsSteward.Shared.Messages
             var step = AddStepWithoutSigning(agentId, packageId, packageSignature, args);
             step.ParentStepId = parent.StepId;
             step.ParentStepResultCode = returnCode;
-            step.Conditions = new ExecutionStepConditions()
+            step.Conditions = new ExecutionStepConditions
             {
                 // require all previous items from this path to match codes
                 RequiredReceipts = GetConditionalReceiptsFromProgression(parent)
@@ -120,16 +127,18 @@ namespace SecOpsSteward.Shared.Messages
         // this assumes ParentStepResultCode exists in the collection already...
         // need to establish pluginresults some other way...
         // [ persist resultcode as nonserialized somewhere? ]
-        private List<ExecutionStepReceipt> GetConditionalReceiptsFromProgression(ExecutionStep executionStep) =>
-            GetPathToRoot(executionStep).Select(i =>
+        private List<ExecutionStepReceipt> GetConditionalReceiptsFromProgression(ExecutionStep executionStep)
+        {
+            return GetPathToRoot(executionStep).Select(i =>
             {
                 if (i.ParentStepId != Guid.Empty) // skip on 0th entity
-                    return new ExecutionStepReceipt()
+                    return new ExecutionStepReceipt
                     {
                         StepId = i.ParentStepId,
                         PluginResult = new PluginOutputStructure(i.ParentStepResultCode)
                     };
-                else return null;
+                return null;
             }).Where(r => r != null).ToList();
+        }
     }
 }
