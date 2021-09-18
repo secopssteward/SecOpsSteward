@@ -361,3 +361,4 @@ appsettings.Development.json
 
 /deploy/agent-publish
 /deploy/publish
+src/UI/SecOpsSteward.UI/sos.db
