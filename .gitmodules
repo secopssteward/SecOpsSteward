@@ -1,0 +1,12 @@
+[submodule "src/SOSCore"]
+	path = src/SOSCore
+	url = https://github.com/secopssteward/SOSCore.git
+[submodule "src/SOSWebUI"]
+	path = src/SOSWebUI
+	url = https://github.com/secopssteward/SOSWebUI.git
+[submodule "src/SOSPlugins"]
+	path = src/SOSPlugins
+	url = https://github.com/secopssteward/SOSPlugins.git
+[submodule "src/SOSAgent-Functions"]
+	path = src/SOSAgent-Functions
+	url = https://github.com/secopssteward/SOSAgent-Functions.git
