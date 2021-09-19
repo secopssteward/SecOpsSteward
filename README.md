@@ -10,3 +10,6 @@ There is a demo site which shows off the interface and basic features that canno
 
 ## Want More?
 There is extensive documentation, including deployment instructions, for SecOps Steward at [docs.secopssteward.com](https://docs.secopssteward.com)!
+
+## Interested in Helping?
+If you'd like to contribute to SecOps Steward, or if you're using SOS in your system and want to give feedback, reach out to secopssteward@anthturner.com or just submit a pull request against the appropriate repository.
