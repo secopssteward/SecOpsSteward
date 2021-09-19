@@ -1,6 +1,6 @@
 Write-Host "Building, signing, and uploading plugin packages to public repository..."
 
-$folders = Get-ChildItem -Path '..\src\Plugins' -Filter SecOpsSteward.Plugins.* |
+$folders = Get-ChildItem -Path '..\src\SOSPlugins' -Filter SecOpsSteward.Plugins.* |
      ? {$_.PsIsContainer -and $_.FullName -notmatch 'Shared' }
 
 foreach ($file in $folders)

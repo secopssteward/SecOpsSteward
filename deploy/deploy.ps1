@@ -332,7 +332,7 @@ if (!$SkipInfrastructure)
         $tenantId = $sub.tenantId
 
         Write-Host "### Writing appSettings.Development.json" -ForegroundColor Cyan
-        $appSettingsPath="..\src\UI\SecOpsSteward.UI\appsettings.Development.json"
+        $appSettingsPath="..\src\SOSWebUI\SecOpsSteward.UI\appsettings.Development.json"
         if (!(Test-Path $appSettingsPath)) { "{}" | Out-File $appSettingsPath -Force }
         $existing = Get-Content -Path $appSettingsPath -Raw | ConvertFrom-Json
 
@@ -355,7 +355,7 @@ if (!$SkipInfrastructure)
     "ResourceGroup": "$ResourceGroup"
 },
 "ConnectionStrings": {
-    "Database": "Data Source=tcp:sossql$DeploymentId.database.windows.net,1433;Initial Catalog=sosdb;User Id=$SqlAdmininstratorLogin@sossql$DeploymentId.database.windows.net;Password=$SqlAdministratorLoginPassword;",
+    "Database": "Data Source=tcp:sossql$DeploymentId.database.windows.net,1433;Initial Catalog=sosdb;User Id=${SqlAdmininstratorLogin}@sossql$DeploymentId.database.windows.net;Password=$SqlAdministratorLoginPassword;",
     "AzureWebJobsStorage": "DefaultEndpointsProtocol=https;AccountName=sosblob$DeploymentId;AccountKey=$storageKey;EndpointSuffix=core.windows.net"
 }
 }
@@ -373,7 +373,7 @@ else { Write-Host "Skipping infrastructure deployment..." }
 #region App Build/Publish
 # move to project folder
 Remove-Item $PSScriptRoot\publish -Recurse -ErrorAction Ignore
-Push-Location $PSScriptRoot\..\src\UI\SecOpsSteward.UI
+Push-Location $PSScriptRoot\..\src\SOSWebUI\SecOpsSteward.UI
 
 Write-Host "### Restoring packages" -ForegroundColor Cyan
 $restored = dotnet restore
