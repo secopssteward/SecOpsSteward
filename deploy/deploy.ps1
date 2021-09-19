@@ -294,7 +294,10 @@ if (!$SkipInfrastructure)
     sqlAdministratorLoginPassword=$SqlAdministratorLoginPassword `
     mainUserPrincipal=$signedInUserObjectId `
     deploymentId=$DeploymentId `
-    $debugRolesText
+    $debugRolesText | ConvertFrom-Json
+
+    $SignDecrypt = $deployed.properties.outputs.signDecryptGuid.value
+    $VerifyEncrypt = $deployed.properties.outputs.verifyEncryptGuid.value
 
     if ($LastExitCode -ne 0)
     {
@@ -353,10 +356,12 @@ if (!$SkipInfrastructure)
     "PackageRepoAccount": "sosblobs$DeploymentIdLower",
     "PackageRepoContainer": "packages",
     "ServiceBusNamespace": "sosbus$DeploymentId",
-    "ResourceGroup": "$ResourceGroup"
+    "ResourceGroup": "$ResourceGroup",
+    "SignDecryptRole": "$SignDecrypt",
+    "VerifyEncryptRole": "$VerifyEncrypt"
 },
 "ConnectionStrings": {
-    "Database": "Data Source=tcp:sossql$DeploymentId.database.windows.net,1433;Initial Catalog=sosdb;User Id=SqlAdmininistratorLogin@sossql$DeploymentId.database.windows.net;Password=$SqlAdministratorLoginPassword;",
+    "Database": "Data Source=tcp:sossql$DeploymentId.database.windows.net,1433;Initial Catalog=sosdb;User Id=$SqlAdmininistratorLogin@sossql$DeploymentId.database.windows.net;Password=$SqlAdministratorLoginPassword;",
     "AzureWebJobsStorage": "DefaultEndpointsProtocol=https;AccountName=sosblob$DeploymentId;AccountKey=$storageKey;EndpointSuffix=core.windows.net"
 }
 }

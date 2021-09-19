@@ -138,3 +138,6 @@ module resourceGroupModule './SecOpsStewardRG.bicep' = {
     webAppName: webAppName
   }
 }
+
+output signDecryptGuid string = guid(signDecryptRoleName)
+output verifyEncryptGuid string = guid(verifyEncryptRoleName)
