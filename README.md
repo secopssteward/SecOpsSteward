@@ -1,4 +1,4 @@
-![SecOps Steward Logo](https://raw.githubusercontent.com/anthturner/SecOpsSteward/main/assets/SOS_Logo_Blue.png)
+![SecOps Steward Logo](https://raw.githubusercontent.com/secopssteward/SecOpsSteward/main/assets/SOS_Logo_Blue.png)
 
 ---
 
