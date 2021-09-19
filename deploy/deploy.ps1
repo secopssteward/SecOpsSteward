@@ -348,14 +348,15 @@ if (!$SkipInfrastructure)
 },
 "Chimera": {
     "SubscriptionId": "$subId",
-    "VaultName": "sosvault$DeploymentId",
+    "AgentVaultName": "sosavault$DeploymentId",
+    "UserVaultName": "sosuvault$DeploymentId",
     "PackageRepoAccount": "sosblobs$DeploymentIdLower",
     "PackageRepoContainer": "packages",
     "ServiceBusNamespace": "sosbus$DeploymentId",
     "ResourceGroup": "$ResourceGroup"
 },
 "ConnectionStrings": {
-    "Database": "Data Source=tcp:sossql$DeploymentId.database.windows.net,1433;Initial Catalog=sosdb;User Id=${SqlAdmininstratorLogin}@sossql$DeploymentId.database.windows.net;Password=$SqlAdministratorLoginPassword;",
+    "Database": "Data Source=tcp:sossql$DeploymentId.database.windows.net,1433;Initial Catalog=sosdb;User Id=SqlAdmininistratorLogin@sossql$DeploymentId.database.windows.net;Password=$SqlAdministratorLoginPassword;",
     "AzureWebJobsStorage": "DefaultEndpointsProtocol=https;AccountName=sosblob$DeploymentId;AccountKey=$storageKey;EndpointSuffix=core.windows.net"
 }
 }
