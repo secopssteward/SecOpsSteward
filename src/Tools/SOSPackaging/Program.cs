@@ -3,6 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
+using Spectre.Console;
 using Spectre.Console.Cli;
 
 namespace SOSPackaging
@@ -84,17 +85,30 @@ namespace SOSPackaging
         {
             SharedActions.ApplyConfiguration(settings);
 
-            Console.WriteLine("Building from " + settings.Path);
-            var pkg = SharedActions.Create(settings.Path);
+            AnsiConsole.Markup($"Building package from [blue]{settings.Path}[/] ... ");
+            string pkg;
+            try
+            {
+                pkg = SharedActions.Create(settings.Path);
+            }
+            catch (Exception ex)
+            {
+                AnsiConsole.MarkupLine($"[red]Not a valid package![/]");
+                return -1;
+            }
 
-            Console.WriteLine("Signing package with public repository key");
+            AnsiConsole.Markup("Signing package with public repository key ... ");
             SharedActions.Sign(pkg, settings.PrivateKey, settings.Signer);
+            AnsiConsole.MarkupLine("[green]OK![/]");
 
             if (!string.IsNullOrEmpty(settings.SasKey))
             {
-                Console.WriteLine("Uploading package to storage");
+                AnsiConsole.Markup($"Uploading package to public storage ... ");
                 SharedActions.Post(pkg, settings.SasKey);
+                AnsiConsole.MarkupLine("[green]OK![/]");
             }
+
+            Console.WriteLine();
 
             File.Delete(pkg);
             return 0;
@@ -146,10 +160,10 @@ namespace SOSPackaging
                 var parameters = rsa.ExportParameters(false);
 
                 Console.WriteLine("Public Key:");
-                Console.WriteLine(Convert.ToBase64String(Encoding.ASCII.GetBytes(rsa.ToXmlString(false))));
+                AnsiConsole.MarkupLine($"[green]{Convert.ToBase64String(Encoding.ASCII.GetBytes(rsa.ToXmlString(false)))}[/green]");
                 Console.WriteLine();
                 Console.WriteLine("Private Key:");
-                Console.WriteLine(Convert.ToBase64String(Encoding.ASCII.GetBytes(rsa.ToXmlString(true))));
+                AnsiConsole.MarkupLine($"[red]{Convert.ToBase64String(Encoding.ASCII.GetBytes(rsa.ToXmlString(true)))}[/red]");
                 Console.WriteLine();
             }
 

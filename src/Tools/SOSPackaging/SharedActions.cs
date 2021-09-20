@@ -1,10 +1,12 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
 using Azure.Storage.Blobs;
 using SecOpsSteward.Shared;
 using SecOpsSteward.Shared.Cryptography.Extensions;
 using SecOpsSteward.Shared.Packaging;
+using Spectre.Console;
 using Spectre.Console.Cli;
 
 namespace SOSPackaging
@@ -24,19 +26,34 @@ namespace SOSPackaging
                 package = ChimeraContainer.CreateFromArchiveStream(fs);
             }
 
-            package.GetMetadata().CheckIntegrity();
-
-            using (var fs = new FileStream(
-                Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar +
-                "pkg-" +
-                package.GetMetadata().ContainerId.ContainerId + ".zip", FileMode.Create))
+            var metadata = package.GetMetadata();
+            var tree = new Tree($"📦 [green]{metadata.ContainerId.ShortId}[/] - {metadata.Version}");
+            foreach (var service in metadata.ServicesMetadata)
             {
-                package.ContainerStream.Seek(0, SeekOrigin.Begin);
-                package.ContainerStream.CopyTo(fs);
+                var svcNode = tree.AddNode($"🛠 [blue]{service.ServiceId.ServiceId}[/] - {service.Name} ({service.Description})");
+                var pkgNode = svcNode.AddNode("[yellow]Plugins[/]");
+                foreach (var pkg in service.PluginIds)
+                {
+                    var plugin = metadata.PluginsMetadata.First(p => p.PluginId == pkg);
+                    pkgNode.AddNode($"🔌 [yellow]{plugin.PluginId.PluginId}[/] - {plugin.Name} (by {plugin.Author}) - {plugin.Description}");
+                }
+                var templateNode = svcNode.AddNode("[fuchsia]Templates[/]");
+                foreach (var template in service.Templates)
+                    templateNode.AddNode($"📃 [fuchsia]{template.WorkflowTemplateId.ShortIdEnd()}[/] - {template.Name} ({template.Participants.Count} steps)");
             }
+            AnsiConsole.WriteLine();
+            AnsiConsole.WriteLine();
+            AnsiConsole.Render(tree);
+            AnsiConsole.WriteLine();
+
+            AnsiConsole.Markup("Checking Package Integrity and Metadata ... ");
+            metadata.CheckIntegrity();
+            AnsiConsole.MarkupLine("[green]OK![/]");
+
+            package.WritePackageFile(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "pkg-" + metadata.ContainerId.ContainerId + ".zip");
 
             return Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "pkg-" +
-                   package.GetMetadata().ContainerId.ContainerId + ".zip";
+                   metadata.ContainerId.ContainerId + ".zip";
         }
 
         public static void Sign(string path, string privateKeyBase64, string signer)
