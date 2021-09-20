@@ -1,0 +1,50 @@
+name: Build Public SOS Plugins
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ master ]
+    paths:
+      - 'src/SOSPlugins/**'
+
+jobs:
+  build:
+    timeout-minutes: 5
+    defaults:
+      run:
+        working-directory: ./src
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup .NET 3.1
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 3.1.x
+    - name: Setup .NET 5
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 5.0.x
+    - name: Restore dependencies
+      run: dotnet restore
+    - name: Build
+      run: dotnet build --no-restore
+    - name: Test
+      run: dotnet test --no-build --verbosity normal
+    
+    - name: Write Publishing Configuration File
+      uses: DamianReeves/write-file-action@v1.0
+      with:
+        path: config.txt
+        contents: |
+        {"PublicKey": "${{ secrets.PUBLIC_REPO_PUBLIC_KEY }}",
+        "PrivateKey": "${{ secrets.PUBLIC_REPO_PRIVATE_KEY }}",
+        "Signer":"SecOps Steward Automatic Signing Service",
+        "SasKey" "${{ secrets.PUBLIC_REPO_SAS_KEY }}"
+        }
+
+    - name: Build Public Packages
+      uses: Amadevus/pwsh-script@v2.0.1
+      with:
+        script: |
+            ${{ github.workspace }}\deploy\build-public-packages.ps1
