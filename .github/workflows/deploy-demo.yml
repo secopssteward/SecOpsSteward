@@ -2,6 +2,8 @@ name: Deploy Example
 
 on:
   workflow_dispatch:
+  push:
+      branches: [ master ]
 
 jobs:
   deploy:
@@ -28,12 +30,4 @@ jobs:
         with:
           azPSVersion: latest
           inlineScript: |
-            ${{ github.workspace }}\deploy\deploy.ps1 -HideSecrets -Location westus -ResourceGroup sos-webapp-demo -ApplicationId 3b8ddfeb-ea9f-49a1-b66a-d937db14e741 -ApplicationSecret ${{ secrets.DEPLOY_SOS_APP_SECRET }} -WebAppName soswebapp-demo -DeploymentId ghaction -AdminUserPrincipal ${{ secrets.SOS_ADMIN_PRINCIPAL }}
-
-      - name: Set Dummy Mode
-        uses: Azure/appservice-settings@v1
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
-          app-name: soswebapp-demo
-          app-settings-json: '[{ "name": "RunDemoMode", "value": "true", "slotSetting": false }]'
-          mask-inputs: false
+            ${{ github.workspace }}\deploy\deploy-demo.ps1 -Location westus -ResourceGroup sos-webapp-demo -WebAppName soswebapp-demo -DeploymentId ghaction
