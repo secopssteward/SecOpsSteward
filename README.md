@@ -13,3 +13,6 @@ There is extensive documentation, including deployment instructions, for SecOps 
 
 ## Interested in Helping?
 If you'd like to contribute to SecOps Steward, or if you're using SOS in your system and want to give feedback, reach out to secopssteward@anthturner.com or just submit a pull request against the appropriate repository.
+
+## Want To Use It?
+**Never** use this project in a production system without extensive testing. No contributors on this project can be liable for data loss or security issues.
