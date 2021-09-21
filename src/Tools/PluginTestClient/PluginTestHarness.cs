@@ -9,6 +9,7 @@ using SecOpsSteward.Plugins.Azure;
 using SecOpsSteward.Shared;
 using SecOpsSteward.Shared.Packaging;
 using SecOpsSteward.Shared.Roles;
+using Spectre.Console;
 
 namespace PluginTestClient
 {
@@ -30,23 +31,20 @@ namespace PluginTestClient
 
         public async Task RunTest(
             string folder,
-            Guid pluginIdGuid,
+            ChimeraPackageIdentifier pluginId,
             Dictionary<string, string> configuration)
         {
-            var pluginId = new ChimeraPackageIdentifier(pluginIdGuid);
-
             var path = "";
             // get test package
-            Console.ForegroundColor = ConsoleColor.Cyan;
-            Console.WriteLine("Press ENTER to start test from new plugin build\n");
+            AnsiConsole.MarkupLine("[cyan]Press ENTER to start test from new plugin build[/]\n");
             Console.ReadLine();
-            Console.WriteLine("*** Recreating ChimeraContainer from built code at " + folder);
+
+            AnsiConsole.MarkupLine($"[cyan]*** Recreating ChimeraContainer from built code at {folder}[/]");
             using (var pkg = ChimeraContainer.CreateFromFolder(folder))
             {
-                Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.WriteLine("This container's source code hash is " +
-                                  BitConverter.ToString(pkg.GetPackageContentHash())
-                                      .Replace("-", "").Substring(0, 8));
+                AnsiConsole.MarkupLine("[yellow]This container's source code hash is " +
+                    BitConverter.ToString(pkg.GetPackageContentHash()).Replace("-", "").Substring(0, 8) + "[/]");
+
                 path = pkg.ExtractedPath;
                 var plugin = pkg.Wrapper.GetPlugin(pluginId.Id);
 
@@ -63,8 +61,7 @@ namespace PluginTestClient
                     async () => await mgrRoleAssignment.AssignPluginRole(userInstance, userInstance.RbacRequirements,
                         userOid));
 
-                Console.ForegroundColor = ConsoleColor.Cyan;
-                Console.WriteLine("... sleeping for 10 seconds to allow RBAC to propagate ...");
+                AnsiConsole.MarkupLine("[cyan]... sleeping for 10 seconds to allow RBAC to propagate ...[/]");
                 await Task.Delay(10000);
 
                 // run EXECUTE as user
@@ -77,8 +74,8 @@ namespace PluginTestClient
                         userOid));
 
                 var roleName = "SoSRole - " + userInstance.GetDescriptiveName();
-                Console.ForegroundColor = ConsoleColor.Cyan;
-                Console.WriteLine("\n\nTest completed. Press ENTER to delete the role '" + roleName + "'.\n\n");
+
+                AnsiConsole.MarkupLine($"[cyan]\n\nTest completed. Press ENTER to delete the role [green]{roleName}[/].[/]\n\n");
                 Console.ReadLine();
 
                 await RunAzureOperation("DROP ROLE [" + roleName + "]", async () =>
@@ -99,25 +96,23 @@ namespace PluginTestClient
         {
             try
             {
-                // attempt EXECUTE as user
-                Console.ForegroundColor = ConsoleColor.Cyan;
-                Console.WriteLine("*** Running " + name + new string('-', 80 - name.Length - 12));
-                Console.ForegroundColor = ConsoleColor.White;
+                AnsiConsole.MarkupLine($"[cyan]*** Running {name + new string('-', 80 - name.Length - 12)}[/]");
+                AnsiConsole.Foreground = Color.White;
                 await operation();
-                Console.ForegroundColor = ConsoleColor.Green;
-                Console.WriteLine("!!! Success !!!");
+                AnsiConsole.ResetColors();
+                AnsiConsole.MarkupLine("[green]!!! Success !!![/]");
             }
 
             catch (DefaultErrorResponseException ex)
             {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine("!!! Azure Failure !!! -> " + ex.Message);
-                Console.WriteLine("!!! Error Message Body: " + JsonConvert.SerializeObject(ex.Response.Content));
+                AnsiConsole.MarkupLine("[red]!!! Azure Failure !!![/]");
+                AnsiConsole.WriteException(ex);
+                AnsiConsole.MarkupLine("[red]!!! Error Message Body: {JsonConvert.SerializeObject(ex.Response.Content)}[/]");
             }
             catch (Exception ex)
             {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine("!!! General Failure: " + ex);
+                AnsiConsole.MarkupLine("[red]!!! General Failure !!![/]");
+                AnsiConsole.WriteException(ex);
             }
         }
     }

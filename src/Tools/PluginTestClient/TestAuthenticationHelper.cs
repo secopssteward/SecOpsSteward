@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Azure.Core;
 using Azure.Identity;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using SecOpsSteward.Integrations.Azure.Roles;
 using SecOpsSteward.Plugins.Azure;
 using SecOpsSteward.Shared;
@@ -40,7 +41,12 @@ namespace PluginTestClient
                 });
 
             var sc = new ServiceCollection();
-            sc.AddScoped(c => new ChimeraServiceConfigurator()); // not needed to be populated for this
+            sc.AddLogging(l => l.AddConsole());
+            sc.AddScoped(c => new ChimeraServiceConfigurator(new System.Collections.Generic.Dictionary<string, string>()
+            {
+                { "SubscriptionId", subscriptionId },
+                { "TenantId", tenantId }
+            })); // not needed to be populated for this
             sc.AddScoped(s => new AzureCurrentCredentialFactory(s, tenantId, subscriptionId));
             sc.AddScoped<IRoleAssignmentService, AzureActiveDirectoryRoleAssignmentService>();
             var services = sc.BuildServiceProvider();
