@@ -15,14 +15,14 @@
     <ProjectReference Include="..\..\SOSCore\SecOpsSteward.Shared\SecOpsSteward.Shared.csproj" />
   </ItemGroup>
 
-  <Target Name="CopyBuiltFiles" AfterTargets="Build">
-    <ItemGroup>
-      <BuiltFiles Include="$(ProjectDir)*.*" />
-    </ItemGroup>
-  </Target>
-  
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Copy SourceFiles="@(BuiltFiles)" DestinationFolder="$(ProjectDir)..\..\..\tools\packaging" SkipUnchangedFiles="true" />
+  <ItemGroup>
+    <GetFiles Include="$(TargetDir)*.*" />
+  </ItemGroup>
+
+  <Target Name="CopyResultFile" AfterTargets="Build" DependsOnTargets="Build">
+    <Message Text="Copying $(TargetDir)" Importance="high" />
+    <Copy SourceFiles="%(GetFiles.Identity)" Retries="10"
+          DestinationFolder="$(ProjectDir)..\..\..\tools\packaging"/>
   </Target>
 
 </Project>
