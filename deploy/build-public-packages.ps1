@@ -1,12 +1,12 @@
 Write-Host "Building, signing, and uploading plugin packages to public repository..."
 
-$folders = Get-ChildItem -Path '..\src\SOSPlugins' -Filter SecOpsSteward.Plugins.* |
+$folders = Get-ChildItem -Path '..\plugins' -Filter SecOpsSteward.Plugins.* |
      ? {$_.PsIsContainer -and $_.FullName -notmatch 'Shared' }
 
 foreach ($file in $folders)
 {
     Write-Host "* $file";
-    $buildFolder = $file.FullName + "\bin\Debug\net5.0";
+    $buildFolder = $file.FullName;
     $files = Get-ChildItem $buildFolder -recurse -filter  "*.dll"
     if ($files.Length -eq 0)
     {

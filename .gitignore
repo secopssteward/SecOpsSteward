@@ -353,8 +353,9 @@ MigrationBackup/
 /*.key
 /config.txt
 
-# Tool build output folder
+# Tool/Plugin build output folder
 /tools/
+/plugins/
 
 # Development settings override
 appsettings.Development.json
