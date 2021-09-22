@@ -1,0 +1,145 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.4.613.9944",
+      "templateHash": "8839203476777935090"
+    }
+  },
+  "parameters": {
+    "randomString": {
+      "type": "string",
+      "defaultValue": "[uniqueString(resourceGroup().name)]",
+      "metadata": {
+        "description": "Random string to append to all resources in deployment"
+      }
+    },
+    "skuName": {
+      "type": "string",
+      "defaultValue": "F1",
+      "metadata": {
+        "description": "Web App Service SKU"
+      },
+      "allowedValues": [
+        "F1",
+        "D1",
+        "B1",
+        "B2",
+        "B3",
+        "S1",
+        "S2",
+        "S3",
+        "P1",
+        "P2",
+        "P3",
+        "P4"
+      ]
+    },
+    "skuCapacity": {
+      "type": "int",
+      "defaultValue": 1,
+      "metadata": {
+        "description": "Number of Web App instances"
+      },
+      "minValue": 1
+    },
+    "webAppName": {
+      "type": "string",
+      "metadata": {
+        "description": "SecOps Steward Web App Name"
+      }
+    }
+  },
+  "functions": [],
+  "variables": {
+    "location": "[resourceGroup().location]",
+    "hostingPlanName": "[format('soshosting{0}', parameters('randomString'))]"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Web/serverfarms",
+      "apiVersion": "2020-06-01",
+      "name": "[variables('hostingPlanName')]",
+      "location": "[variables('location')]",
+      "sku": {
+        "name": "[parameters('skuName')]",
+        "capacity": "[parameters('skuCapacity')]"
+      },
+      "kind": "windows"
+    },
+    {
+      "type": "Microsoft.Web/sites",
+      "apiVersion": "2020-06-01",
+      "name": "[parameters('webAppName')]",
+      "location": "[variables('location')]",
+      "identity": {
+        "type": "SystemAssigned"
+      },
+      "kind": "app",
+      "properties": {
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('hostingPlanName'))]",
+        "httpsOnly": true,
+        "enabled": true,
+        "reserved": false,
+        "hyperV": false,
+        "isXenon": false,
+        "siteConfig": {
+          "netFrameworkVersion": "v5.0",
+          "scmType": "None",
+          "managedPipelineMode": "Integrated",
+          "virtualApplications": [
+            {
+              "virtualPath": "/",
+              "physicalPath": "site\\wwwroot",
+              "preloadEnabled": false
+            }
+          ],
+          "minTlsVersion": "1.2",
+          "appSettings": [
+            {
+              "name": "Chimera__ResourceGroup",
+              "value": "[resourceGroup().name]"
+            },
+            {
+              "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
+              "value": "[reference(resourceId('Microsoft.Insights/components', format('AppInsights{0}', parameters('webAppName')))).InstrumentationKey]"
+            },
+            {
+              "name": "APPLICATIONINSIGHTS_CONNECTION_STRING",
+              "value": "[reference(resourceId('Microsoft.Insights/components', format('AppInsights{0}', parameters('webAppName')))).ConnectionString]"
+            },
+            {
+              "name": "ApplicationInsightsAgent_EXTENSION_VERSION",
+              "value": "~2"
+            },
+            {
+              "name": "ASPNETCORE_ENVIRONMENT",
+              "value": "Development"
+            },
+            {
+              "name": "RunDemoMode",
+              "value": "true"
+            }
+          ],
+          "connectionStrings": []
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Insights/components', format('AppInsights{0}', parameters('webAppName')))]",
+        "[resourceId('Microsoft.Web/serverfarms', variables('hostingPlanName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Insights/components",
+      "apiVersion": "2018-05-01-preview",
+      "name": "[format('AppInsights{0}', parameters('webAppName'))]",
+      "location": "[variables('location')]",
+      "kind": "web",
+      "properties": {
+        "Application_Type": "web"
+      }
+    }
+  ]
+}
