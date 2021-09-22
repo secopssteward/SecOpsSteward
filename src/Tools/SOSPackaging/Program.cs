@@ -12,14 +12,6 @@ namespace SOSPackaging
     {
         private static int Main(string[] args)
         {
-            //args = new string[]
-            //{
-            //    "new",
-            //    "--config",
-            //    @"C:\SOS\SecOpsSteward\config.txt",
-            //    @"C:\SOS\SecOpsSteward\src\Plugins\SecOpsSteward.Plugins.Azure.AppServices\bin\Debug\net5.0"
-            //};
-
             var app = new CommandApp();
 
             app.Configure(config =>

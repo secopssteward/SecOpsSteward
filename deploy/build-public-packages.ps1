@@ -1,7 +1,6 @@
 Write-Host "Building, signing, and uploading plugin packages to public repository..."
 
-$folders = Get-ChildItem -Path '..\plugins' -Filter SecOpsSteward.Plugins.* |
-     ? {$_.PsIsContainer -and $_.FullName -notmatch 'Shared' }
+$folders = Get-ChildItem -Path '..\plugins'
 
 foreach ($file in $folders)
 {
@@ -14,6 +13,6 @@ foreach ($file in $folders)
     }
     else
     {
-        ..\src\Tools\SOSPackaging\bin\Debug\net5.0\SOSPackaging  new --config ..\config.txt $buildFolder
+        ..\tools\packaging\SOSPackaging  new --config ..\config.txt $buildFolder
     }
 }

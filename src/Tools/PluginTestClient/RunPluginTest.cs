@@ -1,4 +1,4 @@
-﻿using SecOpsSteward.Shared;
+﻿using SecOpsSteward.Plugins.Configurable;
 using SecOpsSteward.Shared.Packaging;
 using SecOpsSteward.Shared.Packaging.Metadata;
 using Spectre.Console;
@@ -60,6 +60,7 @@ namespace PluginTestClient
             // ---
 
             PluginMetadata pluginMetadata;
+            Dictionary<string, object> configuration = new Dictionary<string, object>();
             using (var pkg = ChimeraContainer.CreateFromFolder(settings.Path))
             {
                 var metadata = pkg.GetMetadata();
@@ -67,42 +68,42 @@ namespace PluginTestClient
                 s.Title = "Select Plugin in Package";
                 s.AddChoices(metadata.PluginsMetadata);
                 pluginMetadata = await s.ShowAsync(AnsiConsole.Console, CancellationToken.None);
+
+                // ---
+
+                AnsiConsole.MarkupLine("[green]The following parameters will be used for this test:[/]");
+                AnsiConsole.MarkupLine("[white]" +
+                    $"Folder:\t\t{settings.Path}\n" +
+                    $"Tenant ID:\t{settings.TenantId}\n" +
+                    $"Subscription:\t{settings.SubscriptionId}\n" +
+                    $"Plugin:\t\t{pluginMetadata.Name} ({pluginMetadata.PluginId.PluginId})\n\n[/]");
+
+                var cfg = pkg.Wrapper.GetPlugin(pluginMetadata.PluginId.Id).EmitConfiguration(settings.Configuration);
+                configuration = cfg.AsDictionaryProperties();
+                if (!configuration.ContainsKey("SubscriptionId") || configuration["SubscriptionId"] == null)
+                    configuration["SubscriptionId"] = settings.SubscriptionId;
+                if (!configuration.ContainsKey("TenantId") || configuration["TenantId"] == null)
+                    configuration["TenantId"] = settings.TenantId;
+
+                var tbl = new Table();
+                tbl.Title = new TableTitle("Configuration");
+                tbl.AddColumns("Key", "Value");
+                foreach (var item in configuration)
+                    tbl.AddRow(item.Key, $"{item.Value}");
+                AnsiConsole.Render(tbl);
             }
-
-            // ---
-
-            AnsiConsole.MarkupLine("[green]The following parameters will be used for this test:[/]");
-            AnsiConsole.MarkupLine("[white]" +
-                $"Folder:\t\t{settings.Path}\n" +
-                $"Tenant ID:\t{settings.TenantId}\n" +
-                $"Subscription:\t{settings.SubscriptionId}\n" +
-                $"Plugin:\t\t{pluginMetadata.Name} ({pluginMetadata.PluginId.PluginId})\n\n[/]");
-
-            var configuration = ChimeraSharedHelpers.GetFromSerializedString<Dictionary<string, string>>(settings.Configuration);
-            if (!configuration.ContainsKey("SubscriptionId"))
-                configuration["SubscriptionId"] = settings.SubscriptionId;
-            if (!configuration.ContainsKey("TenantId"))
-                configuration["TenantId"] = settings.TenantId;
-
-            var tbl = new Table();
-            tbl.Title = new TableTitle("Configuration");
-            tbl.AddColumns("Key", "Value");
-            foreach (var item in configuration)
-                tbl.AddRow(item.Key, item.Value);
-            AnsiConsole.Render(tbl);
 
             // ---
 
             AnsiConsole.Render(new Rule("[red]Low-priv User Authentication[/]"));
             
-            Console.ForegroundColor = ConsoleColor.Red;
-            AnsiConsole.MarkupLine("\n\n[red]#####          A USER PROMPT WILL APPEAR MOMENTARILY!        #####[/]");
-            AnsiConsole.MarkupLine("[red]#####  Ensure you log in with a dummy or unprivileged user!  #####[/]");
-            AnsiConsole.MarkupLine("[white]" +
-                "[red]###[/] This test application will perform the grant/revoke process \n" +
-                "[red]###[/] around execution. That means the corresponding plugin role will be \n" +
-                "[red]###[/] created and destroyed as well, allowing for testing various RBAC \n" +
-                "[red]###[/] settings quickly.\n\n[/]");
+            AnsiConsole.MarkupLine(
+                "\n\n[red]#####          A USER PROMPT WILL APPEAR MOMENTARILY!        #####[/]" +
+                "[red]#####  Ensure you log in with a dummy or unprivileged user!  #####[/]" +
+                "[white]" +
+                "[red]###[/] This test application will perform the grant/revoke process around \n" +
+                "[red]###[/] execution. That means the corresponding plugin role will be created and \n" +
+                "[red]###[/] destroyed as well, allowing for testing various RBAC settings quickly.\n\n[/]");
 
             AnsiConsole.Render(new Rule("[red]Low-priv User Authentication[/]"));
 
@@ -111,7 +112,7 @@ namespace PluginTestClient
 
             AnsiConsole.MarkupLine("\n\n[white]Test Harness Ready, logged in as:[/]");
             AnsiConsole.MarkupLine($"[green]Manager:\t[/][yellow]{testHarness.ManagerUser}[/]");
-            AnsiConsole.MarkupLine($"[green]User:\t\t[/][yellow]{testHarness.User}[/]\n\n\n");
+            AnsiConsole.MarkupLine($"[green]User:\t\t[/][yellow]{testHarness.User}[/]\n\n");
 
             while (true)
             {
