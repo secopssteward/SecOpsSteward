@@ -361,7 +361,7 @@ if (!$SkipInfrastructure)
     "VerifyEncryptRole": "$VerifyEncrypt"
 },
 "ConnectionStrings": {
-    "Database": "Data Source=tcp:sossql$DeploymentId.database.windows.net,1433;Initial Catalog=sosdb;User Id=$SqlAdmininistratorLogin@sossql$DeploymentId.database.windows.net;Password=$SqlAdministratorLoginPassword;",
+    "Database": "Data Source=tcp:sossql$DeploymentId.database.windows.net,1433;Initial Catalog=sosdb;User Id=$SqlAdministratorLogin@sossql$DeploymentId.database.windows.net;Password=$SqlAdministratorLoginPassword;",
     "AzureWebJobsStorage": "DefaultEndpointsProtocol=https;AccountName=sosblob$DeploymentId;AccountKey=$storageKey;EndpointSuffix=core.windows.net"
 }
 }

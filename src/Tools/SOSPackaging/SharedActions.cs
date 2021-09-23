@@ -30,7 +30,7 @@ namespace SOSPackaging
             var tree = new Tree($"📦 [green]{metadata.ContainerId.ShortId}[/] - {metadata.Version}");
             foreach (var service in metadata.ServicesMetadata)
             {
-                var svcNode = tree.AddNode($"🛠 [blue]{service.ServiceId.ServiceId}[/] - {service.Name} ({service.Description})");
+                var svcNode = tree.AddNode($"🛠 [blue]{service.ServiceId.ServiceId}[/] - {service.Name} ({service.Description}) " + (service.Image == null ? "(No image)" : "(With image)"));
                 var pkgNode = svcNode.AddNode("[yellow]Plugins[/]");
                 foreach (var pkg in service.PluginIds)
                 {

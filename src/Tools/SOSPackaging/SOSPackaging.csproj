@@ -21,7 +21,7 @@
 
   <Target Name="CopyResultFile" AfterTargets="Build" DependsOnTargets="Build">
     <Message Text="Copying $(TargetDir)" Importance="high" />
-    <Copy SourceFiles="%(GetFiles.Identity)" Retries="10"
+    <Copy SourceFiles="%(GetFiles.Identity)" Retries="10" SkipUnchangedFiles="false"
           DestinationFolder="$(ProjectDir)..\..\..\tools\packaging"/>
   </Target>
 
